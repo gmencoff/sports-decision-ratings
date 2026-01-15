@@ -30,9 +30,9 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'trade',
     timestamp: new Date('2025-01-10T14:30:00Z'),
     assets: [
-      { fromTeamId: 'TEN', toTeamId: 'KC', player: 'DeAndre Hopkins' },
-      { fromTeamId: 'KC', toTeamId: 'TEN', draftPick: '2025 3rd round pick' },
-      { fromTeamId: 'KC', toTeamId: 'TEN', draftPick: '2026 5th round pick' },
+      { type: 'player', fromTeamId: 'TEN', toTeamId: 'KC', player: { name: 'DeAndre Hopkins', position: 'WR' } },
+      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', year: 2025, round: 3 },
+      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', year: 2026, round: 5 },
     ],
   },
   {
@@ -43,7 +43,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.PHI],
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
-    player: 'Saquon Barkley',
+    player: { name: 'Saquon Barkley', position: 'RB' },
     contractYears: 3,
     totalValue: 37750000,
     guaranteed: 26000000,
@@ -57,10 +57,10 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'trade',
     timestamp: new Date('2025-01-08T16:45:00Z'),
     assets: [
-      { fromTeamId: 'DAL', toTeamId: 'NYJ', player: 'Micah Parsons' },
-      { fromTeamId: 'NYJ', toTeamId: 'DAL', draftPick: '2025 1st round pick' },
-      { fromTeamId: 'NYJ', toTeamId: 'DAL', draftPick: '2026 1st round pick' },
-      { fromTeamId: 'NYJ', toTeamId: 'DAL', player: 'Sauce Gardner' },
+      { type: 'player', fromTeamId: 'DAL', toTeamId: 'NYJ', player: { name: 'Micah Parsons', position: 'LB' } },
+      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', year: 2025, round: 1 },
+      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', year: 2026, round: 1 },
+      { type: 'player', fromTeamId: 'NYJ', toTeamId: 'DAL', player: { name: 'Sauce Gardner', position: 'CB' } },
     ],
   },
   {
@@ -71,7 +71,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.DET],
     type: 'extension',
     timestamp: new Date('2025-01-07T12:00:00Z'),
-    player: 'Amon-Ra St. Brown',
+    player: { name: 'Amon-Ra St. Brown', position: 'WR' },
     contractYears: 4,
     totalValue: 120000000,
     guaranteed: 80000000,
@@ -84,8 +84,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.CHI],
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
-    person: 'Ben Johnson',
-    role: 'Head Coach',
+    staff: { name: 'Ben Johnson', role: 'Head Coach' },
   },
   {
     id: '6',
@@ -95,7 +94,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.LV],
     type: 'release',
     timestamp: new Date('2025-01-05T15:00:00Z'),
-    player: 'Jimmy Garoppolo',
+    player: { name: 'Jimmy Garoppolo', position: 'QB' },
     capSavings: 11250000,
   },
   {
@@ -107,9 +106,9 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'trade',
     timestamp: new Date('2025-01-04T11:20:00Z'),
     assets: [
-      { fromTeamId: 'BAL', toTeamId: 'BUF', draftPick: '2025 2nd round pick' },
-      { fromTeamId: 'BUF', toTeamId: 'BAL', player: 'Stefon Diggs' },
-      { fromTeamId: 'BUF', toTeamId: 'BAL', draftPick: '2026 4th round pick' },
+      { type: 'draft_pick', fromTeamId: 'BAL', toTeamId: 'BUF', year: 2025, round: 2 },
+      { type: 'player', fromTeamId: 'BUF', toTeamId: 'BAL', player: { name: 'Stefon Diggs', position: 'WR' } },
+      { type: 'draft_pick', fromTeamId: 'BUF', toTeamId: 'BAL', year: 2026, round: 4 },
     ],
   },
   {
@@ -120,10 +119,9 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.GB],
     type: 'draft',
     timestamp: new Date('2025-01-03T20:00:00Z'),
-    player: 'Caleb Williams',
+    player: { name: 'Caleb Williams', position: 'QB' },
     round: 1,
     pick: 1,
-    position: 'QB',
   },
 ];
 
