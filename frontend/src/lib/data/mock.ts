@@ -29,6 +29,11 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.KC],
     type: 'trade',
     timestamp: new Date('2025-01-10T14:30:00Z'),
+    assets: [
+      { fromTeamId: 'TEN', toTeamId: 'KC', player: 'DeAndre Hopkins' },
+      { fromTeamId: 'KC', toTeamId: 'TEN', draftPick: '2025 3rd round pick' },
+      { fromTeamId: 'KC', toTeamId: 'TEN', draftPick: '2026 5th round pick' },
+    ],
   },
   {
     id: '2',
@@ -38,6 +43,10 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.PHI],
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
+    player: 'Saquon Barkley',
+    contractYears: 3,
+    totalValue: 37750000,
+    guaranteed: 26000000,
   },
   {
     id: '3',
@@ -47,6 +56,12 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.DAL, TEAMS.NYJ],
     type: 'trade',
     timestamp: new Date('2025-01-08T16:45:00Z'),
+    assets: [
+      { fromTeamId: 'DAL', toTeamId: 'NYJ', player: 'Micah Parsons' },
+      { fromTeamId: 'NYJ', toTeamId: 'DAL', draftPick: '2025 1st round pick' },
+      { fromTeamId: 'NYJ', toTeamId: 'DAL', draftPick: '2026 1st round pick' },
+      { fromTeamId: 'NYJ', toTeamId: 'DAL', player: 'Sauce Gardner' },
+    ],
   },
   {
     id: '4',
@@ -56,6 +71,10 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.DET],
     type: 'extension',
     timestamp: new Date('2025-01-07T12:00:00Z'),
+    player: 'Amon-Ra St. Brown',
+    contractYears: 4,
+    totalValue: 120000000,
+    guaranteed: 80000000,
   },
   {
     id: '5',
@@ -65,6 +84,8 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.CHI],
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
+    person: 'Ben Johnson',
+    role: 'Head Coach',
   },
   {
     id: '6',
@@ -74,6 +95,8 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.LV],
     type: 'release',
     timestamp: new Date('2025-01-05T15:00:00Z'),
+    player: 'Jimmy Garoppolo',
+    capSavings: 11250000,
   },
   {
     id: '7',
@@ -83,6 +106,11 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.BAL, TEAMS.BUF],
     type: 'trade',
     timestamp: new Date('2025-01-04T11:20:00Z'),
+    assets: [
+      { fromTeamId: 'BAL', toTeamId: 'BUF', draftPick: '2025 2nd round pick' },
+      { fromTeamId: 'BUF', toTeamId: 'BAL', player: 'Stefon Diggs' },
+      { fromTeamId: 'BUF', toTeamId: 'BAL', draftPick: '2026 4th round pick' },
+    ],
   },
   {
     id: '8',
@@ -92,6 +120,10 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     teams: [TEAMS.GB],
     type: 'draft',
     timestamp: new Date('2025-01-03T20:00:00Z'),
+    player: 'Caleb Williams',
+    round: 1,
+    pick: 1,
+    position: 'QB',
   },
 ];
 
@@ -107,6 +139,7 @@ function initializeVotes(): void {
       voteStorage.set(key, {
         good: Math.floor(Math.random() * 500) + 50,
         bad: Math.floor(Math.random() * 300) + 20,
+        unsure: Math.floor(Math.random() * 200) + 10,
       });
     });
   });
@@ -131,17 +164,19 @@ export class MockDataProvider implements DataProvider {
     teamId: string
   ): Promise<VoteCounts> {
     const key: VoteKey = `${transactionId}-${teamId}`;
-    return voteStorage.get(key) || { good: 0, bad: 0 };
+    return voteStorage.get(key) || { good: 0, bad: 0, unsure: 0 };
   }
 
   async submitVote(vote: Vote): Promise<void> {
     const key: VoteKey = `${vote.transactionId}-${vote.teamId}`;
-    const current = voteStorage.get(key) || { good: 0, bad: 0 };
+    const current = voteStorage.get(key) || { good: 0, bad: 0, unsure: 0 };
 
     if (vote.sentiment === 'good') {
       current.good += 1;
-    } else {
+    } else if (vote.sentiment === 'bad') {
       current.bad += 1;
+    } else {
+      current.unsure += 1;
     }
 
     voteStorage.set(key, current);

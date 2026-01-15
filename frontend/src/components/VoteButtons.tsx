@@ -1,9 +1,9 @@
 'use client';
 
 interface VoteButtonsProps {
-  onVote: (sentiment: 'good' | 'bad') => void;
+  onVote: (sentiment: 'good' | 'bad' | 'unsure') => void;
   disabled?: boolean;
-  userVote?: 'good' | 'bad' | null;
+  userVote?: 'good' | 'bad' | 'unsure' | null;
 }
 
 export function VoteButtons({
@@ -27,6 +27,21 @@ export function VoteButtons({
         `}
       >
         Good
+      </button>
+      <button
+        onClick={() => onVote('unsure')}
+        disabled={disabled}
+        className={`
+          px-4 py-2 rounded-lg font-medium text-sm transition-all
+          ${
+            userVote === 'unsure'
+              ? 'bg-gray-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        `}
+      >
+        Not sure
       </button>
       <button
         onClick={() => onVote('bad')}

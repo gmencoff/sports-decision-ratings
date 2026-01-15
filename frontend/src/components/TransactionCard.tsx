@@ -44,7 +44,7 @@ function formatTimestamp(date: Date): string {
 
 interface TeamVoteState {
   counts: VoteCounts;
-  userVote: 'good' | 'bad' | null;
+  userVote: 'good' | 'bad' | 'unsure' | null;
   isVoting: boolean;
 }
 
@@ -74,7 +74,7 @@ export function TransactionCard({
     loadVoteCounts();
   }, [transaction.id, transaction.teams]);
 
-  async function handleVote(teamId: string, sentiment: 'good' | 'bad') {
+  async function handleVote(teamId: string, sentiment: 'good' | 'bad' | 'unsure') {
     const currentState = teamVotes[teamId];
     if (!currentState || currentState.isVoting || currentState.userVote) {
       return;
@@ -132,7 +132,7 @@ export function TransactionCard({
       <div className="space-y-4">
         {transaction.teams.map((team) => {
           const voteState = teamVotes[team.id] || {
-            counts: { good: 0, bad: 0 },
+            counts: { good: 0, bad: 0, unsure: 0 },
             userVote: null,
             isVoting: false,
           };

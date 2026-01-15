@@ -5,7 +5,7 @@ interface SentimentBarProps {
 }
 
 export function SentimentBar({ counts }: SentimentBarProps) {
-  const total = counts.good + counts.bad;
+  const total = counts.good + counts.bad + (counts.unsure || 0);
 
   if (total === 0) {
     return (
@@ -17,7 +17,8 @@ export function SentimentBar({ counts }: SentimentBarProps) {
   }
 
   const goodPercent = Math.round((counts.good / total) * 100);
-  const badPercent = 100 - goodPercent;
+  const unsurePercent = Math.round(((counts.unsure || 0) / total) * 100);
+  const badPercent = 100 - goodPercent - unsurePercent;
 
   return (
     <div className="w-full">
@@ -25,6 +26,10 @@ export function SentimentBar({ counts }: SentimentBarProps) {
         <div
           className="bg-green-500 transition-all duration-300"
           style={{ width: `${goodPercent}%` }}
+        />
+        <div
+          className="bg-gray-400 transition-all duration-300"
+          style={{ width: `${unsurePercent}%` }}
         />
         <div
           className="bg-red-500 transition-all duration-300"
