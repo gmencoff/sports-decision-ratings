@@ -22,24 +22,28 @@ export function SentimentBar({ counts }: SentimentBarProps) {
 
   return (
     <div className="w-full">
-      <div className="flex h-2 rounded-full overflow-hidden">
+      <div className="flex h-8 rounded-full overflow-hidden text-sm font-bold text-white">
         <div
-          className="bg-green-500 transition-all duration-300"
+          className="bg-green-500 transition-all duration-300 flex items-center justify-center"
           style={{ width: `${goodPercent}%` }}
-        />
+        >
+          {goodPercent >= 15 && `${goodPercent}%`}
+        </div>
         <div
-          className="bg-gray-400 transition-all duration-300"
+          className="bg-gray-400 transition-all duration-300 flex items-center justify-center"
           style={{ width: `${unsurePercent}%` }}
-        />
+        >
+          {unsurePercent >= 15 && `${unsurePercent}%`}
+        </div>
         <div
-          className="bg-red-500 transition-all duration-300"
+          className="bg-red-500 transition-all duration-300 flex items-center justify-center"
           style={{ width: `${badPercent}%` }}
-        />
+        >
+          {badPercent >= 15 && `${badPercent}%`}
+        </div>
       </div>
-      <div className="flex justify-between text-xs text-gray-600 mt-1">
-        <span>{goodPercent}% Good</span>
-        <span>{total.toLocaleString()} votes</span>
-        <span>{badPercent}% Bad</span>
+      <div className="text-xs text-gray-500 text-center mt-1">
+        {total.toLocaleString()} votes
       </div>
     </div>
   );
