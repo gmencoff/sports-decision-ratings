@@ -1,7 +1,7 @@
-import { Transaction, Vote, VoteCounts } from './types';
+import { Transaction, Vote, VoteCounts, PaginatedResult } from './types';
 
 export interface DataProvider {
-  getTransactions(): Promise<Transaction[]>;
+  getTransactions(limit?: number, cursor?: string): Promise<PaginatedResult<Transaction>>;
   getTransaction(id: string): Promise<Transaction | null>;
   getVoteCounts(transactionId: string, teamId: string): Promise<VoteCounts>;
   submitVote(vote: Vote): Promise<void>;

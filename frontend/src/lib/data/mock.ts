@@ -1,5 +1,21 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult } from './types';
+
+const DEFAULT_PAGE_SIZE = 10;
+
+function encodeCursor(timestamp: Date, id: string): string {
+  return Buffer.from(`${timestamp.toISOString()}:${id}`).toString('base64');
+}
+
+function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+    const [isoString, id] = decoded.split(':');
+    return { timestamp: new Date(isoString), id };
+  } catch {
+    return null;
+  }
+}
 
 // Sample NFL teams
 const TEAMS: Record<string, Team> = {
@@ -146,11 +162,45 @@ function initializeVotes(): void {
 initializeVotes();
 
 export class MockDataProvider implements DataProvider {
-  async getTransactions(): Promise<Transaction[]> {
-    // Return transactions sorted by timestamp (newest first)
-    return [...MOCK_TRANSACTIONS].sort(
-      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-    );
+  async getTransactions(
+    limit: number = DEFAULT_PAGE_SIZE,
+    cursor?: string
+  ): Promise<PaginatedResult<Transaction>> {
+    // Sort transactions by timestamp (newest first), then by id for stable ordering
+    const sorted = [...MOCK_TRANSACTIONS].sort((a, b) => {
+      const timeDiff = b.timestamp.getTime() - a.timestamp.getTime();
+      if (timeDiff !== 0) return timeDiff;
+      return b.id.localeCompare(a.id);
+    });
+
+    // Find starting position based on cursor
+    let startIndex = 0;
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      if (decoded) {
+        startIndex = sorted.findIndex((t) => {
+          const timeDiff = decoded.timestamp.getTime() - t.timestamp.getTime();
+          if (timeDiff !== 0) return timeDiff > 0;
+          return decoded.id.localeCompare(t.id) >= 0;
+        });
+        if (startIndex === -1) startIndex = sorted.length;
+      }
+    }
+
+    // Get the page of results
+    const pageData = sorted.slice(startIndex, startIndex + limit);
+    const hasMore = startIndex + limit < sorted.length;
+
+    // Generate next cursor from last item
+    const nextCursor = hasMore && pageData.length > 0
+      ? encodeCursor(pageData[pageData.length - 1].timestamp, pageData[pageData.length - 1].id)
+      : undefined;
+
+    return {
+      data: pageData,
+      nextCursor,
+      hasMore,
+    };
   }
 
   async getTransaction(id: string): Promise<Transaction | null> {

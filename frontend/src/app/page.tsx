@@ -3,7 +3,7 @@ import { TransactionCard } from '@/components/TransactionCard';
 
 export default async function Home() {
   const provider = await getDataProvider();
-  const transactions = await provider.getTransactions();
+  const { data: transactions } = await provider.getTransactions();
 
   return (
     <div>
