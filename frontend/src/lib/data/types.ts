@@ -116,10 +116,13 @@ export type Transaction =
 // Helper type to extract the transaction type string
 export type TransactionType = Transaction['type'];
 
+export type Sentiment = 'good' | 'bad' | 'unsure';
+
 export interface Vote {
   transactionId: string;
   teamId: string;
-  sentiment: 'good' | 'bad' | 'unsure';
+  userId: string;
+  sentiment: Sentiment;
 }
 
 export interface VoteCounts {

@@ -1,5 +1,5 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -141,20 +141,50 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
 ];
 
-// In-memory vote storage
-type VoteKey = `${string}-${string}`; // transactionId-teamId
-const voteStorage: Map<VoteKey, VoteCounts> = new Map();
+// In-memory vote storage - stores individual votes
+type VoteKey = `${string}-${string}-${string}`; // transactionId-teamId-userId
+const voteStorage: Map<VoteKey, Sentiment> = new Map();
+
+// Helper to generate vote key
+function getVoteKey(transactionId: string, teamId: string, userId: string): VoteKey {
+  return `${transactionId}-${teamId}-${userId}`;
+}
+
+// Helper to calculate vote counts from stored votes
+function calculateVoteCounts(transactionId: string, teamId: string): VoteCounts {
+  const counts: VoteCounts = { good: 0, bad: 0, unsure: 0 };
+  const prefix = `${transactionId}-${teamId}-`;
+
+  for (const [key, sentiment] of voteStorage.entries()) {
+    if (key.startsWith(prefix)) {
+      counts[sentiment] += 1;
+    }
+  }
+
+  return counts;
+}
 
 // Initialize with some random votes for demo purposes
 function initializeVotes(): void {
   MOCK_TRANSACTIONS.forEach((transaction) => {
     transaction.teams.forEach((team) => {
-      const key: VoteKey = `${transaction.id}-${team.id}`;
-      voteStorage.set(key, {
-        good: Math.floor(Math.random() * 500) + 50,
-        bad: Math.floor(Math.random() * 300) + 20,
-        unsure: Math.floor(Math.random() * 200) + 10,
-      });
+      // Generate random votes from fake users
+      const goodVotes = Math.floor(Math.random() * 500) + 50;
+      const badVotes = Math.floor(Math.random() * 300) + 20;
+      const unsureVotes = Math.floor(Math.random() * 200) + 10;
+
+      for (let i = 0; i < goodVotes; i++) {
+        const key = getVoteKey(transaction.id, team.id, `fake-user-good-${i}`);
+        voteStorage.set(key, 'good');
+      }
+      for (let i = 0; i < badVotes; i++) {
+        const key = getVoteKey(transaction.id, team.id, `fake-user-bad-${i}`);
+        voteStorage.set(key, 'bad');
+      }
+      for (let i = 0; i < unsureVotes; i++) {
+        const key = getVoteKey(transaction.id, team.id, `fake-user-unsure-${i}`);
+        voteStorage.set(key, 'unsure');
+      }
     });
   });
 }
@@ -211,22 +241,21 @@ export class MockDataProvider implements DataProvider {
     transactionId: string,
     teamId: string
   ): Promise<VoteCounts> {
-    const key: VoteKey = `${transactionId}-${teamId}`;
-    return voteStorage.get(key) || { good: 0, bad: 0, unsure: 0 };
+    return calculateVoteCounts(transactionId, teamId);
+  }
+
+  async getUserVote(
+    transactionId: string,
+    teamId: string,
+    userId: string
+  ): Promise<Sentiment | null> {
+    const key = getVoteKey(transactionId, teamId, userId);
+    return voteStorage.get(key) || null;
   }
 
   async submitVote(vote: Vote): Promise<void> {
-    const key: VoteKey = `${vote.transactionId}-${vote.teamId}`;
-    const current = voteStorage.get(key) || { good: 0, bad: 0, unsure: 0 };
-
-    if (vote.sentiment === 'good') {
-      current.good += 1;
-    } else if (vote.sentiment === 'bad') {
-      current.bad += 1;
-    } else {
-      current.unsure += 1;
-    }
-
-    voteStorage.set(key, current);
+    const key = getVoteKey(vote.transactionId, vote.teamId, vote.userId);
+    // Upsert: simply set the vote, overwriting any previous vote
+    voteStorage.set(key, vote.sentiment);
   }
 }

@@ -1,9 +1,11 @@
 'use client';
 
+import { Sentiment } from '@/lib/data/types';
+
 interface VoteButtonsProps {
-  onVote: (sentiment: 'good' | 'bad' | 'unsure') => void;
+  onVote: (sentiment: Sentiment) => void;
   disabled?: boolean;
-  userVote?: 'good' | 'bad' | 'unsure' | null;
+  userVote?: Sentiment | null;
 }
 
 export function VoteButtons({
@@ -14,7 +16,11 @@ export function VoteButtons({
   return (
     <div className="flex gap-2">
       <button
-        onClick={() => onVote('good')}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onVote('good');
+        }}
         disabled={disabled}
         className={`
           px-4 py-2 rounded-lg font-medium text-sm transition-all
@@ -29,7 +35,11 @@ export function VoteButtons({
         Good
       </button>
       <button
-        onClick={() => onVote('unsure')}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onVote('unsure');
+        }}
         disabled={disabled}
         className={`
           px-4 py-2 rounded-lg font-medium text-sm transition-all
@@ -44,7 +54,11 @@ export function VoteButtons({
         Not sure
       </button>
       <button
-        onClick={() => onVote('bad')}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onVote('bad');
+        }}
         disabled={disabled}
         className={`
           px-4 py-2 rounded-lg font-medium text-sm transition-all

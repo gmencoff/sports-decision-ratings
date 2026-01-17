@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Transaction, VoteCounts } from '@/lib/data/types';
+import { Transaction, VoteCounts, Sentiment } from '@/lib/data/types';
 import { getDataProvider } from '@/lib/data';
+import { getUserId } from '@/lib/userId';
 import { VoteButtons } from './VoteButtons';
 import { SentimentBar } from './SentimentBar';
 
@@ -44,7 +45,7 @@ function formatTimestamp(date: Date): string {
 
 interface TeamVoteState {
   counts: VoteCounts;
-  userVote: 'good' | 'bad' | 'unsure' | null;
+  userVote: Sentiment | null;
   isVoting: boolean;
 }
 
@@ -57,13 +58,17 @@ export function TransactionCard({
   useEffect(() => {
     async function loadVoteCounts() {
       const provider = await getDataProvider();
+      const userId = getUserId();
       const newTeamVotes: Record<string, TeamVoteState> = {};
 
       for (const team of transaction.teams) {
-        const counts = await provider.getVoteCounts(transaction.id, team.id);
+        const [counts, userVote] = await Promise.all([
+          provider.getVoteCounts(transaction.id, team.id),
+          provider.getUserVote(transaction.id, team.id, userId),
+        ]);
         newTeamVotes[team.id] = {
           counts,
-          userVote: null,
+          userVote,
           isVoting: false,
         };
       }
@@ -74,9 +79,14 @@ export function TransactionCard({
     loadVoteCounts();
   }, [transaction.id, transaction.teams]);
 
-  async function handleVote(teamId: string, sentiment: 'good' | 'bad' | 'unsure') {
+  async function handleVote(teamId: string, sentiment: Sentiment) {
     const currentState = teamVotes[teamId];
-    if (!currentState || currentState.isVoting || currentState.userVote) {
+    if (!currentState || currentState.isVoting) {
+      return;
+    }
+
+    // Don't re-submit the same vote
+    if (currentState.userVote === sentiment) {
       return;
     }
 
@@ -87,9 +97,11 @@ export function TransactionCard({
 
     try {
       const provider = await getDataProvider();
+      const userId = getUserId();
       await provider.submitVote({
         transactionId: transaction.id,
         teamId,
+        userId,
         sentiment,
       });
 
@@ -146,7 +158,7 @@ export function TransactionCard({
                 <span className="font-medium text-gray-800">{team.name}</span>
                 <VoteButtons
                   onVote={(sentiment) => handleVote(team.id, sentiment)}
-                  disabled={voteState.isVoting || voteState.userVote !== null}
+                  disabled={voteState.isVoting}
                   userVote={voteState.userVote}
                 />
               </div>
