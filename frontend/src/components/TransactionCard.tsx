@@ -2,14 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Transaction, VoteCounts, Sentiment } from '@/lib/data/types';
-import { getDataProvider } from '@/lib/data';
+import { Transaction, Team, VoteCounts, Sentiment } from '@/lib/data/types';
 import { getUserId } from '@/lib/userId';
 import { VoteButtons } from './VoteButtons';
 import { SentimentBar } from './SentimentBar';
 
+export interface TeamVoteData {
+  counts: VoteCounts;
+  userVote: Sentiment | null;
+}
+
+interface TeamVoteState extends TeamVoteData {
+  isVoting: boolean;
+}
+
+export type LoadVotesAction = (
+  transactionId: string,
+  teams: Team[],
+  userId: string
+) => Promise<Record<string, TeamVoteData>>;
+
+export type SubmitVoteAction = (
+  transactionId: string,
+  teamId: string,
+  userId: string,
+  sentiment: Sentiment
+) => Promise<VoteCounts>;
+
 interface TransactionCardProps {
   transaction: Transaction;
+  loadVotes: LoadVotesAction;
+  submitVote: SubmitVoteAction;
   showLink?: boolean;
 }
 
@@ -43,41 +66,27 @@ function formatTimestamp(date: Date): string {
   }
 }
 
-interface TeamVoteState {
-  counts: VoteCounts;
-  userVote: Sentiment | null;
-  isVoting: boolean;
-}
-
 export function TransactionCard({
   transaction,
+  loadVotes,
+  submitVote,
   showLink = true,
 }: TransactionCardProps) {
   const [teamVotes, setTeamVotes] = useState<Record<string, TeamVoteState>>({});
 
   useEffect(() => {
-    async function loadVoteCounts() {
-      const provider = await getDataProvider();
+    async function fetchVotes() {
       const userId = getUserId();
-      const newTeamVotes: Record<string, TeamVoteState> = {};
-
-      for (const team of transaction.teams) {
-        const [counts, userVote] = await Promise.all([
-          provider.getVoteCounts(transaction.id, team.id),
-          provider.getUserVote(transaction.id, team.id, userId),
-        ]);
-        newTeamVotes[team.id] = {
-          counts,
-          userVote,
-          isVoting: false,
-        };
+      const votes = await loadVotes(transaction.id, transaction.teams, userId);
+      const votesWithLoading: Record<string, TeamVoteState> = {};
+      for (const [teamId, voteData] of Object.entries(votes)) {
+        votesWithLoading[teamId] = { ...voteData, isVoting: false };
       }
-
-      setTeamVotes(newTeamVotes);
+      setTeamVotes(votesWithLoading);
     }
 
-    loadVoteCounts();
-  }, [transaction.id, transaction.teams]);
+    fetchVotes();
+  }, [loadVotes, transaction.id, transaction.teams]);
 
   async function handleVote(teamId: string, sentiment: Sentiment) {
     const currentState = teamVotes[teamId];
@@ -96,16 +105,8 @@ export function TransactionCard({
     }));
 
     try {
-      const provider = await getDataProvider();
       const userId = getUserId();
-      await provider.submitVote({
-        transactionId: transaction.id,
-        teamId,
-        userId,
-        sentiment,
-      });
-
-      const newCounts = await provider.getVoteCounts(transaction.id, teamId);
+      const newCounts = await submitVote(transaction.id, teamId, userId, sentiment);
 
       setTeamVotes((prev) => ({
         ...prev,

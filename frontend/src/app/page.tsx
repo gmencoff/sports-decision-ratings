@@ -1,9 +1,9 @@
-import { getDataProvider } from '@/lib/data';
 import { TransactionCard } from '@/components/TransactionCard';
+import { getTransactions } from './actions/transactions';
+import { loadVotes, submitVote } from './actions/votes';
 
 export default async function Home() {
-  const provider = await getDataProvider();
-  const { data: transactions } = await provider.getTransactions();
+  const { data: transactions } = await getTransactions();
 
   return (
     <div>
@@ -16,7 +16,12 @@ export default async function Home() {
 
       <div className="space-y-4">
         {transactions.map((transaction) => (
-          <TransactionCard key={transaction.id} transaction={transaction} />
+          <TransactionCard
+            key={transaction.id}
+            transaction={transaction}
+            loadVotes={loadVotes}
+            submitVote={submitVote}
+          />
         ))}
       </div>
 

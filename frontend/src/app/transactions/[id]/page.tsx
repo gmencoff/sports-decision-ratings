@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getDataProvider } from '@/lib/data';
 import { TransactionCard } from '@/components/TransactionCard';
+import { getTransaction } from '@/app/actions/transactions';
+import { loadVotes, submitVote } from '@/app/actions/votes';
 
 interface TransactionPageProps {
   params: Promise<{ id: string }>;
@@ -9,8 +10,7 @@ interface TransactionPageProps {
 
 export default async function TransactionPage({ params }: TransactionPageProps) {
   const { id } = await params;
-  const provider = await getDataProvider();
-  const transaction = await provider.getTransaction(id);
+  const transaction = await getTransaction(id);
 
   if (!transaction) {
     notFound();
@@ -38,7 +38,12 @@ export default async function TransactionPage({ params }: TransactionPageProps) 
         Back to all transactions
       </Link>
 
-      <TransactionCard transaction={transaction} showLink={false} />
+      <TransactionCard
+        transaction={transaction}
+        loadVotes={loadVotes}
+        submitVote={submitVote}
+        showLink={false}
+      />
 
       <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
         <h2 className="font-semibold text-gray-900 mb-2">Share this transaction</h2>
@@ -52,8 +57,7 @@ export default async function TransactionPage({ params }: TransactionPageProps) 
 
 export async function generateMetadata({ params }: TransactionPageProps) {
   const { id } = await params;
-  const provider = await getDataProvider();
-  const transaction = await provider.getTransaction(id);
+  const transaction = await getTransaction(id);
 
   if (!transaction) {
     return {
