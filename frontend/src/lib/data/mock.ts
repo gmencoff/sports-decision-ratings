@@ -237,6 +237,20 @@ export class MockDataProvider implements DataProvider {
     return MOCK_TRANSACTIONS.find((t) => t.id === id) || null;
   }
 
+  async addTransaction(transaction: Transaction): Promise<Transaction> {
+    MOCK_TRANSACTIONS.push(transaction);
+    return transaction;
+  }
+
+  async editTransaction(id: string, transaction: Transaction): Promise<Transaction | null> {
+    const index = MOCK_TRANSACTIONS.findIndex((t) => t.id === id);
+    if (index === -1) {
+      return null;
+    }
+    MOCK_TRANSACTIONS[index] = { ...transaction, id };
+    return MOCK_TRANSACTIONS[index];
+  }
+
   async getVoteCounts(
     transactionId: string,
     teamId: string

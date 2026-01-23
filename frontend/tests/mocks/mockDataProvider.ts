@@ -1,19 +1,16 @@
 import { vi } from 'vitest';
 import { DataProvider } from '@/lib/data';
-import { Transaction, PaginatedResult, VoteCounts, Sentiment, Vote } from '@/lib/data/types';
+import { Transaction } from '@/lib/data/types';
 
 export function createMockDataProvider(overrides: Partial<DataProvider> = {}): DataProvider {
   return {
-    getTransactions: vi.fn<[number?, string?], Promise<PaginatedResult<Transaction>>>()
-      .mockResolvedValue({ data: [], hasMore: false }),
-    getTransaction: vi.fn<[string], Promise<Transaction | null>>()
-      .mockResolvedValue(null),
-    getVoteCounts: vi.fn<[string, string], Promise<VoteCounts>>()
-      .mockResolvedValue({ good: 0, bad: 0, unsure: 0 }),
-    getUserVote: vi.fn<[string, string, string], Promise<Sentiment | null>>()
-      .mockResolvedValue(null),
-    submitVote: vi.fn<[Vote], Promise<void>>()
-      .mockResolvedValue(undefined),
+    getTransactions: vi.fn().mockResolvedValue({ data: [], hasMore: false }),
+    getTransaction: vi.fn().mockResolvedValue(null),
+    addTransaction: vi.fn().mockImplementation((tx: Transaction) => Promise.resolve(tx)),
+    editTransaction: vi.fn().mockImplementation((id: string, tx: Transaction) => Promise.resolve({ ...tx, id })),
+    getVoteCounts: vi.fn().mockResolvedValue({ good: 0, bad: 0, unsure: 0 }),
+    getUserVote: vi.fn().mockResolvedValue(null),
+    submitVote: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

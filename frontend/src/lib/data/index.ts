@@ -3,6 +3,8 @@ import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment } from './typ
 export interface DataProvider {
   getTransactions(limit?: number, cursor?: string): Promise<PaginatedResult<Transaction>>;
   getTransaction(id: string): Promise<Transaction | null>;
+  addTransaction(transaction: Transaction): Promise<Transaction>;
+  editTransaction(id: string, transaction: Transaction): Promise<Transaction | null>;
   getVoteCounts(transactionId: string, teamId: string): Promise<VoteCounts>;
   getUserVote(transactionId: string, teamId: string, userId: string): Promise<Sentiment | null>;
   submitVote(vote: Vote): Promise<void>;
