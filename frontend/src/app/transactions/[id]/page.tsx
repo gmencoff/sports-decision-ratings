@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { TransactionCard } from '@/components/TransactionCard';
 import { getTransaction } from '@/app/actions/transactions';
 import { loadVotes, submitVote } from '@/app/actions/votes';
+import { getModule } from '@/lib/transactions';
 
 interface TransactionPageProps {
   params: Promise<{ id: string }>;
@@ -65,8 +66,11 @@ export async function generateMetadata({ params }: TransactionPageProps) {
     };
   }
 
+  const transactionModule = getModule(transaction.type);
+  const teamNames = transaction.teams.map((t) => t.name).join(', ');
+
   return {
-    title: `${transaction.title} | NFL Transactions`,
-    description: transaction.description,
+    title: `${transactionModule.label}: ${teamNames} | NFL Transactions`,
+    description: `${transactionModule.label} involving ${teamNames}`,
   };
 }

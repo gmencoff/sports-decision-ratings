@@ -39,9 +39,6 @@ const TEAMS: Record<string, Team> = {
 const MOCK_TRANSACTIONS: Transaction[] = [
   {
     id: '1',
-    title: 'Chiefs trade for Pro Bowl WR',
-    description:
-      'Kansas City acquires DeAndre Hopkins from Tennessee for a 2025 3rd round pick and a 2026 5th round pick.',
     teams: [TEAMS.KC],
     type: 'trade',
     timestamp: new Date('2025-01-10T14:30:00Z'),
@@ -53,9 +50,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '2',
-    title: 'Saquon Barkley signs with Eagles',
-    description:
-      'Philadelphia signs RB Saquon Barkley to a 3-year, $37.75 million contract with $26 million guaranteed.',
     teams: [TEAMS.PHI],
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
@@ -66,9 +60,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '3',
-    title: 'Cowboys and Jets complete blockbuster trade',
-    description:
-      'Dallas trades Micah Parsons to the Jets for their 2025 1st, 2026 1st, and Sauce Gardner.',
     teams: [TEAMS.DAL, TEAMS.NYJ],
     type: 'trade',
     timestamp: new Date('2025-01-08T16:45:00Z'),
@@ -81,9 +72,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '4',
-    title: 'Lions extend Amon-Ra St. Brown',
-    description:
-      'Detroit signs WR Amon-Ra St. Brown to a 4-year, $120 million extension, making him the highest-paid WR in NFL history.',
     teams: [TEAMS.DET],
     type: 'extension',
     timestamp: new Date('2025-01-07T12:00:00Z'),
@@ -94,9 +82,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '5',
-    title: 'Bears hire Ben Johnson as head coach',
-    description:
-      'Chicago hires Lions offensive coordinator Ben Johnson as their new head coach on a 6-year deal.',
     teams: [TEAMS.CHI],
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
@@ -104,9 +89,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '6',
-    title: 'Raiders release Jimmy Garoppolo',
-    description:
-      'Las Vegas releases QB Jimmy Garoppolo, saving $11.25 million in cap space.',
     teams: [TEAMS.LV],
     type: 'release',
     timestamp: new Date('2025-01-05T15:00:00Z'),
@@ -115,9 +97,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '7',
-    title: 'Ravens and Bills swap picks and players',
-    description:
-      'Baltimore trades their 2025 2nd round pick to Buffalo for Stefon Diggs and a 2026 4th rounder.',
     teams: [TEAMS.BAL, TEAMS.BUF],
     type: 'trade',
     timestamp: new Date('2025-01-04T11:20:00Z'),
@@ -129,9 +108,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '8',
-    title: 'Packers select Caleb Williams with 1st overall pick',
-    description:
-      'Green Bay uses their first overall pick (acquired from Chicago) to draft USC QB Caleb Williams.',
     teams: [TEAMS.GB],
     type: 'draft',
     timestamp: new Date('2025-01-03T20:00:00Z'),

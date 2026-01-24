@@ -52,8 +52,6 @@ export type TradeAsset =
 // Shared base fields for all transactions
 interface TransactionBase {
   id: string;
-  title: string;
-  description: string;
   teams: Team[];
   timestamp: Date;
 }

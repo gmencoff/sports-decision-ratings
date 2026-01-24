@@ -19,8 +19,6 @@ vi.mock('next/link', () => ({
 describe('TransactionCard', () => {
   const mockTransaction = createMockTransaction({
     id: 'tx-1',
-    title: 'Chiefs trade for Hopkins',
-    description: 'Kansas City acquires the veteran receiver',
     teams: [
       { id: 'team-1', name: 'Kansas City Chiefs', abbreviation: 'KC' },
       { id: 'team-2', name: 'Tennessee Titans', abbreviation: 'TEN' },
@@ -48,10 +46,11 @@ describe('TransactionCard', () => {
       />
     );
 
-    expect(screen.getByText('Chiefs trade for Hopkins')).toBeInTheDocument();
-    expect(screen.getByText('Kansas City acquires the veteran receiver')).toBeInTheDocument();
+    // Verify team names are rendered
     expect(screen.getByText('Kansas City Chiefs')).toBeInTheDocument();
     expect(screen.getByText('Tennessee Titans')).toBeInTheDocument();
+    // Verify trade card content (empty assets array shows "0 assets exchanged")
+    expect(screen.getByText('0 assets exchanged')).toBeInTheDocument();
   });
 
   it('should load votes on mount', async () => {

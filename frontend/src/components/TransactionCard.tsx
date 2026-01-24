@@ -6,6 +6,7 @@ import { Transaction, Team, VoteCounts, Sentiment } from '@/lib/data/types';
 import { getUserId } from '@/lib/userId';
 import { VoteButtons } from './VoteButtons';
 import { SentimentBar } from './SentimentBar';
+import { getModule } from '@/lib/transactions';
 
 export interface TeamVoteData {
   counts: VoteCounts;
@@ -74,6 +75,9 @@ export function TransactionCard({
 }: TransactionCardProps) {
   const [teamVotes, setTeamVotes] = useState<Record<string, TeamVoteState>>({});
 
+  const transactionModule = getModule(transaction.type);
+  const CardContent = transactionModule.Card;
+
   useEffect(() => {
     async function fetchVotes() {
       const userId = getUserId();
@@ -136,11 +140,9 @@ export function TransactionCard({
         </span>
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        {transaction.title}
-      </h3>
-
-      <p className="text-gray-600 text-sm mb-4">{transaction.description}</p>
+      <div className="mb-4">
+        <CardContent transaction={transaction} />
+      </div>
 
       <div className="space-y-4">
         {transaction.teams.map((team) => {

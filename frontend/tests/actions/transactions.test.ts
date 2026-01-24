@@ -7,8 +7,8 @@ describe('transactions actions', () => {
   describe('getTransactionsImpl', () => {
     it('should return transactions from the provider', async () => {
       const mockTransactions = [
-        createMockTransaction({ id: 'tx-1', title: 'Transaction 1' }),
-        createMockTransaction({ id: 'tx-2', title: 'Transaction 2' }),
+        createMockTransaction({ id: 'tx-1' }),
+        createMockTransaction({ id: 'tx-2' }),
       ];
 
       const mockProvider = createMockDataProvider({
@@ -23,7 +23,6 @@ describe('transactions actions', () => {
 
       expect(mockProvider.getTransactions).toHaveBeenCalledWith(undefined, undefined);
       expect(result.data).toHaveLength(2);
-      expect(result.data[0].title).toBe('Transaction 1');
       expect(result.hasMore).toBe(true);
       expect(result.nextCursor).toBe('cursor-123');
     });
@@ -53,10 +52,7 @@ describe('transactions actions', () => {
 
   describe('getTransactionImpl', () => {
     it('should return a transaction by id', async () => {
-      const mockTransaction = createMockTransaction({
-        id: 'tx-123',
-        title: 'Specific Transaction',
-      });
+      const mockTransaction = createMockTransaction({ id: 'tx-123' });
 
       const mockProvider = createMockDataProvider({
         getTransaction: vi.fn().mockResolvedValue(mockTransaction),
@@ -67,7 +63,6 @@ describe('transactions actions', () => {
       expect(mockProvider.getTransaction).toHaveBeenCalledWith('tx-123');
       expect(result).not.toBeNull();
       expect(result?.id).toBe('tx-123');
-      expect(result?.title).toBe('Specific Transaction');
     });
 
     it('should return null when transaction not found', async () => {
@@ -90,8 +85,6 @@ describe('transactions actions', () => {
       const tradeTransaction: Trade = {
         id: 'trade-1',
         type: 'trade',
-        title: 'Major Trade',
-        description: 'A big trade',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         assets: [
@@ -110,8 +103,6 @@ describe('transactions actions', () => {
       const signingTransaction: Signing = {
         id: 'signing-1',
         type: 'signing',
-        title: 'Free Agent Signing',
-        description: 'Signed a top player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Jane Smith', position: 'WR' },
@@ -131,8 +122,6 @@ describe('transactions actions', () => {
       const draftTransaction: DraftSelection = {
         id: 'draft-1',
         type: 'draft',
-        title: 'First Round Pick',
-        description: 'Selected a promising player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Rookie Star', position: 'RB' },
@@ -151,8 +140,6 @@ describe('transactions actions', () => {
       const releaseTransaction: Release = {
         id: 'release-1',
         type: 'release',
-        title: 'Player Released',
-        description: 'Released veteran player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Old Timer', position: 'LB' },
@@ -170,8 +157,6 @@ describe('transactions actions', () => {
       const extensionTransaction: Extension = {
         id: 'extension-1',
         type: 'extension',
-        title: 'Contract Extension',
-        description: 'Extended star player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
@@ -191,8 +176,6 @@ describe('transactions actions', () => {
       const hireTransaction: Hire = {
         id: 'hire-1',
         type: 'hire',
-        title: 'New Head Coach',
-        description: 'Hired experienced coach',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
@@ -209,8 +192,6 @@ describe('transactions actions', () => {
       const fireTransaction: Fire = {
         id: 'fire-1',
         type: 'fire',
-        title: 'Coaching Change',
-        description: 'Fired head coach',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Jones', role: 'Head Coach' },
@@ -232,8 +213,6 @@ describe('transactions actions', () => {
       const tradeTransaction: Trade = {
         id: 'trade-1',
         type: 'trade',
-        title: 'Updated Trade',
-        description: 'Updated trade details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         assets: [
@@ -252,8 +231,6 @@ describe('transactions actions', () => {
       const signingTransaction: Signing = {
         id: 'signing-1',
         type: 'signing',
-        title: 'Updated Signing',
-        description: 'Updated signing details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Jane Smith', position: 'WR' },
@@ -273,8 +250,6 @@ describe('transactions actions', () => {
       const draftTransaction: DraftSelection = {
         id: 'draft-1',
         type: 'draft',
-        title: 'Updated Draft Pick',
-        description: 'Updated draft details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Rookie Star', position: 'RB' },
@@ -293,8 +268,6 @@ describe('transactions actions', () => {
       const releaseTransaction: Release = {
         id: 'release-1',
         type: 'release',
-        title: 'Updated Release',
-        description: 'Updated release details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Old Timer', position: 'LB' },
@@ -312,8 +285,6 @@ describe('transactions actions', () => {
       const extensionTransaction: Extension = {
         id: 'extension-1',
         type: 'extension',
-        title: 'Updated Extension',
-        description: 'Updated extension details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
@@ -333,8 +304,6 @@ describe('transactions actions', () => {
       const hireTransaction: Hire = {
         id: 'hire-1',
         type: 'hire',
-        title: 'Updated Hire',
-        description: 'Updated hire details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Offensive Coordinator' },
@@ -351,8 +320,6 @@ describe('transactions actions', () => {
       const fireTransaction: Fire = {
         id: 'fire-1',
         type: 'fire',
-        title: 'Updated Fire',
-        description: 'Updated fire details',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Jones', role: 'Defensive Coordinator' },

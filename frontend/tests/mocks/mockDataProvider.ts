@@ -19,8 +19,6 @@ export function createMockTransaction(overrides: Partial<Transaction> = {}): Tra
   return {
     id: 'tx-1',
     type: 'trade',
-    title: 'Test Transaction',
-    description: 'A test transaction',
     teams: [
       { id: 'team-1', name: 'Team A', abbreviation: 'TA' },
       { id: 'team-2', name: 'Team B', abbreviation: 'TB' },
