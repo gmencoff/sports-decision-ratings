@@ -115,6 +115,22 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     round: 1,
     pick: 1,
   },
+  {
+    id: '9',
+    teams: [TEAMS.DAL],
+    type: 'fire',
+    timestamp: new Date('2025-01-02T08:00:00Z'),
+    staff: { name: 'Mike McCarthy', role: 'Head Coach' },
+  },
+  {
+    id: '10',
+    teams: [TEAMS.NYJ],
+    type: 'draft',
+    timestamp: new Date('2025-01-01T19:00:00Z'),
+    player: { name: 'Marvin Harrison Jr.', position: 'WR' },
+    round: 1,
+    pick: 4,
+  },
 ];
 
 // In-memory vote storage - stores individual votes
