@@ -16,7 +16,7 @@ export class ExtensionModule implements TransactionModule<Extension> {
       type: 'extension',
       teams: [],
       timestamp: new Date(),
-      player: { name: '', position: '' },
+      player: { name: '', position: 'QB' },
       contractYears: 1,
       totalValue: 0,
       guaranteed: 0,

@@ -54,7 +54,7 @@ describe('TransactionEditor', () => {
 
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Patrick Mahomes');
-      await user.type(screen.getByLabelText(/position/i), 'QB');
+      await user.selectOptions(screen.getByLabelText(/position/i), 'QB');
       await user.clear(screen.getByLabelText(/contract years/i));
       await user.type(screen.getByLabelText(/contract years/i), '5');
       await user.clear(screen.getByLabelText(/total value/i));
@@ -90,7 +90,7 @@ describe('TransactionEditor', () => {
 
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Caleb Williams');
-      await user.type(screen.getByLabelText(/position/i), 'QB');
+      await user.selectOptions(screen.getByLabelText(/position/i), 'QB');
       await user.clear(screen.getByLabelText(/round/i));
       await user.type(screen.getByLabelText(/round/i), '1');
       await user.clear(screen.getByLabelText(/pick/i));
@@ -123,7 +123,7 @@ describe('TransactionEditor', () => {
 
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Jimmy Garoppolo');
-      await user.type(screen.getByLabelText(/position/i), 'QB');
+      await user.selectOptions(screen.getByLabelText(/position/i), 'QB');
       await user.clear(screen.getByLabelText(/cap savings/i));
       await user.type(screen.getByLabelText(/cap savings/i), '11000000');
 
@@ -153,7 +153,7 @@ describe('TransactionEditor', () => {
 
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Travis Kelce');
-      await user.type(screen.getByLabelText(/position/i), 'TE');
+      await user.selectOptions(screen.getByLabelText(/position/i), 'TE');
       await user.clear(screen.getByLabelText(/contract years/i));
       await user.type(screen.getByLabelText(/contract years/i), '2');
       await user.clear(screen.getByLabelText(/total value/i));

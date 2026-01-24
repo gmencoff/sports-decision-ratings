@@ -16,7 +16,7 @@ export class DraftModule implements TransactionModule<DraftSelection> {
       type: 'draft',
       teams: [],
       timestamp: new Date(),
-      player: { name: '', position: '' },
+      player: { name: '', position: 'QB' },
       round: 1,
       pick: 1,
     };

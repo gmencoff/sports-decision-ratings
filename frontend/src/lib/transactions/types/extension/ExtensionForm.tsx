@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Extension } from '@/lib/data/types';
+import { Extension, Position, POSITIONS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
   const [playerName, setPlayerName] = useState(value?.player?.name ?? '');
-  const [playerPosition, setPlayerPosition] = useState(value?.player?.position ?? '');
+  const [playerPosition, setPlayerPosition] = useState<Position>(value?.player?.position ?? 'QB');
   const [contractYears, setContractYears] = useState(value?.contractYears ?? 1);
   const [totalValue, setTotalValue] = useState(value?.totalValue ?? 0);
   const [guaranteed, setGuaranteed] = useState(value?.guaranteed ?? 0);
@@ -46,14 +46,19 @@ export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
           <label htmlFor="playerPosition" className="block text-sm font-medium">
             Position
           </label>
-          <input
-            type="text"
+          <select
             id="playerPosition"
             value={playerPosition}
-            onChange={(e) => setPlayerPosition(e.target.value)}
+            onChange={(e) => setPlayerPosition(e.target.value as Position)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
-          />
+          >
+            {POSITIONS.map((pos) => (
+              <option key={pos} value={pos}>
+                {pos}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

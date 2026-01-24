@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { DraftSelection } from '@/lib/data/types';
+import { DraftSelection, Position, POSITIONS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
   const [playerName, setPlayerName] = useState(value?.player?.name ?? '');
-  const [playerPosition, setPlayerPosition] = useState(value?.player?.position ?? '');
+  const [playerPosition, setPlayerPosition] = useState<Position>(value?.player?.position ?? 'QB');
   const [round, setRound] = useState(value?.round ?? 1);
   const [pick, setPick] = useState(value?.pick ?? 1);
 
@@ -44,14 +44,19 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
           <label htmlFor="playerPosition" className="block text-sm font-medium">
             Position
           </label>
-          <input
-            type="text"
+          <select
             id="playerPosition"
             value={playerPosition}
-            onChange={(e) => setPlayerPosition(e.target.value)}
+            onChange={(e) => setPlayerPosition(e.target.value as Position)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
-          />
+          >
+            {POSITIONS.map((pos) => (
+              <option key={pos} value={pos}>
+                {pos}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

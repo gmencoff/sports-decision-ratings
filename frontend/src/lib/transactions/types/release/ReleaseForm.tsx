@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Release } from '@/lib/data/types';
+import { Release, Position, POSITIONS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
   const [playerName, setPlayerName] = useState(value?.player?.name ?? '');
-  const [playerPosition, setPlayerPosition] = useState(value?.player?.position ?? '');
+  const [playerPosition, setPlayerPosition] = useState<Position>(value?.player?.position ?? 'QB');
   const [capSavings, setCapSavings] = useState(value?.capSavings ?? 0);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,14 +42,19 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
           <label htmlFor="playerPosition" className="block text-sm font-medium">
             Position
           </label>
-          <input
-            type="text"
+          <select
             id="playerPosition"
             value={playerPosition}
-            onChange={(e) => setPlayerPosition(e.target.value)}
+            onChange={(e) => setPlayerPosition(e.target.value as Position)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
-          />
+          >
+            {POSITIONS.map((pos) => (
+              <option key={pos} value={pos}>
+                {pos}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -4,9 +4,31 @@ export interface Team {
   abbreviation: string;
 }
 
+export const POSITIONS = [
+  'QB',
+  'RB',
+  'FB',
+  'WR',
+  'TE',
+  'OT',
+  'OG',
+  'C',
+  'DE',
+  'DT',
+  'NT',
+  'LB',
+  'CB',
+  'S',
+  'K',
+  'P',
+  'LS',
+] as const;
+
+export type Position = (typeof POSITIONS)[number];
+
 export interface Player {
   name: string;
-  position: string;
+  position: Position;
 }
 
 export interface Staff {
