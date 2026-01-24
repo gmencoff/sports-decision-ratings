@@ -31,9 +31,30 @@ export interface Player {
   position: Position;
 }
 
+export const ROLES = [
+  'President',
+  'General Manager',
+  'Head Coach',
+  'Offensive Coordinator',
+  'Defensive Coordinator',
+  'Special Teams Coordinator',
+  'Quarterbacks Coach',
+  'Running Backs Coach',
+  'Wide Receivers Coach',
+  'Tight Ends Coach',
+  'Offensive Line Coach',
+  'Defensive Line Coach',
+  'Linebackers Coach',
+  'Defensive Backs Coach',
+  'Strength and Conditioning Coach',
+  'Assistant Coach',
+] as const;
+
+export type Role = (typeof ROLES)[number];
+
 export interface Staff {
   name: string;
-  role: string;
+  role: Role;
 }
 
 // Trade asset types

@@ -189,7 +189,7 @@ describe('TransactionEditor', () => {
 
       // Fill in required fields
       await user.type(screen.getByLabelText(/staff name/i), 'Ben Johnson');
-      await user.type(screen.getByLabelText(/role/i), 'Head Coach');
+      await user.selectOptions(screen.getByLabelText(/role/i), 'Head Coach');
 
       const submitButton = screen.getByRole('button', { name: /hire/i });
       await user.click(submitButton);
@@ -216,7 +216,7 @@ describe('TransactionEditor', () => {
 
       // Fill in required fields
       await user.type(screen.getByLabelText(/staff name/i), 'Mike McCarthy');
-      await user.type(screen.getByLabelText(/role/i), 'Head Coach');
+      await user.selectOptions(screen.getByLabelText(/role/i), 'Head Coach');
 
       const submitButton = screen.getByRole('button', { name: /fire/i });
       await user.click(submitButton);
@@ -289,9 +289,7 @@ describe('TransactionEditor', () => {
       render(<TransactionEditor existingTransaction={existingTransaction} />);
 
       // Update the role
-      const roleInput = screen.getByLabelText(/role/i);
-      await user.clear(roleInput);
-      await user.type(roleInput, 'Head Coach');
+      await user.selectOptions(screen.getByLabelText(/role/i), 'Head Coach');
 
       const submitButton = screen.getByRole('button', { name: /update fire/i });
       await user.click(submitButton);

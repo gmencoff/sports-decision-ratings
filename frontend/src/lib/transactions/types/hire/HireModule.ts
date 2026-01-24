@@ -16,7 +16,7 @@ export class HireModule implements TransactionModule<Hire> {
       type: 'hire',
       teams: [],
       timestamp: new Date(),
-      staff: { name: '', role: '' },
+      staff: { name: '', role: 'Head Coach' },
     };
   }
 }

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Hire } from '@/lib/data/types';
+import { Hire, Role, ROLES } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function HireForm({ value, onSubmit }: FormProps<Hire>) {
   const [staffName, setStaffName] = useState(value?.staff?.name ?? '');
-  const [staffRole, setStaffRole] = useState(value?.staff?.role ?? '');
+  const [staffRole, setStaffRole] = useState<Role>(value?.staff?.role ?? 'Head Coach');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,14 +40,19 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
           <label htmlFor="staffRole" className="block text-sm font-medium">
             Role
           </label>
-          <input
-            type="text"
+          <select
             id="staffRole"
             value={staffRole}
-            onChange={(e) => setStaffRole(e.target.value)}
+            onChange={(e) => setStaffRole(e.target.value as Role)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
-          />
+          >
+            {ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
