@@ -86,9 +86,14 @@ export function TransactionEditor({ existingTransaction }: TransactionEditorProp
         onSubmit={handleSubmit}
       />
 
-      {isSubmitting && (
-        <p className="text-sm text-gray-500">Saving...</p>
-      )}
+      <button
+        type="submit"
+        form="transaction-form"
+        disabled={isSubmitting}
+        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {isSubmitting ? 'Saving...' : isEditing ? `Update ${currentModule.label}` : `Create ${currentModule.label}`}
+      </button>
     </div>
   );
 }

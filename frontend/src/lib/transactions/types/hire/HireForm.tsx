@@ -5,22 +5,22 @@ import { Hire, Role, ROLES } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function HireForm({ value, onSubmit }: FormProps<Hire>) {
-  const [staffName, setStaffName] = useState(value?.staff?.name ?? '');
-  const [staffRole, setStaffRole] = useState<Role>(value?.staff?.role ?? 'Head Coach');
+  const [staffName, setStaffName] = useState(value.staff.name);
+  const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      id: value?.id ?? '',
+      id: value.id,
       type: 'hire',
-      teams: value?.teams ?? [],
-      timestamp: value?.timestamp ?? new Date(),
+      teams: value.teams,
+      timestamp: value.timestamp,
       staff: { name: staffName, role: staffRole },
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="staffName" className="block text-sm font-medium">
@@ -55,13 +55,6 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
           </select>
         </div>
       </div>
-
-      <button
-        type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
-        {value ? 'Update Hire' : 'Create Hire'}
-      </button>
     </form>
   );
 }

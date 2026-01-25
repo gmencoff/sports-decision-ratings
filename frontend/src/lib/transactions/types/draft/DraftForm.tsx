@@ -5,18 +5,18 @@ import { DraftSelection, Position, POSITIONS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
-  const [playerName, setPlayerName] = useState(value?.player?.name ?? '');
-  const [playerPosition, setPlayerPosition] = useState<Position>(value?.player?.position ?? 'QB');
-  const [round, setRound] = useState(value?.round ?? 1);
-  const [pick, setPick] = useState(value?.pick ?? 1);
+  const [playerName, setPlayerName] = useState(value.player.name);
+  const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
+  const [round, setRound] = useState(value.round);
+  const [pick, setPick] = useState(value.pick);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      id: value?.id ?? '',
+      id: value.id,
       type: 'draft',
-      teams: value?.teams ?? [],
-      timestamp: value?.timestamp ?? new Date(),
+      teams: value.teams,
+      timestamp: value.timestamp,
       player: { name: playerName, position: playerPosition },
       round,
       pick,
@@ -24,7 +24,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="playerName" className="block text-sm font-medium">
@@ -92,13 +92,6 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
           />
         </div>
       </div>
-
-      <button
-        type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
-        {value ? 'Update Draft Selection' : 'Create Draft Selection'}
-      </button>
     </form>
   );
 }

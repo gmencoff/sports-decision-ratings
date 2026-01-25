@@ -1,7 +1,7 @@
 import { Transaction } from '@/lib/data/types';
 
 export interface FormProps<T extends Transaction> {
-  value?: T;
+  value: T;
   onSubmit: (transaction: T) => void;
 }
 

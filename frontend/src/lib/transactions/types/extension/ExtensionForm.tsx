@@ -5,19 +5,19 @@ import { Extension, Position, POSITIONS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 
 export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
-  const [playerName, setPlayerName] = useState(value?.player?.name ?? '');
-  const [playerPosition, setPlayerPosition] = useState<Position>(value?.player?.position ?? 'QB');
-  const [contractYears, setContractYears] = useState(value?.contractYears ?? 1);
-  const [totalValue, setTotalValue] = useState(value?.totalValue ?? 0);
-  const [guaranteed, setGuaranteed] = useState(value?.guaranteed ?? 0);
+  const [playerName, setPlayerName] = useState(value.player.name);
+  const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
+  const [contractYears, setContractYears] = useState(value.contractYears);
+  const [totalValue, setTotalValue] = useState(value.totalValue);
+  const [guaranteed, setGuaranteed] = useState(value.guaranteed);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      id: value?.id ?? '',
+      id: value.id,
       type: 'extension',
-      teams: value?.teams ?? [],
-      timestamp: value?.timestamp ?? new Date(),
+      teams: value.teams,
+      timestamp: value.timestamp,
       player: { name: playerName, position: playerPosition },
       contractYears,
       totalValue,
@@ -26,7 +26,7 @@ export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="playerName" className="block text-sm font-medium">
@@ -108,13 +108,6 @@ export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
           />
         </div>
       </div>
-
-      <button
-        type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
-        {value ? 'Update Extension' : 'Create Extension'}
-      </button>
     </form>
   );
 }
