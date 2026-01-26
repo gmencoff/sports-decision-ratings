@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -18,23 +18,10 @@ function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
   }
 }
 
-// Sample NFL teams
-const TEAMS: Record<string, Team> = {
-  KC: { id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC' },
-  SF: { id: 'SF', name: 'San Francisco 49ers', abbreviation: 'SF' },
-  PHI: { id: 'PHI', name: 'Philadelphia Eagles', abbreviation: 'PHI' },
-  DAL: { id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL' },
-  BUF: { id: 'BUF', name: 'Buffalo Bills', abbreviation: 'BUF' },
-  MIA: { id: 'MIA', name: 'Miami Dolphins', abbreviation: 'MIA' },
-  DET: { id: 'DET', name: 'Detroit Lions', abbreviation: 'DET' },
-  GB: { id: 'GB', name: 'Green Bay Packers', abbreviation: 'GB' },
-  BAL: { id: 'BAL', name: 'Baltimore Ravens', abbreviation: 'BAL' },
-  CLE: { id: 'CLE', name: 'Cleveland Browns', abbreviation: 'CLE' },
-  NYJ: { id: 'NYJ', name: 'New York Jets', abbreviation: 'NYJ' },
-  LV: { id: 'LV', name: 'Las Vegas Raiders', abbreviation: 'LV' },
-  CHI: { id: 'CHI', name: 'Chicago Bears', abbreviation: 'CHI' },
-  LAR: { id: 'LAR', name: 'Los Angeles Rams', abbreviation: 'LAR' },
-};
+// Create a lookup map from NFL_TEAMS
+const TEAMS: Record<string, Team> = Object.fromEntries(
+  NFL_TEAMS.map((team) => [team.id, team])
+);
 
 // Sample transactions
 const MOCK_TRANSACTIONS: Transaction[] = [
