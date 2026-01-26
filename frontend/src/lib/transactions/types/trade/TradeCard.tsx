@@ -1,7 +1,12 @@
-import { Trade } from '@/lib/data/types';
+import { Trade, NFL_TEAMS } from '@/lib/data/types';
 import { CardProps } from '../../interface';
 
 export function TradeCard({ transaction }: CardProps<Trade>) {
+  const getTeamAbbreviation = (teamId: string): string => {
+    const team = NFL_TEAMS.find((t) => t.id === teamId);
+    return team?.abbreviation || teamId;
+  };
+
   return (
     <div className="space-y-2">
       <div className="text-sm text-gray-600">
@@ -18,10 +23,10 @@ export function TradeCard({ transaction }: CardProps<Trade>) {
               <span>{asset.staff.name} ({asset.staff.role})</span>
             )}
             {asset.type === 'draft_pick' && (
-              <span>{asset.year} Round {asset.round} pick</span>
+              <span>{asset.year} Round {asset.round} pick ({getTeamAbbreviation(asset.ogTeamId)})</span>
             )}
             {asset.type === 'conditional_draft_pick' && (
-              <span>{asset.year} Round {asset.round} pick (conditional)</span>
+              <span>{asset.year} Round {asset.round} pick ({getTeamAbbreviation(asset.ogTeamId)}) (conditional)</span>
             )}
           </li>
         ))}

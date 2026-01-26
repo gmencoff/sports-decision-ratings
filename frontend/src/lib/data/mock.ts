@@ -32,8 +32,8 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     timestamp: new Date('2025-01-10T14:30:00Z'),
     assets: [
       { type: 'player', fromTeamId: 'TEN', toTeamId: 'KC', player: { name: 'DeAndre Hopkins', position: 'WR' } },
-      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', year: 2025, round: 3 },
-      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', year: 2026, round: 5 },
+      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', ogTeamId: 'KC', year: 2025, round: 3 },
+      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', ogTeamId: 'KC', year: 2026, round: 5 },
     ],
   },
   {
@@ -53,8 +53,8 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     timestamp: new Date('2025-01-08T16:45:00Z'),
     assets: [
       { type: 'player', fromTeamId: 'DAL', toTeamId: 'NYJ', player: { name: 'Micah Parsons', position: 'LB' } },
-      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', year: 2025, round: 1 },
-      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', year: 2026, round: 1 },
+      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', ogTeamId: 'NYJ', year: 2025, round: 1 },
+      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', ogTeamId: 'NYJ', year: 2026, round: 1 },
       { type: 'player', fromTeamId: 'NYJ', toTeamId: 'DAL', player: { name: 'Sauce Gardner', position: 'CB' } },
     ],
   },
@@ -89,9 +89,9 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'trade',
     timestamp: new Date('2025-01-04T11:20:00Z'),
     assets: [
-      { type: 'draft_pick', fromTeamId: 'BAL', toTeamId: 'BUF', year: 2025, round: 2 },
+      { type: 'draft_pick', fromTeamId: 'BAL', toTeamId: 'BUF', ogTeamId: 'BAL', year: 2025, round: 2 },
       { type: 'player', fromTeamId: 'BUF', toTeamId: 'BAL', player: { name: 'Stefon Diggs', position: 'WR' } },
-      { type: 'draft_pick', fromTeamId: 'BUF', toTeamId: 'BAL', year: 2026, round: 4 },
+      { type: 'draft_pick', fromTeamId: 'BUF', toTeamId: 'BAL', ogTeamId: 'BUF', year: 2026, round: 4 },
     ],
   },
   {

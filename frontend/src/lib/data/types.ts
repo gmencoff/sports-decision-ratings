@@ -123,12 +123,14 @@ export interface CoachAsset extends TradeAssetBase {
 
 export interface DraftPickAsset extends TradeAssetBase {
   type: 'draft_pick';
+  ogTeamId: string;
   year: number;
   round: number;
 }
 
 export interface ConditionalDraftPickAsset extends TradeAssetBase {
   type: 'conditional_draft_pick';
+  ogTeamId: string;
   year: number;
   round: number;
   conditions: string;
