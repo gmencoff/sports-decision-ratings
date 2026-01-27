@@ -240,7 +240,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-123',
         type: 'signing',
-        teams: [{ id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC' }],
+        teams: [{ id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' }],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Old Player', position: 'WR' },
         contractYears: 2,
@@ -281,7 +281,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-456',
         type: 'fire',
-        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL' }],
+        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
         timestamp: new Date('2025-01-01'),
         staff: { name: 'Old Coach', role: 'Offensive Coordinator' },
       };
@@ -312,7 +312,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-789',
         type: 'draft',
-        teams: [{ id: 'CHI', name: 'Chicago Bears', abbreviation: 'CHI' }],
+        teams: [{ id: 'CHI', name: 'Chicago Bears', abbreviation: 'CHI', conference: 'NFC', division: 'North' }],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Draft Pick', position: 'QB' },
         round: 1,

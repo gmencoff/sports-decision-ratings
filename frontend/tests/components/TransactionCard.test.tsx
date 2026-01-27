@@ -20,8 +20,8 @@ describe('TransactionCard', () => {
   const mockTransaction = createMockTransaction({
     id: 'tx-1',
     teams: [
-      { id: 'team-1', name: 'Kansas City Chiefs', abbreviation: 'KC' },
-      { id: 'team-2', name: 'Tennessee Titans', abbreviation: 'TEN' },
+      { id: 'team-1', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' },
+      { id: 'team-2', name: 'Tennessee Titans', abbreviation: 'TEN', conference: 'AFC', division: 'South' },
     ],
   });
 

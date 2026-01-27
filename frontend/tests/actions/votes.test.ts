@@ -5,8 +5,8 @@ import { Team } from '@/lib/data/types';
 
 describe('votes actions', () => {
   const mockTeams: Team[] = [
-    { id: 'team-1', name: 'Team A', abbreviation: 'TA' },
-    { id: 'team-2', name: 'Team B', abbreviation: 'TB' },
+    { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC', division: 'East' },
+    { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC', division: 'West' },
   ];
 
   describe('loadVotesImpl', () => {
@@ -56,7 +56,7 @@ describe('votes actions', () => {
         getUserVote: vi.fn().mockResolvedValue('bad'),
       });
 
-      const singleTeam = [{ id: 'team-1', name: 'Team A', abbreviation: 'TA' }];
+      const singleTeam: Team[] = [{ id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC', division: 'East' }];
       const result = await loadVotesImpl(mockProvider, 'tx-1', singleTeam, 'user-123');
 
       expect(result['team-1']).toEqual({

@@ -78,7 +78,7 @@ describe('transactions actions', () => {
   });
 
   describe('addTransactionImpl', () => {
-    const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA' };
+    const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
     const baseTimestamp = new Date('2024-01-15');
 
     it('should add a Trade transaction', async () => {
@@ -206,7 +206,7 @@ describe('transactions actions', () => {
   });
 
   describe('editTransactionImpl', () => {
-    const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA' };
+    const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
     const baseTimestamp = new Date('2024-01-15');
 
     it('should edit a Trade transaction', async () => {
