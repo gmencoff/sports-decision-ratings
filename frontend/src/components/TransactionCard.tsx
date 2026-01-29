@@ -1,0 +1,179 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Transaction, Team, VoteCounts, Sentiment } from '@/lib/data/types';
+import { getUserId } from '@/lib/userId';
+import { VoteButtons } from './VoteButtons';
+import { SentimentBar } from './SentimentBar';
+import { getModule } from '@/lib/transactions';
+import * as votesApi from '@/lib/api/votes';
+
+export interface TeamVoteData {
+  counts: VoteCounts;
+  userVote: Sentiment | null;
+}
+
+interface TeamVoteState extends TeamVoteData {
+  isVoting: boolean;
+}
+
+export type LoadVotesAction = (
+  transactionId: string,
+  teams: Team[],
+  userId: string
+) => Promise<Record<string, TeamVoteData>>;
+
+export type SubmitVoteAction = (
+  transactionId: string,
+  teamId: string,
+  userId: string,
+  sentiment: Sentiment
+) => Promise<VoteCounts>;
+
+interface TransactionCardProps {
+  transaction: Transaction;
+  loadVotes?: LoadVotesAction;
+  submitVote?: SubmitVoteAction;
+  showLink?: boolean;
+}
+
+export function TransactionCard({
+  transaction,
+  loadVotes = votesApi.loadVotes,
+  submitVote = votesApi.submitVote,
+  showLink = true,
+}: TransactionCardProps) {
+  const [teamVotes, setTeamVotes] = useState<Record<string, TeamVoteState>>({});
+
+  const transactionModule = getModule(transaction.type);
+  const CardContent = transactionModule.Card;
+
+  useEffect(() => {
+    async function fetchVotes() {
+      const userId = getUserId();
+      const votes = await loadVotes(transaction.id, transaction.teams, userId);
+      const votesWithLoading: Record<string, TeamVoteState> = {};
+      for (const [teamId, voteData] of Object.entries(votes)) {
+        votesWithLoading[teamId] = { ...voteData, isVoting: false };
+      }
+      setTeamVotes(votesWithLoading);
+    }
+
+    fetchVotes();
+  }, [loadVotes, transaction.id, transaction.teams]);
+
+  async function handleVote(teamId: string, sentiment: Sentiment) {
+    const currentState = teamVotes[teamId];
+    if (!currentState || currentState.isVoting) {
+      return;
+    }
+
+    // Don't re-submit the same vote
+    if (currentState.userVote === sentiment) {
+      return;
+    }
+
+    setTeamVotes((prev) => ({
+      ...prev,
+      [teamId]: { ...prev[teamId], isVoting: true },
+    }));
+
+    try {
+      const userId = getUserId();
+      const newCounts = await submitVote(transaction.id, teamId, userId, sentiment);
+
+      setTeamVotes((prev) => ({
+        ...prev,
+        [teamId]: {
+          counts: newCounts,
+          userVote: sentiment,
+          isVoting: false,
+        },
+      }));
+    } catch (error) {
+      console.error('Failed to submit vote:', error);
+      setTeamVotes((prev) => ({
+        ...prev,
+        [teamId]: { ...prev[teamId], isVoting: false },
+      }));
+    }
+  }
+
+  const cardContent = (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
+          {transactionModule.label}
+        </span>
+        <span className="text-sm text-gray-500">
+          {formatTimestamp(transaction.timestamp)}
+        </span>
+      </div>
+
+      <div className="mb-4">
+        <CardContent transaction={transaction} />
+      </div>
+
+      <div className="space-y-4">
+        {transaction.teams.map((team) => {
+          const voteState = teamVotes[team.id] || {
+            counts: { good: 0, bad: 0, unsure: 0 },
+            userVote: null,
+            isVoting: false,
+          };
+
+          return (
+            <div
+              key={team.id}
+              className="pt-4 border-t border-gray-100 first:pt-0 first:border-t-0"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-gray-800">{team.name}</span>
+                <VoteButtons
+                  onVote={(sentiment) => handleVote(team.id, sentiment)}
+                  disabled={voteState.isVoting}
+                  userVote={voteState.userVote}
+                />
+              </div>
+              <SentimentBar counts={voteState.counts} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  if (showLink) {
+    return (
+      <Link
+        href={`/transactions/${transaction.id}`}
+        className="block"
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
+}
+
+function formatTimestamp(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffHours < 1) {
+    return 'Just now';
+  } else if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  } else if (diffDays < 7) {
+    return `${diffDays}d ago`;
+  } else {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+}
