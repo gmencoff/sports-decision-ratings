@@ -1,6 +1,5 @@
 import { TransactionCard } from '@/components/TransactionCard';
 import { getTransactions } from './actions/transactions';
-import { loadVotes, submitVote } from './actions/votes';
 
 export default async function Home() {
   const { data: transactions } = await getTransactions();
@@ -19,8 +18,6 @@ export default async function Home() {
           <TransactionCard
             key={transaction.id}
             transaction={transaction}
-            loadVotes={loadVotes}
-            submitVote={submitVote}
           />
         ))}
       </div>

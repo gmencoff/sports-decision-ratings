@@ -7,6 +7,7 @@ import { getUserId } from '@/lib/userId';
 import { VoteButtons } from './VoteButtons';
 import { SentimentBar } from './SentimentBar';
 import { getModule } from '@/lib/transactions';
+import * as votesApi from '@/lib/api/votes';
 
 export interface TeamVoteData {
   counts: VoteCounts;
@@ -32,45 +33,15 @@ export type SubmitVoteAction = (
 
 interface TransactionCardProps {
   transaction: Transaction;
-  loadVotes: LoadVotesAction;
-  submitVote: SubmitVoteAction;
+  loadVotes?: LoadVotesAction;
+  submitVote?: SubmitVoteAction;
   showLink?: boolean;
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  trade: 'Trade',
-  signing: 'Signing',
-  draft: 'Draft',
-  release: 'Release',
-  extension: 'Extension',
-  hire: 'Hire',
-  fire: 'Fire',
-};
-
-function formatTimestamp(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffHours < 1) {
-    return 'Just now';
-  } else if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays}d ago`;
-  } else {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
-  }
 }
 
 export function TransactionCard({
   transaction,
-  loadVotes,
-  submitVote,
+  loadVotes = votesApi.loadVotes,
+  submitVote = votesApi.submitVote,
   showLink = true,
 }: TransactionCardProps) {
   const [teamVotes, setTeamVotes] = useState<Record<string, TeamVoteState>>({});
@@ -133,7 +104,7 @@ export function TransactionCard({
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
-          {TYPE_LABELS[transaction.type] || transaction.type}
+          {transactionModule.label}
         </span>
         <span className="text-sm text-gray-500">
           {formatTimestamp(transaction.timestamp)}
@@ -185,4 +156,24 @@ export function TransactionCard({
   }
 
   return cardContent;
+}
+
+function formatTimestamp(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffHours < 1) {
+    return 'Just now';
+  } else if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  } else if (diffDays < 7) {
+    return `${diffDays}d ago`;
+  } else {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
 }
