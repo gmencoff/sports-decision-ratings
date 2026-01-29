@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { TransactionCard } from '@/components/TransactionCard';
 import { getTransaction } from '@/app/actions/transactions';
-import { loadVotes, submitVote } from '@/app/actions/votes';
 import { getModule } from '@/lib/transactions';
 
 interface TransactionPageProps {
@@ -41,8 +40,6 @@ export default async function TransactionPage({ params }: TransactionPageProps) 
 
       <TransactionCard
         transaction={transaction}
-        loadVotes={loadVotes}
-        submitVote={submitVote}
         showLink={false}
       />
 
