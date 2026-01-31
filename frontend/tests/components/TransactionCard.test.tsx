@@ -4,11 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { TransactionCard } from '@/components/TransactionCard';
 import { createMockTransaction } from '../mocks/mockDataProvider';
 
-// Mock getUserId
-vi.mock('@/lib/userId', () => ({
-  getUserId: vi.fn(() => 'test-user-123'),
-}));
-
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -63,10 +58,10 @@ describe('TransactionCard', () => {
     );
 
     await waitFor(() => {
+      // User ID is now handled server-side, not passed from client
       expect(mockLoadVotes).toHaveBeenCalledWith(
         'tx-1',
-        mockTransaction.teams,
-        'test-user-123'
+        mockTransaction.teams
       );
     });
   });
@@ -120,10 +115,10 @@ describe('TransactionCard', () => {
     await user.click(goodButtons[0]);
 
     await waitFor(() => {
+      // User ID is now handled server-side, not passed from client
       expect(mockSubmitVote).toHaveBeenCalledWith(
         'tx-1',
         'team-1',
-        'test-user-123',
         'good'
       );
     });

@@ -5,18 +5,22 @@ export interface TeamVoteData {
   userVote: Sentiment | null;
 }
 
+/**
+ * Load votes for a transaction across multiple teams.
+ * User identity is handled server-side via session cookies.
+ */
 export async function loadVotes(
   transactionId: string,
-  teams: Team[],
-  userId: string
+  teams: Team[]
 ): Promise<Record<string, TeamVoteData>> {
   const params = new URLSearchParams({
     transactionId,
     teams: JSON.stringify(teams),
-    userId,
   });
 
-  const response = await fetch(`/api/votes?${params}`);
+  const response = await fetch(`/api/votes?${params}`, {
+    credentials: 'include',
+  });
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to load votes');
@@ -25,21 +29,24 @@ export async function loadVotes(
   return response.json();
 }
 
+/**
+ * Submit a vote for a transaction.
+ * User identity is handled server-side via session cookies.
+ */
 export async function submitVote(
   transactionId: string,
   teamId: string,
-  userId: string,
   sentiment: Sentiment
 ): Promise<VoteCounts> {
   const response = await fetch('/api/votes', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       transactionId,
       teamId,
-      userId,
       sentiment,
     }),
   });
