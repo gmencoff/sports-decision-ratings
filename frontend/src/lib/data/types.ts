@@ -204,10 +204,12 @@ export type Transaction =
   | Hire
   | Fire;
 
-// Helper type to extract the transaction type string
-export type TransactionType = Transaction['type'];
+// Single source of truth for transaction types
+export const TRANSACTION_TYPES = ['trade', 'signing', 'draft', 'release', 'extension', 'hire', 'fire'] as const;
+export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 
-export type Sentiment = 'good' | 'bad' | 'unsure';
+export const SENTIMENTS = ['good', 'bad', 'unsure'] as const;
+export type Sentiment = (typeof SENTIMENTS)[number];
 
 export interface Vote {
   transactionId: string;
