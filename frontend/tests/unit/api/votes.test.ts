@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/votes/route';
 import { setDataProvider, resetDataProvider } from '@/lib/data';
-import { createMockDataProvider } from '../mocks/mockDataProvider';
+import { createMockDataProvider } from '../../mocks/mockDataProvider';
+
+// The voter session is mocked in setup.ts to return 'test-voter-id-hash'
+const MOCKED_VOTER_ID = 'test-voter-id-hash';
 
 describe('GET /api/votes', () => {
   const mockProvider = createMockDataProvider();
@@ -30,7 +33,6 @@ describe('GET /api/votes', () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
     url.searchParams.set('teams', JSON.stringify(teams));
-    url.searchParams.set('userId', 'user-123');
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -44,7 +46,8 @@ describe('GET /api/votes', () => {
       },
     });
     expect(mockProvider.getVoteCounts).toHaveBeenCalledWith('tx-1', 'team-1');
-    expect(mockProvider.getUserVote).toHaveBeenCalledWith('tx-1', 'team-1', 'user-123');
+    // Voter ID comes from server-side session (mocked)
+    expect(mockProvider.getUserVote).toHaveBeenCalledWith('tx-1', 'team-1', MOCKED_VOTER_ID);
   });
 
   it('should return votes for multiple teams', async () => {
@@ -62,7 +65,6 @@ describe('GET /api/votes', () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
     url.searchParams.set('teams', JSON.stringify(teams));
-    url.searchParams.set('userId', 'user-123');
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -84,7 +86,6 @@ describe('GET /api/votes', () => {
   it('should return 400 when transactionId is missing', async () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('teams', JSON.stringify([]));
-    url.searchParams.set('userId', 'user-123');
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -97,20 +98,6 @@ describe('GET /api/votes', () => {
   it('should return 400 when teams is missing', async () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
-    url.searchParams.set('userId', 'user-123');
-
-    const request = new NextRequest(url);
-    const response = await GET(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toContain('Missing required parameters');
-  });
-
-  it('should return 400 when userId is missing', async () => {
-    const url = new URL('http://localhost/api/votes');
-    url.searchParams.set('transactionId', 'tx-1');
-    url.searchParams.set('teams', JSON.stringify([]));
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -124,7 +111,6 @@ describe('GET /api/votes', () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
     url.searchParams.set('teams', 'invalid-json');
-    url.searchParams.set('userId', 'user-123');
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -160,7 +146,6 @@ describe('POST /api/votes', () => {
       body: JSON.stringify({
         transactionId: 'tx-1',
         teamId: 'team-1',
-        userId: 'user-123',
         sentiment: 'good',
       }),
     });
@@ -170,10 +155,11 @@ describe('POST /api/votes', () => {
 
     expect(response.status).toBe(200);
     expect(data).toEqual({ good: 11, bad: 5, unsure: 2 });
+    // Voter ID comes from server-side session (mocked)
     expect(mockProvider.submitVote).toHaveBeenCalledWith({
       transactionId: 'tx-1',
       teamId: 'team-1',
-      userId: 'user-123',
+      userId: MOCKED_VOTER_ID,
       sentiment: 'good',
     });
     expect(mockProvider.getVoteCounts).toHaveBeenCalledWith('tx-1', 'team-1');
@@ -192,7 +178,6 @@ describe('POST /api/votes', () => {
       body: JSON.stringify({
         transactionId: 'tx-1',
         teamId: 'team-1',
-        userId: 'user-123',
         sentiment: 'bad',
       }),
     });
@@ -217,7 +202,6 @@ describe('POST /api/votes', () => {
       body: JSON.stringify({
         transactionId: 'tx-1',
         teamId: 'team-1',
-        userId: 'user-123',
         sentiment: 'unsure',
       }),
     });
@@ -234,7 +218,6 @@ describe('POST /api/votes', () => {
       method: 'POST',
       body: JSON.stringify({
         teamId: 'team-1',
-        userId: 'user-123',
         sentiment: 'good',
       }),
     });
@@ -251,24 +234,6 @@ describe('POST /api/votes', () => {
       method: 'POST',
       body: JSON.stringify({
         transactionId: 'tx-1',
-        userId: 'user-123',
-        sentiment: 'good',
-      }),
-    });
-
-    const response = await POST(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toContain('Missing required fields');
-  });
-
-  it('should return 400 when userId is missing', async () => {
-    const request = new NextRequest('http://localhost/api/votes', {
-      method: 'POST',
-      body: JSON.stringify({
-        transactionId: 'tx-1',
-        teamId: 'team-1',
         sentiment: 'good',
       }),
     });
@@ -286,7 +251,6 @@ describe('POST /api/votes', () => {
       body: JSON.stringify({
         transactionId: 'tx-1',
         teamId: 'team-1',
-        userId: 'user-123',
       }),
     });
 
@@ -303,7 +267,6 @@ describe('POST /api/votes', () => {
       body: JSON.stringify({
         transactionId: 'tx-1',
         teamId: 'team-1',
-        userId: 'user-123',
         sentiment: 'invalid',
       }),
     });

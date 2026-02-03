@@ -5,10 +5,12 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'happy-dom',
+    environment: 'node',
     globals: true,
-    setupFiles: ['./tests/unit/setup.ts'],
-    include: ['tests/unit/**/*.test.{ts,tsx}'],
+    setupFiles: ['./tests/integration/setup.ts'],
+    include: ['tests/integration/**/*.test.{ts,tsx}'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
   resolve: {
     alias: {

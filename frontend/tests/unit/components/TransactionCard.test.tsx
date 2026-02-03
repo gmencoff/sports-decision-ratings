@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TransactionCard } from '@/components/TransactionCard';
-import { createMockTransaction } from '../mocks/mockDataProvider';
+import { createMockTransaction } from '../../mocks/mockDataProvider';
 
 // Mock next/link
 vi.mock('next/link', () => ({

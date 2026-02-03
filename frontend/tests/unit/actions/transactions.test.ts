@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { getTransactionsImpl, getTransactionImpl, addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
-import { createMockDataProvider, createMockTransaction } from '../mocks/mockDataProvider';
+import { createMockDataProvider, createMockTransaction } from '../../mocks/mockDataProvider';
 import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire } from '@/lib/data/types';
 
 describe('transactions actions', () => {
