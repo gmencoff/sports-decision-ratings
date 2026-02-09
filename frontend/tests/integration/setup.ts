@@ -4,7 +4,6 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { sql } from 'drizzle-orm';
 import * as schema from '../../src/server/db/schema';
-import { NFL_TEAMS } from '../../src/lib/data/types';
 
 let container: StartedPostgreSqlContainer;
 let pool: Pool;
@@ -20,23 +19,10 @@ export async function truncateAllTables() {
   await db.execute(sql`TRUNCATE TABLE vote_summaries CASCADE`);
   await db.execute(sql`TRUNCATE TABLE votes CASCADE`);
   await db.execute(sql`TRUNCATE TABLE transactions CASCADE`);
-  // Don't truncate teams - they're reference data
 }
 
 async function createSchema() {
   // Create enums
-  await db.execute(sql`
-    DO $$ BEGIN
-      CREATE TYPE conference AS ENUM ('AFC', 'NFC');
-    EXCEPTION WHEN duplicate_object THEN null;
-    END $$;
-  `);
-  await db.execute(sql`
-    DO $$ BEGIN
-      CREATE TYPE division AS ENUM ('North', 'South', 'East', 'West');
-    EXCEPTION WHEN duplicate_object THEN null;
-    END $$;
-  `);
   await db.execute(sql`
     DO $$ BEGIN
       CREATE TYPE transaction_type AS ENUM ('trade', 'signing', 'draft', 'release', 'extension', 'hire', 'fire');
@@ -52,16 +38,6 @@ async function createSchema() {
 
   // Create tables
   await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS teams (
-      id VARCHAR(10) PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      abbreviation VARCHAR(10) NOT NULL,
-      conference conference NOT NULL,
-      division division NOT NULL
-    )
-  `);
-
-  await db.execute(sql`
     CREATE TABLE IF NOT EXISTS transactions (
       id VARCHAR(50) PRIMARY KEY,
       type transaction_type NOT NULL,
@@ -75,7 +51,7 @@ async function createSchema() {
     CREATE TABLE IF NOT EXISTS votes (
       id VARCHAR(50) PRIMARY KEY,
       transaction_id VARCHAR(50) NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-      team_id VARCHAR(10) NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      team_id VARCHAR(10) NOT NULL,
       voter_id VARCHAR(64) NOT NULL,
       sentiment sentiment NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -87,28 +63,13 @@ async function createSchema() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS vote_summaries (
       transaction_id VARCHAR(50) NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-      team_id VARCHAR(10) NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      team_id VARCHAR(10) NOT NULL,
       good_count INTEGER NOT NULL DEFAULT 0,
       bad_count INTEGER NOT NULL DEFAULT 0,
       unsure_count INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (transaction_id, team_id)
     )
   `);
-}
-
-async function seedTeams() {
-  for (const team of NFL_TEAMS) {
-    await db
-      .insert(schema.teams)
-      .values({
-        id: team.id,
-        name: team.name,
-        abbreviation: team.abbreviation,
-        conference: team.conference,
-        division: team.division,
-      })
-      .onConflictDoNothing();
-  }
 }
 
 // Start container and set up database before all tests
@@ -126,9 +87,8 @@ beforeAll(async () => {
   // Create drizzle instance
   db = drizzle(pool, { schema });
 
-  // Create schema and seed data
+  // Create schema
   await createSchema();
-  await seedTeams();
 }, 60000); // 60 second timeout for container startup
 
 // Cleanup data between tests

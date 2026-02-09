@@ -1,7 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../../src/server/db/schema';
-import { NFL_TEAMS } from '../../src/lib/data/types';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -11,22 +10,6 @@ const db = drizzle(pool, { schema });
 
 async function seed() {
   console.log('🌱 Seeding test database...');
-
-  // Seed teams from NFL_TEAMS constant
-  console.log('📋 Seeding teams...');
-  for (const team of NFL_TEAMS) {
-    await db
-      .insert(schema.teams)
-      .values({
-        id: team.id,
-        name: team.name,
-        abbreviation: team.abbreviation,
-        conference: team.conference,
-        division: team.division,
-      })
-      .onConflictDoNothing();
-  }
-  console.log(`✅ Seeded ${NFL_TEAMS.length} teams`);
 
   // Seed sample transactions for testing
   console.log('📋 Seeding sample transactions...');

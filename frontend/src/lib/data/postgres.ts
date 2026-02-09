@@ -1,6 +1,6 @@
 import { eq, desc, and, lt, or } from 'drizzle-orm';
 import { getDb, type Database } from '@/server/db';
-import { teams, transactions } from '@/server/db/schema';
+import { transactions } from '@/server/db/schema';
 import { VoteService, getVoteService } from '@/server/services/vote-service';
 import { DataProvider } from './index';
 import {
@@ -27,6 +27,7 @@ import {
   ConditionalDraftPickAsset,
   Position,
   Role,
+  NFL_TEAMS,
 } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -48,22 +49,8 @@ function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
   }
 }
 
-// Convert DB team to domain Team
-function dbTeamToTeam(dbTeam: {
-  id: string;
-  name: string;
-  abbreviation: string;
-  conference: 'AFC' | 'NFC';
-  division: 'North' | 'South' | 'East' | 'West';
-}): Team {
-  return {
-    id: dbTeam.id,
-    name: dbTeam.name,
-    abbreviation: dbTeam.abbreviation,
-    conference: dbTeam.conference,
-    division: dbTeam.division,
-  };
-}
+// Build team map from hardcoded NFL_TEAMS
+const TEAM_MAP = new Map<string, Team>(NFL_TEAMS.map((t) => [t.id, t]));
 
 // Convert raw JSONB player data to Player type
 export function decodePlayer(raw: unknown): Player {
@@ -232,16 +219,15 @@ export class PostgresDataProvider implements DataProvider {
     this.voteService = voteService ?? getVoteService();
   }
 
-  private async getTeamMap(): Promise<Map<string, Team>> {
-    const dbTeams = await this.db.select().from(teams);
-    return new Map(dbTeams.map((t) => [t.id, dbTeamToTeam(t)]));
+  private getTeamMap(): Map<string, Team> {
+    return TEAM_MAP;
   }
 
   async getTransactions(
     limit: number = DEFAULT_PAGE_SIZE,
     cursor?: string
   ): Promise<PaginatedResult<Transaction>> {
-    const teamMap = await this.getTeamMap();
+    const teamMap = this.getTeamMap();
 
     let results;
 
@@ -295,7 +281,7 @@ export class PostgresDataProvider implements DataProvider {
   }
 
   async getTransaction(id: string): Promise<Transaction | null> {
-    const teamMap = await this.getTeamMap();
+    const teamMap = this.getTeamMap();
 
     const result = await this.db
       .select()

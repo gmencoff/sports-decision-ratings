@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { getTestDb, schema } from './setup';
 import { PostgresDataProvider } from '@/lib/data/postgres';
 import { VoteService } from '@/server/services/vote-service';
-import type { Transaction, Trade } from '@/lib/data/types';
+import { NFL_TEAMS, type Transaction, type Trade } from '@/lib/data/types';
+
+// Use teams from the hardcoded NFL_TEAMS
+const testTeams = NFL_TEAMS.slice(0, 2); // BUF, MIA
 
 describe('PostgresDataProvider Integration', () => {
   let provider: PostgresDataProvider;
@@ -16,25 +19,16 @@ describe('PostgresDataProvider Integration', () => {
 
   describe('transactions', () => {
     it('should add and retrieve a transaction', async () => {
-      const db = getTestDb();
-      const teams = await db.select().from(schema.teams).limit(2);
-
       const transaction: Trade = {
         id: 'test-trade-1',
         type: 'trade',
-        teams: teams.map((t) => ({
-          id: t.id,
-          name: t.name,
-          abbreviation: t.abbreviation,
-          conference: t.conference,
-          division: t.division,
-        })),
+        teams: testTeams,
         timestamp: new Date('2024-01-15T10:00:00Z'),
         assets: [
           {
             type: 'player',
-            fromTeamId: teams[0].id,
-            toTeamId: teams[1].id,
+            fromTeamId: testTeams[0].id,
+            toTeamId: testTeams[1].id,
             player: { name: 'Test Player', position: 'QB' },
           },
         ],
@@ -55,15 +49,7 @@ describe('PostgresDataProvider Integration', () => {
     });
 
     it('should list transactions with pagination', async () => {
-      const db = getTestDb();
-      const teams = await db.select().from(schema.teams).limit(1);
-      const team = {
-        id: teams[0].id,
-        name: teams[0].name,
-        abbreviation: teams[0].abbreviation,
-        conference: teams[0].conference,
-        division: teams[0].division,
-      };
+      const team = testTeams[0];
 
       // Add multiple transactions
       for (let i = 1; i <= 5; i++) {
@@ -97,15 +83,7 @@ describe('PostgresDataProvider Integration', () => {
     });
 
     it('should edit a transaction', async () => {
-      const db = getTestDb();
-      const teams = await db.select().from(schema.teams).limit(1);
-      const team = {
-        id: teams[0].id,
-        name: teams[0].name,
-        abbreviation: teams[0].abbreviation,
-        conference: teams[0].conference,
-        division: teams[0].division,
-      };
+      const team = testTeams[0];
 
       const original: Transaction = {
         id: 'edit-test',

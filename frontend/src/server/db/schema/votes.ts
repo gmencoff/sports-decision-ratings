@@ -1,7 +1,6 @@
 import { pgTable, varchar, timestamp, pgEnum, index, unique } from 'drizzle-orm/pg-core';
 import { SENTIMENTS } from '@/lib/data/types';
 import { transactions } from './transactions';
-import { teams } from './teams';
 
 export const sentimentEnum = pgEnum('sentiment', [...SENTIMENTS]);
 
@@ -12,9 +11,7 @@ export const votes = pgTable(
     transactionId: varchar('transaction_id', { length: 50 })
       .notNull()
       .references(() => transactions.id, { onDelete: 'cascade' }),
-    teamId: varchar('team_id', { length: 10 })
-      .notNull()
-      .references(() => teams.id, { onDelete: 'cascade' }),
+    teamId: varchar('team_id', { length: 10 }).notNull(),
     voterId: varchar('voter_id', { length: 64 }).notNull(), // SHA-256 hash
     sentiment: sentimentEnum('sentiment').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

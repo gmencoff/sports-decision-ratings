@@ -1,6 +1,5 @@
 import { pgTable, varchar, integer, primaryKey } from 'drizzle-orm/pg-core';
 import { transactions } from './transactions';
-import { teams } from './teams';
 
 export const voteSummaries = pgTable(
   'vote_summaries',
@@ -8,9 +7,7 @@ export const voteSummaries = pgTable(
     transactionId: varchar('transaction_id', { length: 50 })
       .notNull()
       .references(() => transactions.id, { onDelete: 'cascade' }),
-    teamId: varchar('team_id', { length: 10 })
-      .notNull()
-      .references(() => teams.id, { onDelete: 'cascade' }),
+    teamId: varchar('team_id', { length: 10 }).notNull(),
     goodCount: integer('good_count').notNull().default(0),
     badCount: integer('bad_count').notNull().default(0),
     unsureCount: integer('unsure_count').notNull().default(0),
