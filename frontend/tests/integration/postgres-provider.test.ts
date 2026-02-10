@@ -2,10 +2,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { getTestDb, schema } from './setup';
 import { PostgresDataProvider } from '@/lib/data/postgres';
 import { VoteService } from '@/server/services/vote-service';
-import { NFL_TEAMS, type Transaction, type Trade } from '@/lib/data/types';
-
-// Use teams from the hardcoded NFL_TEAMS
-const testTeams = NFL_TEAMS.slice(0, 2); // BUF, MIA
+import {
+  allTransactionTypes,
+  createTestData,
+  assertFieldsPreserved,
+  testTeams,
+} from '../helpers/transaction-visitor';
 
 describe('PostgresDataProvider Integration', () => {
   let provider: PostgresDataProvider;
@@ -18,29 +20,44 @@ describe('PostgresDataProvider Integration', () => {
   });
 
   describe('transactions', () => {
-    it('should add and retrieve a transaction', async () => {
-      const transaction: Trade = {
-        id: 'test-trade-1',
-        type: 'trade',
-        teams: testTeams,
-        timestamp: new Date('2024-01-15T10:00:00Z'),
-        assets: [
-          {
-            type: 'player',
-            fromTeamId: testTeams[0].id,
-            toTeamId: testTeams[1].id,
-            player: { name: 'Test Player', position: 'QB' },
-          },
-        ],
-      };
+    // Test each transaction type
+    describe.each(allTransactionTypes())('%s transactions', (type) => {
+      it('should add and retrieve', async () => {
+        const original = createTestData(type, `test-${type}-add`, testTeams);
 
-      await provider.addTransaction(transaction);
+        await provider.addTransaction(original);
 
-      const retrieved = await provider.getTransaction('test-trade-1');
-      expect(retrieved).not.toBeNull();
-      expect(retrieved!.id).toBe('test-trade-1');
-      expect(retrieved!.type).toBe('trade');
-      expect(retrieved!.teams).toHaveLength(2);
+        const retrieved = await provider.getTransaction(original.id);
+        expect(retrieved).not.toBeNull();
+        expect(retrieved!.id).toBe(original.id);
+        expect(retrieved!.type).toBe(type);
+        expect(retrieved!.teams.length).toBeGreaterThan(0);
+        expect(retrieved!.timestamp).toEqual(original.timestamp);
+
+        // Verify type-specific fields are preserved
+        assertFieldsPreserved(original, retrieved!, expect);
+      });
+
+      it('should edit', async () => {
+        const original = createTestData(type, `test-${type}-edit`, testTeams);
+        await provider.addTransaction(original);
+
+        // Modify timestamp
+        const updated = {
+          ...original,
+          timestamp: new Date('2025-06-15T12:00:00Z'),
+        };
+
+        const result = await provider.editTransaction(original.id, updated);
+        expect(result).not.toBeNull();
+
+        const retrieved = await provider.getTransaction(original.id);
+        expect(retrieved).not.toBeNull();
+        expect(retrieved!.timestamp).toEqual(updated.timestamp);
+
+        // Verify type-specific fields still preserved
+        assertFieldsPreserved(original, retrieved!, expect);
+      });
     });
 
     it('should return null for non-existent transaction', async () => {
@@ -49,20 +66,11 @@ describe('PostgresDataProvider Integration', () => {
     });
 
     it('should list transactions with pagination', async () => {
-      const team = testTeams[0];
-
       // Add multiple transactions
       for (let i = 1; i <= 5; i++) {
-        await provider.addTransaction({
-          id: `tx-${i}`,
-          type: 'signing',
-          teams: [team],
-          timestamp: new Date(`2024-01-${10 + i}T10:00:00Z`),
-          player: { name: `Player ${i}`, position: 'WR' },
-          contractYears: 3,
-          totalValue: 50000000,
-          guaranteed: 30000000,
-        });
+        const tx = createTestData('signing', `pagination-tx-${i}`, testTeams);
+        tx.timestamp = new Date(`2024-01-${10 + i}T10:00:00Z`);
+        await provider.addTransaction(tx);
       }
 
       // First page
@@ -82,36 +90,23 @@ describe('PostgresDataProvider Integration', () => {
       expect(page3.hasMore).toBe(false);
     });
 
-    it('should edit a transaction', async () => {
-      const team = testTeams[0];
+    it('should list transactions of all types', async () => {
+      const types = allTransactionTypes();
 
-      const original: Transaction = {
-        id: 'edit-test',
-        type: 'signing',
-        teams: [team],
-        timestamp: new Date('2024-01-15T10:00:00Z'),
-        player: { name: 'Original Player', position: 'RB' },
-        contractYears: 2,
-        totalValue: 20000000,
-        guaranteed: 10000000,
-      };
+      // Add one of each type
+      for (const type of types) {
+        const tx = createTestData(type, `mixed-${type}`, testTeams);
+        await provider.addTransaction(tx);
+      }
 
-      await provider.addTransaction(original);
+      const result = await provider.getTransactions(10);
+      expect(result.data).toHaveLength(types.length);
 
-      const updated: Transaction = {
-        ...original,
-        player: { name: 'Updated Player', position: 'RB' },
-        contractYears: 4,
-      };
-
-      const result = await provider.editTransaction('edit-test', updated);
-      expect(result).not.toBeNull();
-
-      const retrieved = await provider.getTransaction('edit-test');
-      expect(retrieved).not.toBeNull();
-      if (retrieved?.type === 'signing') {
-        expect(retrieved.player.name).toBe('Updated Player');
-        expect(retrieved.contractYears).toBe(4);
+      // Verify each type was stored and retrieved
+      for (const type of types) {
+        const tx = result.data.find((t) => t.type === type);
+        expect(tx).toBeDefined();
+        expect(tx!.id).toBe(`mixed-${type}`);
       }
     });
   });
