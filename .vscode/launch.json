@@ -7,6 +7,7 @@
       "request": "launch",
       "command": "npx next dev --webpack --inspect",
       "cwd": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Start PostgreSQL",
       "sourceMaps": true,
       "resolveSourceMapLocations": [
         "${workspaceFolder}/frontend/**",
@@ -46,6 +47,7 @@
       "request": "launch",
       "command": "npx next dev --inspect",
       "cwd": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Start PostgreSQL",
       "sourceMaps": true,
       "serverReadyAction": {
         "pattern": "- Local:.+(https?://.+)",
