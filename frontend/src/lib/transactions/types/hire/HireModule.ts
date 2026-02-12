@@ -1,5 +1,5 @@
 import { Hire } from '@/lib/data/types';
-import { TransactionModule } from '../../interface';
+import { TransactionModule, ValidationResult } from '../../interface';
 import { HireForm } from './HireForm';
 import { HireCard } from './HireCard';
 
@@ -18,5 +18,9 @@ export class HireModule implements TransactionModule<Hire> {
       timestamp: new Date(),
       staff: { name: '', role: 'Head Coach' },
     };
+  }
+
+  validate(_input: Hire): ValidationResult {
+    return { valid: true, errors: [] };
   }
 }

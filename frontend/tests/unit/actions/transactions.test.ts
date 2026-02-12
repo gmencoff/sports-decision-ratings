@@ -78,13 +78,15 @@ describe('transactions actions', () => {
   });
 
   describe('addTransactionImpl', () => {
-    const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
+    const team1 = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
+    const team2 = { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC' as const, division: 'West' as const };
+    const baseTeam = team1;
     const baseTimestamp = new Date('2024-01-15');
 
     it('should add a Trade transaction and generate id', async () => {
       const tradeInput: TransactionInput = {
         type: 'trade',
-        teams: [baseTeam],
+        teams: [team1, team2],
         timestamp: baseTimestamp,
         assets: [
           { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
@@ -101,6 +103,43 @@ describe('transactions actions', () => {
         ...tradeInput,
         id: expect.any(String),
       }));
+    });
+
+    it('should reject a Trade with missing team in teams list', async () => {
+      const invalidTradeInput: TransactionInput = {
+        type: 'trade',
+        teams: [team1], // Missing team-2
+        timestamp: baseTimestamp,
+        assets: [
+          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+        ],
+      };
+
+      const mockProvider = createMockDataProvider();
+
+      await expect(addTransactionImpl(mockProvider, invalidTradeInput)).rejects.toThrow(
+        "Invalid transaction: Team 'team-2' referenced in trade assets is not in the teams list"
+      );
+      expect(mockProvider.addTransaction).not.toHaveBeenCalled();
+    });
+
+    it('should reject a Trade with extra team not in assets', async () => {
+      const team3 = { id: 'team-3', name: 'Team C', abbreviation: 'TC', conference: 'AFC' as const, division: 'North' as const };
+      const invalidTradeInput: TransactionInput = {
+        type: 'trade',
+        teams: [team1, team2, team3], // team-3 not in any asset
+        timestamp: baseTimestamp,
+        assets: [
+          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+        ],
+      };
+
+      const mockProvider = createMockDataProvider();
+
+      await expect(addTransactionImpl(mockProvider, invalidTradeInput)).rejects.toThrow(
+        "Invalid transaction: Team 'team-3' is in the teams list but not referenced in any trade asset"
+      );
+      expect(mockProvider.addTransaction).not.toHaveBeenCalled();
     });
 
     it('should add a Signing transaction and generate id', async () => {
@@ -252,14 +291,16 @@ describe('transactions actions', () => {
   });
 
   describe('editTransactionImpl', () => {
-    const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
+    const team1 = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
+    const team2 = { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC' as const, division: 'West' as const };
+    const baseTeam = team1;
     const baseTimestamp = new Date('2024-01-15');
 
     it('should edit a Trade transaction', async () => {
       const tradeTransaction: Trade = {
         id: 'trade-1',
         type: 'trade',
-        teams: [baseTeam],
+        teams: [team1, team2],
         timestamp: baseTimestamp,
         assets: [
           { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
@@ -271,6 +312,25 @@ describe('transactions actions', () => {
 
       expect(mockProvider.editTransaction).toHaveBeenCalledWith('trade-1', tradeTransaction);
       expect(result?.id).toBe('trade-1');
+    });
+
+    it('should reject editing a Trade with invalid teams', async () => {
+      const invalidTradeTransaction: Trade = {
+        id: 'trade-1',
+        type: 'trade',
+        teams: [team1], // Missing team-2
+        timestamp: baseTimestamp,
+        assets: [
+          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+        ],
+      };
+
+      const mockProvider = createMockDataProvider();
+
+      await expect(editTransactionImpl(mockProvider, 'trade-1', invalidTradeTransaction)).rejects.toThrow(
+        "Invalid transaction: Team 'team-2' referenced in trade assets is not in the teams list"
+      );
+      expect(mockProvider.editTransaction).not.toHaveBeenCalled();
     });
 
     it('should edit a Signing transaction', async () => {

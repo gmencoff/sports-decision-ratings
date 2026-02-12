@@ -1,5 +1,5 @@
 import { Extension } from '@/lib/data/types';
-import { TransactionModule } from '../../interface';
+import { TransactionModule, ValidationResult } from '../../interface';
 import { ExtensionForm } from './ExtensionForm';
 import { ExtensionCard } from './ExtensionCard';
 
@@ -21,5 +21,9 @@ export class ExtensionModule implements TransactionModule<Extension> {
       totalValue: 0,
       guaranteed: 0,
     };
+  }
+
+  validate(_input: Extension): ValidationResult {
+    return { valid: true, errors: [] };
   }
 }

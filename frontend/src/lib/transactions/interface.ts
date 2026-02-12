@@ -9,6 +9,11 @@ export interface CardProps<T extends Transaction> {
   transaction: T;
 }
 
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
 export interface TransactionModule<T extends Transaction> {
   readonly type: T['type'];
   readonly label: string;
@@ -16,4 +21,5 @@ export interface TransactionModule<T extends Transaction> {
   Form: React.FC<FormProps<T>>;
   Card: React.FC<CardProps<T>>;
   createDefault(): T;
+  validate(input: T): ValidationResult;
 }

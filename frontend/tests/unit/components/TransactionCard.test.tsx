@@ -44,8 +44,8 @@ describe('TransactionCard', () => {
     // Verify team names are rendered
     expect(screen.getByText('Kansas City Chiefs')).toBeInTheDocument();
     expect(screen.getByText('Tennessee Titans')).toBeInTheDocument();
-    // Verify trade card content (empty assets array shows "0 assets exchanged")
-    expect(screen.getByText('0 assets exchanged')).toBeInTheDocument();
+    // Verify trade card content (1 asset from default mock)
+    expect(screen.getByText('1 asset exchanged')).toBeInTheDocument();
   });
 
   it('should load votes on mount', async () => {

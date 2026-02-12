@@ -1,5 +1,5 @@
 import { Transaction, TransactionType } from '@/lib/data/types';
-import { TransactionModule } from './interface';
+import { TransactionModule, ValidationResult } from './interface';
 import { TradeModule } from './types/trade';
 import { SigningModule } from './types/signing';
 import { DraftModule } from './types/draft';
@@ -25,4 +25,9 @@ export function getModule<T extends Transaction>(type: T['type']): TransactionMo
 
 export function getAllModules(): TransactionModule<Transaction>[] {
   return Object.values(modules);
+}
+
+export function validateTransaction(input: Transaction): ValidationResult {
+  const cmodule = modules[input.type];
+  return cmodule.validate(input);
 }

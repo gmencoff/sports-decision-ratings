@@ -205,7 +205,7 @@ export type Transaction =
   | Fire;
 
 // Distributive Omit that works properly with union types
-type DistributiveOmit<T, K extends keyof any> = T extends unknown ? Omit<T, K> : never;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 // Input type for creating transactions (id is generated server-side)
 export type TransactionInput = DistributiveOmit<Transaction, 'id'>;
