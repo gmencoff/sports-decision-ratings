@@ -39,6 +39,7 @@ export function TransactionEditor({ existingTransaction }: TransactionEditorProp
         await editTransaction(existingTransaction.id, transaction);
       } else {
         // Strip the id - it will be generated server-side
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id: _, ...input } = transaction;
         await addTransaction(input as TransactionInput);
       }
