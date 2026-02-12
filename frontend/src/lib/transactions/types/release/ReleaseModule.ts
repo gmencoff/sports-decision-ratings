@@ -20,6 +20,7 @@ export class ReleaseModule implements TransactionModule<Release> {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(_input: Release): ValidationResult {
     return { valid: true, errors: [] };
   }

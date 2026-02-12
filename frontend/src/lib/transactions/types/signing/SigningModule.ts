@@ -23,6 +23,7 @@ export class SigningModule implements TransactionModule<Signing> {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(_input: Signing): ValidationResult {
     return { valid: true, errors: [] };
   }

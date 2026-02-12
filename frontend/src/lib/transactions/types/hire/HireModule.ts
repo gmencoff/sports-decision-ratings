@@ -20,6 +20,7 @@ export class HireModule implements TransactionModule<Hire> {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(_input: Hire): ValidationResult {
     return { valid: true, errors: [] };
   }

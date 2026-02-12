@@ -22,6 +22,7 @@ export class DraftModule implements TransactionModule<DraftSelection> {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(_input: DraftSelection): ValidationResult {
     return { valid: true, errors: [] };
   }

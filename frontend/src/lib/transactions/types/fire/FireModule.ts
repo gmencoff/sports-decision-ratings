@@ -20,6 +20,7 @@ export class FireModule implements TransactionModule<Fire> {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(_input: Fire): ValidationResult {
     return { valid: true, errors: [] };
   }

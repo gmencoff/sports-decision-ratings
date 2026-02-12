@@ -23,6 +23,7 @@ export class ExtensionModule implements TransactionModule<Extension> {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(_input: Extension): ValidationResult {
     return { valid: true, errors: [] };
   }
