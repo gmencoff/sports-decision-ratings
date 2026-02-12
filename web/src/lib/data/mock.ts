@@ -4,13 +4,16 @@ import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TE
 const DEFAULT_PAGE_SIZE = 10;
 
 function encodeCursor(timestamp: Date, id: string): string {
-  return Buffer.from(`${timestamp.toISOString()}:${id}`).toString('base64');
+  return Buffer.from(`${timestamp.toISOString()}|${id}`).toString('base64');
 }
 
 function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
   try {
     const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
-    const [isoString, id] = decoded.split(':');
+    const separatorIndex = decoded.indexOf('|');
+    if (separatorIndex === -1) return null;
+    const isoString = decoded.slice(0, separatorIndex);
+    const id = decoded.slice(separatorIndex + 1);
     return { timestamp: new Date(isoString), id };
   } catch {
     return null;
@@ -190,7 +193,7 @@ export class MockDataProvider implements DataProvider {
         startIndex = sorted.findIndex((t) => {
           const timeDiff = decoded.timestamp.getTime() - t.timestamp.getTime();
           if (timeDiff !== 0) return timeDiff > 0;
-          return decoded.id.localeCompare(t.id) >= 0;
+          return decoded.id.localeCompare(t.id) > 0;
         });
         if (startIndex === -1) startIndex = sorted.length;
       }
