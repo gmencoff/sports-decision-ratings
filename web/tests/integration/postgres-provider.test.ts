@@ -109,6 +109,48 @@ describe('PostgresDataProvider Integration', () => {
         expect(tx!.id).toBe(`mixed-${type}`);
       }
     });
+
+    it('should not skip transactions during pagination', async () => {
+      // Add 10 transactions with sequential IDs and timestamps
+      const transactionIds: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const id = `pagination-skip-test-${i}`;
+        transactionIds.push(id);
+        const tx = createTestData('signing', id, testTeams);
+        // Use different timestamps to ensure ordering
+        tx.timestamp = new Date(`2024-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`);
+        await provider.addTransaction(tx);
+      }
+
+      // Fetch in pages of 3 - should get 4 pages (3 + 3 + 3 + 1)
+      const allFetchedIds: string[] = [];
+      let cursor: string | undefined = undefined;
+      let pageCount = 0;
+
+      do {
+        const page = await provider.getTransactions(3, cursor);
+        pageCount++;
+        
+        // Collect all IDs from this page
+        for (const tx of page.data) {
+          allFetchedIds.push(tx.id);
+        }
+        
+        cursor = page.nextCursor;
+      } while (cursor);
+
+      // Verify we got exactly 10 transactions
+      expect(allFetchedIds).toHaveLength(10);
+      
+      // Verify all original IDs are present (no skips)
+      for (const expectedId of transactionIds) {
+        expect(allFetchedIds).toContain(expectedId);
+      }
+      
+      // Verify no duplicates
+      const uniqueIds = new Set(allFetchedIds);
+      expect(uniqueIds.size).toBe(allFetchedIds.length);
+    });
   });
 
   describe('votes', () => {
