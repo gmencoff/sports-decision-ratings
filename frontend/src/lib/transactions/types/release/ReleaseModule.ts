@@ -1,5 +1,5 @@
 import { Release } from '@/lib/data/types';
-import { TransactionModule } from '../../interface';
+import { TransactionModule, ValidationResult } from '../../interface';
 import { ReleaseForm } from './ReleaseForm';
 import { ReleaseCard } from './ReleaseCard';
 
@@ -18,5 +18,10 @@ export class ReleaseModule implements TransactionModule<Release> {
       timestamp: new Date(),
       player: { name: '', position: 'QB' },
     };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  validate(_input: Release): ValidationResult {
+    return { valid: true, errors: [] };
   }
 }

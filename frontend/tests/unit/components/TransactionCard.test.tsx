@@ -2,12 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TransactionCard } from '@/components/TransactionCard';
-import { createMockTransaction } from '../mocks/mockDataProvider';
-
-// Mock getUserId
-vi.mock('@/lib/userId', () => ({
-  getUserId: vi.fn(() => 'test-user-123'),
-}));
+import { createMockTransaction } from '../../mocks/mockDataProvider';
 
 // Mock next/link
 vi.mock('next/link', () => ({
@@ -49,8 +44,8 @@ describe('TransactionCard', () => {
     // Verify team names are rendered
     expect(screen.getByText('Kansas City Chiefs')).toBeInTheDocument();
     expect(screen.getByText('Tennessee Titans')).toBeInTheDocument();
-    // Verify trade card content (empty assets array shows "0 assets exchanged")
-    expect(screen.getByText('0 assets exchanged')).toBeInTheDocument();
+    // Verify trade card content (1 asset from default mock)
+    expect(screen.getByText('1 asset exchanged')).toBeInTheDocument();
   });
 
   it('should load votes on mount', async () => {
@@ -63,10 +58,10 @@ describe('TransactionCard', () => {
     );
 
     await waitFor(() => {
+      // User ID is now handled server-side, not passed from client
       expect(mockLoadVotes).toHaveBeenCalledWith(
         'tx-1',
-        mockTransaction.teams,
-        'test-user-123'
+        mockTransaction.teams
       );
     });
   });
@@ -120,10 +115,10 @@ describe('TransactionCard', () => {
     await user.click(goodButtons[0]);
 
     await waitFor(() => {
+      // User ID is now handled server-side, not passed from client
       expect(mockSubmitVote).toHaveBeenCalledWith(
         'tx-1',
         'team-1',
-        'test-user-123',
         'good'
       );
     });

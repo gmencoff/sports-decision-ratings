@@ -16,9 +16,14 @@ let providerInstance: DataProvider | null = null;
 
 export async function getDataProvider(): Promise<DataProvider> {
   if (!providerInstance) {
-    // Default to mock provider for now
-    const { MockDataProvider } = await import('./mock');
-    providerInstance = new MockDataProvider();
+    // Use PostgresDataProvider if DATABASE_URL is configured, otherwise fall back to mock
+    if (process.env.DATABASE_URL) {
+      const { PostgresDataProvider } = await import('./postgres');
+      providerInstance = new PostgresDataProvider();
+    } else {
+      const { MockDataProvider } = await import('./mock');
+      providerInstance = new MockDataProvider();
+    }
   }
   return providerInstance;
 }

@@ -24,7 +24,9 @@ export function createMockTransaction(overrides: Partial<Transaction> = {}): Tra
       { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC', division: 'West' },
     ],
     timestamp: new Date('2024-01-15'),
-    assets: [],
+    assets: [
+      { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'Test Player', position: 'QB' } },
+    ],
     ...overrides,
   } as Transaction;
 }

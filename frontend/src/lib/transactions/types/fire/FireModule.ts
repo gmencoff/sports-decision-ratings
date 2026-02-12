@@ -1,5 +1,5 @@
 import { Fire } from '@/lib/data/types';
-import { TransactionModule } from '../../interface';
+import { TransactionModule, ValidationResult } from '../../interface';
 import { FireForm } from './FireForm';
 import { FireCard } from './FireCard';
 
@@ -18,5 +18,10 @@ export class FireModule implements TransactionModule<Fire> {
       timestamp: new Date(),
       staff: { name: '', role: 'Head Coach' },
     };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  validate(_input: Fire): ValidationResult {
+    return { valid: true, errors: [] };
   }
 }

@@ -1,0 +1,72 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: debug (with Postgres)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx next dev --webpack --inspect",
+      "cwd": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Start PostgreSQL",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/frontend/**",
+        "!**/node_modules/**"
+      ],
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}/frontend"
+      }
+    },
+    {
+      "name": "Next.js: debug (mock data)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx next dev --webpack --inspect",
+      "cwd": "${workspaceFolder}/frontend",
+      "env": {
+        "DATABASE_URL": ""
+      },
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/frontend/**",
+        "!**/node_modules/**"
+      ],
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}/frontend"
+      }
+    },
+    {
+      "name": "Next.js: debug Turbopack (with Postgres)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx next dev --inspect",
+      "cwd": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Start PostgreSQL",
+      "sourceMaps": true,
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}/frontend"
+      }
+    },
+    {
+      "name": "Next.js: attach",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/frontend/**",
+        "!**/node_modules/**"
+      ]
+    }
+  ]
+}

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Transaction, Team, VoteCounts, Sentiment } from '@/lib/data/types';
-import { getUserId } from '@/lib/userId';
 import { VoteButtons } from './VoteButtons';
 import { SentimentBar } from './SentimentBar';
 import { getModule } from '@/lib/transactions';
@@ -20,14 +19,12 @@ interface TeamVoteState extends TeamVoteData {
 
 export type LoadVotesAction = (
   transactionId: string,
-  teams: Team[],
-  userId: string
+  teams: Team[]
 ) => Promise<Record<string, TeamVoteData>>;
 
 export type SubmitVoteAction = (
   transactionId: string,
   teamId: string,
-  userId: string,
   sentiment: Sentiment
 ) => Promise<VoteCounts>;
 
@@ -51,8 +48,7 @@ export function TransactionCard({
 
   useEffect(() => {
     async function fetchVotes() {
-      const userId = getUserId();
-      const votes = await loadVotes(transaction.id, transaction.teams, userId);
+      const votes = await loadVotes(transaction.id, transaction.teams);
       const votesWithLoading: Record<string, TeamVoteState> = {};
       for (const [teamId, voteData] of Object.entries(votes)) {
         votesWithLoading[teamId] = { ...voteData, isVoting: false };
@@ -80,8 +76,7 @@ export function TransactionCard({
     }));
 
     try {
-      const userId = getUserId();
-      const newCounts = await submitVote(transaction.id, teamId, userId, sentiment);
+      const newCounts = await submitVote(transaction.id, teamId, sentiment);
 
       setTeamVotes((prev) => ({
         ...prev,

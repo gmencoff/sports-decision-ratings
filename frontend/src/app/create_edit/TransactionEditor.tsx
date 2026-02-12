@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Transaction, TransactionType } from '@/lib/data/types';
+import { Transaction, TransactionInput, TransactionType } from '@/lib/data/types';
 import { getModule, getAllModules } from '@/lib/transactions';
 import { addTransaction, editTransaction } from '@/app/actions/transactions';
 
@@ -38,7 +38,10 @@ export function TransactionEditor({ existingTransaction }: TransactionEditorProp
       if (isEditing) {
         await editTransaction(existingTransaction.id, transaction);
       } else {
-        await addTransaction(transaction);
+        // Strip the id - it will be generated server-side
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _, ...input } = transaction;
+        await addTransaction(input as TransactionInput);
       }
       router.push('/');
     } catch (err) {

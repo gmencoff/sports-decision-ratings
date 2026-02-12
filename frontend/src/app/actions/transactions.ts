@@ -1,7 +1,8 @@
 'use server';
 
-import { Transaction, PaginatedResult } from '@/lib/data/types';
+import { Transaction, TransactionInput, PaginatedResult } from '@/lib/data/types';
 import { DataProvider, getDataProvider } from '@/lib/data';
+import { validateTransaction } from '@/lib/transactions';
 
 export async function getTransactionsImpl(
   provider: DataProvider,
@@ -33,16 +34,27 @@ export async function getTransaction(id: string): Promise<Transaction | null> {
 
 export async function addTransactionImpl(
   provider: DataProvider,
-  transaction: Transaction
+  input: TransactionInput
 ): Promise<Transaction> {
+  // Add id
+  const transaction: Transaction = {
+    ...input,
+    id: crypto.randomUUID(),
+  } as Transaction;
+
+  // Validate transaction
+  const validation = validateTransaction(transaction);
+  if (!validation.valid) {
+    throw new Error(`Invalid transaction: ${validation.errors.join(', ')}`);
+  }
   return provider.addTransaction(transaction);
 }
 
 export async function addTransaction(
-  transaction: Transaction
+  input: TransactionInput
 ): Promise<Transaction> {
   const provider = await getDataProvider();
-  return addTransactionImpl(provider, transaction);
+  return addTransactionImpl(provider, input);
 }
 
 export async function editTransactionImpl(
@@ -50,6 +62,11 @@ export async function editTransactionImpl(
   id: string,
   transaction: Transaction
 ): Promise<Transaction | null> {
+  const validation = validateTransaction(transaction);
+  if (!validation.valid) {
+    throw new Error(`Invalid transaction: ${validation.errors.join(', ')}`);
+  }
+
   return provider.editTransaction(id, transaction);
 }
 

@@ -1,4 +1,3 @@
-import { randomInt } from 'node:crypto';
 import { DataProvider } from './index';
 import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS } from './types';
 
@@ -218,7 +217,6 @@ export class MockDataProvider implements DataProvider {
   }
 
   async addTransaction(transaction: Transaction): Promise<Transaction> {
-    transaction.id = randomInt(10000, 99999).toString();
     MOCK_TRANSACTIONS.push(transaction);
     return transaction;
   }

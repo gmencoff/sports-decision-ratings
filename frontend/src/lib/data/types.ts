@@ -204,10 +204,18 @@ export type Transaction =
   | Hire
   | Fire;
 
-// Helper type to extract the transaction type string
-export type TransactionType = Transaction['type'];
+// Distributive Omit that works properly with union types
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
-export type Sentiment = 'good' | 'bad' | 'unsure';
+// Input type for creating transactions (id is generated server-side)
+export type TransactionInput = DistributiveOmit<Transaction, 'id'>;
+
+// Single source of truth for transaction types
+export const TRANSACTION_TYPES = ['trade', 'signing', 'draft', 'release', 'extension', 'hire', 'fire'] as const;
+export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+
+export const SENTIMENTS = ['good', 'bad', 'unsure'] as const;
+export type Sentiment = (typeof SENTIMENTS)[number];
 
 export interface Vote {
   transactionId: string;

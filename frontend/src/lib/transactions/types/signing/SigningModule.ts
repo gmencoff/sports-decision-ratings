@@ -1,5 +1,5 @@
 import { Signing } from '@/lib/data/types';
-import { TransactionModule } from '../../interface';
+import { TransactionModule, ValidationResult } from '../../interface';
 import { SigningForm } from './SigningForm';
 import { SigningCard } from './SigningCard';
 
@@ -21,5 +21,10 @@ export class SigningModule implements TransactionModule<Signing> {
       totalValue: 0,
       guaranteed: 0,
     };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  validate(_input: Signing): ValidationResult {
+    return { valid: true, errors: [] };
   }
 }
