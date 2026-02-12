@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { getTransactionsImpl, getTransactionImpl, addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
 import { createMockDataProvider, createMockTransaction } from '../../mocks/mockDataProvider';
-import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire } from '@/lib/data/types';
+import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire, TransactionInput } from '@/lib/data/types';
 
 describe('transactions actions', () => {
   describe('getTransactionsImpl', () => {
@@ -81,9 +81,8 @@ describe('transactions actions', () => {
     const baseTeam = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
     const baseTimestamp = new Date('2024-01-15');
 
-    it('should add a Trade transaction', async () => {
-      const tradeTransaction: Trade = {
-        id: 'trade-1',
+    it('should add a Trade transaction and generate id', async () => {
+      const tradeInput: TransactionInput = {
         type: 'trade',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -93,15 +92,19 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, tradeTransaction);
+      const result = await addTransactionImpl(mockProvider, tradeInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(tradeTransaction);
-      expect(result).toEqual(tradeTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/); // UUID format
+      expect(result.type).toBe('trade');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...tradeInput,
+        id: expect.any(String),
+      }));
     });
 
-    it('should add a Signing transaction', async () => {
-      const signingTransaction: Signing = {
-        id: 'signing-1',
+    it('should add a Signing transaction and generate id', async () => {
+      const signingInput: TransactionInput = {
         type: 'signing',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -112,15 +115,19 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, signingTransaction);
+      const result = await addTransactionImpl(mockProvider, signingInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(signingTransaction);
-      expect(result).toEqual(signingTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('signing');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...signingInput,
+        id: expect.any(String),
+      }));
     });
 
-    it('should add a DraftSelection transaction', async () => {
-      const draftTransaction: DraftSelection = {
-        id: 'draft-1',
+    it('should add a DraftSelection transaction and generate id', async () => {
+      const draftInput: TransactionInput = {
         type: 'draft',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -130,15 +137,19 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, draftTransaction);
+      const result = await addTransactionImpl(mockProvider, draftInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(draftTransaction);
-      expect(result).toEqual(draftTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('draft');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...draftInput,
+        id: expect.any(String),
+      }));
     });
 
-    it('should add a Release transaction', async () => {
-      const releaseTransaction: Release = {
-        id: 'release-1',
+    it('should add a Release transaction and generate id', async () => {
+      const releaseInput: TransactionInput = {
         type: 'release',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -147,15 +158,19 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, releaseTransaction);
+      const result = await addTransactionImpl(mockProvider, releaseInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(releaseTransaction);
-      expect(result).toEqual(releaseTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('release');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...releaseInput,
+        id: expect.any(String),
+      }));
     });
 
-    it('should add an Extension transaction', async () => {
-      const extensionTransaction: Extension = {
-        id: 'extension-1',
+    it('should add an Extension transaction and generate id', async () => {
+      const extensionInput: TransactionInput = {
         type: 'extension',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -166,15 +181,19 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, extensionTransaction);
+      const result = await addTransactionImpl(mockProvider, extensionInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(extensionTransaction);
-      expect(result).toEqual(extensionTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('extension');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...extensionInput,
+        id: expect.any(String),
+      }));
     });
 
-    it('should add a Hire transaction', async () => {
-      const hireTransaction: Hire = {
-        id: 'hire-1',
+    it('should add a Hire transaction and generate id', async () => {
+      const hireInput: TransactionInput = {
         type: 'hire',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -182,15 +201,19 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, hireTransaction);
+      const result = await addTransactionImpl(mockProvider, hireInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(hireTransaction);
-      expect(result).toEqual(hireTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('hire');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...hireInput,
+        id: expect.any(String),
+      }));
     });
 
-    it('should add a Fire transaction', async () => {
-      const fireTransaction: Fire = {
-        id: 'fire-1',
+    it('should add a Fire transaction and generate id', async () => {
+      const fireInput: TransactionInput = {
         type: 'fire',
         teams: [baseTeam],
         timestamp: baseTimestamp,
@@ -198,10 +221,33 @@ describe('transactions actions', () => {
       };
 
       const mockProvider = createMockDataProvider();
-      const result = await addTransactionImpl(mockProvider, fireTransaction);
+      const result = await addTransactionImpl(mockProvider, fireInput);
 
-      expect(mockProvider.addTransaction).toHaveBeenCalledWith(fireTransaction);
-      expect(result).toEqual(fireTransaction);
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('fire');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...fireInput,
+        id: expect.any(String),
+      }));
+    });
+
+    it('should generate unique ids for each transaction', async () => {
+      const input: TransactionInput = {
+        type: 'signing',
+        teams: [baseTeam],
+        timestamp: baseTimestamp,
+        player: { name: 'Test Player', position: 'QB' },
+        contractYears: 1,
+        totalValue: 1000000,
+        guaranteed: 500000,
+      };
+
+      const mockProvider = createMockDataProvider();
+      const result1 = await addTransactionImpl(mockProvider, input);
+      const result2 = await addTransactionImpl(mockProvider, input);
+
+      expect(result1.id).not.toBe(result2.id);
     });
   });
 

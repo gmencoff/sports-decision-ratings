@@ -1,6 +1,6 @@
 'use server';
 
-import { Transaction, PaginatedResult } from '@/lib/data/types';
+import { Transaction, TransactionInput, PaginatedResult } from '@/lib/data/types';
 import { DataProvider, getDataProvider } from '@/lib/data';
 
 export async function getTransactionsImpl(
@@ -33,16 +33,20 @@ export async function getTransaction(id: string): Promise<Transaction | null> {
 
 export async function addTransactionImpl(
   provider: DataProvider,
-  transaction: Transaction
+  input: TransactionInput
 ): Promise<Transaction> {
+  const transaction: Transaction = {
+    ...input,
+    id: crypto.randomUUID(),
+  } as Transaction;
   return provider.addTransaction(transaction);
 }
 
 export async function addTransaction(
-  transaction: Transaction
+  input: TransactionInput
 ): Promise<Transaction> {
   const provider = await getDataProvider();
-  return addTransactionImpl(provider, transaction);
+  return addTransactionImpl(provider, input);
 }
 
 export async function editTransactionImpl(
