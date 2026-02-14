@@ -3,6 +3,8 @@ import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TE
 
 const DEFAULT_PAGE_SIZE = 10;
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function encodeCursor(timestamp: Date, id: string): string {
   return Buffer.from(`${timestamp.toISOString()}:${id}`).toString('base64');
 }
@@ -234,6 +236,7 @@ export class MockDataProvider implements DataProvider {
     transactionId: string,
     teamId: string
   ): Promise<VoteCounts> {
+    await delay(1000);
     return calculateVoteCounts(transactionId, teamId);
   }
 
@@ -242,6 +245,7 @@ export class MockDataProvider implements DataProvider {
     teamId: string,
     userId: string
   ): Promise<Sentiment | null> {
+    await delay(1000);
     const key = getVoteKey(transactionId, teamId, userId);
     return voteStorage.get(key) || null;
   }
