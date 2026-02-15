@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Signing, Position, POSITIONS, NFL_TEAMS } from '@/lib/data/types';
+import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract, createPlayerContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { ContractFormFields } from '../../components/ContractFormFields';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -10,9 +11,13 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
-  const [contractYears, setContractYears] = useState(value.contractYears);
-  const [totalValue, setTotalValue] = useState(value.totalValue);
-  const [guaranteed, setGuaranteed] = useState(value.guaranteed);
+  const [contract, setContract] = useState<PlayerContract>(
+    createPlayerContract(
+      value.contract.years ?? 1,
+      value.contract.totalValue ?? 0,
+      value.contract.guaranteed ?? 0,
+    )
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +28,7 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
       teams: [selectedTeam],
       timestamp: value.timestamp,
       player: { name: playerName, position: playerPosition },
-      contractYears,
-      totalValue,
-      guaranteed,
+      contract,
     });
   };
 
@@ -85,52 +88,7 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label htmlFor="contractYears" className="block text-sm font-medium">
-            Contract Years
-          </label>
-          <input
-            type="number"
-            id="contractYears"
-            value={contractYears}
-            onChange={(e) => setContractYears(Number(e.target.value))}
-            min={1}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="totalValue" className="block text-sm font-medium">
-            Total Value ($)
-          </label>
-          <input
-            type="number"
-            id="totalValue"
-            value={totalValue}
-            onChange={(e) => setTotalValue(Number(e.target.value))}
-            min={0}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="guaranteed" className="block text-sm font-medium">
-            Guaranteed ($)
-          </label>
-          <input
-            type="number"
-            id="guaranteed"
-            value={guaranteed}
-            onChange={(e) => setGuaranteed(Number(e.target.value))}
-            min={0}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-      </div>
+      <ContractFormFields contract={contract} onChange={setContract} />
     </form>
   );
 }

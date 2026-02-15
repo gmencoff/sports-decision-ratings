@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TransactionEditor } from '@/app/create_edit/TransactionEditor';
-import { Transaction } from '@/lib/data/types';
+import { Transaction, createPlayerContract } from '@/lib/data/types';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -71,9 +71,7 @@ describe('TransactionEditor', () => {
           expect.objectContaining({
             type: 'signing',
             player: { name: 'Patrick Mahomes', position: 'QB' },
-            contractYears: 5,
-            totalValue: 50000000,
-            guaranteed: 40000000,
+            contract: { years: 5, totalValue: 50000000, guaranteed: 40000000 },
           })
         );
       });
@@ -170,9 +168,7 @@ describe('TransactionEditor', () => {
           expect.objectContaining({
             type: 'extension',
             player: { name: 'Travis Kelce', position: 'TE' },
-            contractYears: 2,
-            totalValue: 34000000,
-            guaranteed: 20000000,
+            contract: { years: 2, totalValue: 34000000, guaranteed: 20000000 },
           })
         );
       });
@@ -243,9 +239,7 @@ describe('TransactionEditor', () => {
         teams: [{ id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' }],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Old Player', position: 'WR' },
-        contractYears: 2,
-        totalValue: 20000000,
-        guaranteed: 10000000,
+        contract: createPlayerContract(2, 20000000, 10000000),
       };
 
       render(<TransactionEditor existingTransaction={existingTransaction} />);

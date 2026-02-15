@@ -28,6 +28,8 @@ import {
   Position,
   Role,
   NFL_TEAMS,
+  createPlayerContract,
+  PlayerContract,
 } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -60,6 +62,12 @@ export function decodePlayer(raw: unknown): Player {
     position: data.position as Position,
   };
 }
+
+// Convert raw JSONB contract data to Player type
+export function decodeContract(raw: unknown): PlayerContract {
+  return raw as { years: number; totalValue: number; guaranteed: number };
+}
+
 
 // Convert raw JSONB staff data to Staff type
 export function decodeStaff(raw: unknown): Staff {
@@ -147,9 +155,7 @@ function dbTransactionToTransaction(
         ...base,
         type: 'signing',
         player: decodePlayer(data.player),
-        contractYears: data.contractYears as number,
-        totalValue: data.totalValue as number,
-        guaranteed: data.guaranteed as number,
+        contract: decodeContract(data.contract)
       } as Signing;
     case 'draft':
       return {
@@ -171,9 +177,7 @@ function dbTransactionToTransaction(
         ...base,
         type: 'extension',
         player: decodePlayer(data.player),
-        contractYears: data.contractYears as number,
-        totalValue: data.totalValue as number,
-        guaranteed: data.guaranteed as number,
+        contract: decodeContract(data.contract)
       } as Extension;
     case 'hire':
       return {

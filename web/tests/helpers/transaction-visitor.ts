@@ -1,4 +1,4 @@
-import { Transaction, Team, NFL_TEAMS } from '@/lib/data/types';
+import { Transaction, Team, NFL_TEAMS, createPlayerContract } from '@/lib/data/types';
 import {
   TransactionVisitor,
   visitTransaction,
@@ -66,9 +66,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'signing',
       player: { name: 'Free Agent Star', position: 'CB' },
-      contractYears: 4,
-      totalValue: 80000000,
-      guaranteed: 50000000,
+      contract: createPlayerContract(4, 80000000, 50000000),
     }),
 
     visitDraft: () => ({
@@ -93,9 +91,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'extension',
       player: { name: 'Franchise Player', position: 'DE' },
-      contractYears: 5,
-      totalValue: 150000000,
-      guaranteed: 100000000,
+      contract: createPlayerContract(5, 150000000, 100000000),
     }),
 
     visitHire: () => ({
@@ -138,9 +134,7 @@ export function createFieldAssertionVisitor(
     visitSigning: () => {
       if (original.type === 'signing' && decoded.type === 'signing') {
         expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.contractYears).toBe(original.contractYears);
-        expectFn(decoded.totalValue).toBe(original.totalValue);
-        expectFn(decoded.guaranteed).toBe(original.guaranteed);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
 
@@ -162,9 +156,7 @@ export function createFieldAssertionVisitor(
     visitExtension: () => {
       if (original.type === 'extension' && decoded.type === 'extension') {
         expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.contractYears).toBe(original.contractYears);
-        expectFn(decoded.totalValue).toBe(original.totalValue);
-        expectFn(decoded.guaranteed).toBe(original.guaranteed);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
 

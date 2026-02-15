@@ -1,5 +1,5 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS, createPlayerContract } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -43,9 +43,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
     player: { name: 'Saquon Barkley', position: 'RB' },
-    contractYears: 3,
-    totalValue: 37750000,
-    guaranteed: 26000000,
+    contract: createPlayerContract(3, 37750000, 26000000),
   },
   {
     id: '3',
@@ -65,9 +63,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'extension',
     timestamp: new Date('2025-01-07T12:00:00Z'),
     player: { name: 'Amon-Ra St. Brown', position: 'WR' },
-    contractYears: 4,
-    totalValue: 120000000,
-    guaranteed: 80000000,
+    contract: createPlayerContract(4, 120000000, 80000000),
   },
   {
     id: '5',

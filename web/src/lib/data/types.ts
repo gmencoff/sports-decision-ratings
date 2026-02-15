@@ -79,6 +79,20 @@ export interface Player {
   position: Position;
 }
 
+export interface PlayerContract {
+  years?: number;
+  totalValue?: number;
+  guaranteed?: number;
+}
+
+export function createPlayerContract(
+  years?: number,
+  totalValue?: number,
+  guaranteed?: number
+): PlayerContract {
+  return { years, totalValue, guaranteed };
+}
+
 export const ROLES = [
   'President',
   'General Manager',
@@ -158,9 +172,7 @@ export interface Trade extends TransactionBase {
 export interface Signing extends TransactionBase {
   type: 'signing';
   player: Player;
-  contractYears: number;
-  totalValue: number;
-  guaranteed: number;
+  contract: PlayerContract;
 }
 
 export interface DraftSelection extends TransactionBase {
@@ -179,9 +191,7 @@ export interface Release extends TransactionBase {
 export interface Extension extends TransactionBase {
   type: 'extension';
   player: Player;
-  contractYears: number;
-  totalValue: number;
-  guaranteed: number;
+  contract: PlayerContract;
 }
 
 export interface Hire extends TransactionBase {

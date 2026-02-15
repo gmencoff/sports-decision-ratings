@@ -1,15 +1,6 @@
 import { Release } from '@/lib/data/types';
 import { CardProps } from '../../interface';
-
-function formatMoney(amount: number): string {
-  if (amount >= 1_000_000) {
-    return `$${(amount / 1_000_000).toFixed(1)}M`;
-  }
-  if (amount >= 1_000) {
-    return `$${(amount / 1_000).toFixed(0)}K`;
-  }
-  return `$${amount}`;
-}
+import { formatMoney } from '../../format';
 
 export function ReleaseCard({ transaction }: CardProps<Release>) {
   return (
