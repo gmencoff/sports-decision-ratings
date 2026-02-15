@@ -1,5 +1,5 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS, createPlayerContract } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS, createPlayerContract, createStaffContract } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -61,9 +61,19 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '4',
     teams: [TEAMS.DET],
     type: 'extension',
+    subtype: 'player',
     timestamp: new Date('2025-01-07T12:00:00Z'),
     player: { name: 'Amon-Ra St. Brown', position: 'WR' },
     contract: createPlayerContract(4, 120000000, 80000000),
+  },
+  {
+    id: '11',
+    teams: [TEAMS.SF],
+    type: 'extension',
+    subtype: 'staff',
+    timestamp: new Date('2025-01-07T11:00:00Z'),
+    staff: { name: 'Kyle Shanahan', role: 'Head Coach' },
+    contract: createStaffContract(6, 60000000),
   },
   {
     id: '5',
@@ -71,6 +81,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
     staff: { name: 'Ben Johnson', role: 'Head Coach' },
+    contract: createStaffContract(5, 50000000),
   },
   {
     id: '6',

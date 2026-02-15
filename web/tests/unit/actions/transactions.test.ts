@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { getTransactionsImpl, getTransactionImpl, addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
 import { createMockDataProvider, createMockTransaction } from '../../mocks/mockDataProvider';
 import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire, TransactionInput } from '@/lib/data/types';
-import { createPlayerContract } from '@/lib/data/types';
+import { createPlayerContract, createStaffContract } from '@/lib/data/types';
 
 describe('transactions actions', () => {
   describe('getTransactionsImpl', () => {
@@ -207,13 +207,36 @@ describe('transactions actions', () => {
       }));
     });
 
-    it('should add an Extension transaction and generate id', async () => {
+    it('should add a player Extension transaction and generate id', async () => {
       const extensionInput: TransactionInput = {
         type: 'extension',
+        subtype: 'player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
         contract: createPlayerContract(5, 200000000, 150000000),
+      };
+
+      const mockProvider = createMockDataProvider();
+      const result = await addTransactionImpl(mockProvider, extensionInput);
+
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('extension');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...extensionInput,
+        id: expect.any(String),
+      }));
+    });
+
+    it('should add a staff Extension transaction and generate id', async () => {
+      const extensionInput: TransactionInput = {
+        type: 'extension',
+        subtype: 'staff',
+        teams: [baseTeam],
+        timestamp: baseTimestamp,
+        staff: { name: 'Coach Smith', role: 'Head Coach' },
+        contract: createStaffContract(5, 50000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -234,6 +257,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
+        contract: createStaffContract(4, 40000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -384,6 +408,7 @@ describe('transactions actions', () => {
       const extensionTransaction: Extension = {
         id: 'extension-1',
         type: 'extension',
+        subtype: 'player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
@@ -404,6 +429,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Offensive Coordinator' },
+        contract: createStaffContract(3, 30000000),
       };
 
       const mockProvider = createMockDataProvider();

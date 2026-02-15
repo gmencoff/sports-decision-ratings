@@ -1,27 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { Hire, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
-import { FormProps } from '../../interface';
-import { StaffContractFormFields } from '../../components/StaffContractFormFields';
+import { PlayerExtension, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
+import { ContractFormFields } from '../../components/ContractFormFields';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
-export function HireForm({ value, onSubmit }: FormProps<Hire>) {
+interface PlayerExtensionFormProps {
+  value: PlayerExtension;
+  onSubmit: (value: PlayerExtension) => void;
+}
+
+export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProps) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
-  const [staffName, setStaffName] = useState(value.staff.name);
-  const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
-  const [contract, setContract] = useState<StaffContract>(value.contract);
+  const [playerName, setPlayerName] = useState(value.player.name);
+  const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
+  const [contract, setContract] = useState<PlayerContract>(value.contract);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedTeam = NFL_TEAMS.find((t) => t.abbreviation === teamAbbreviation)!;
     onSubmit({
       id: value.id,
-      type: 'hire',
+      type: 'extension',
+      subtype: 'player',
       teams: [selectedTeam],
       timestamp: value.timestamp,
-      staff: { name: staffName, role: staffRole },
+      player: { name: playerName, position: playerPosition },
       contract,
     });
   };
@@ -49,40 +54,40 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="staffName" className="block text-sm font-medium">
-            Staff Name
+          <label htmlFor="playerName" className="block text-sm font-medium">
+            Player Name
           </label>
           <input
             type="text"
-            id="staffName"
-            value={staffName}
-            onChange={(e) => setStaffName(e.target.value)}
+            id="playerName"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="staffRole" className="block text-sm font-medium">
-            Role
+          <label htmlFor="playerPosition" className="block text-sm font-medium">
+            Position
           </label>
           <select
-            id="staffRole"
-            value={staffRole}
-            onChange={(e) => setStaffRole(e.target.value as Role)}
+            id="playerPosition"
+            value={playerPosition}
+            onChange={(e) => setPlayerPosition(e.target.value as Position)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
           >
-            {ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role}
+            {POSITIONS.map((pos) => (
+              <option key={pos} value={pos}>
+                {pos}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      <StaffContractFormFields contract={contract} onChange={setContract} />
+      <ContractFormFields contract={contract} onChange={setContract} />
     </form>
   );
 }

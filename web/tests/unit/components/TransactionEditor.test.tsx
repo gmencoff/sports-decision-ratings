@@ -177,6 +177,7 @@ describe('TransactionEditor', () => {
         expect(mockAddTransaction).toHaveBeenCalledWith(
           expect.objectContaining({
             type: 'extension',
+            subtype: 'player',
             player: { name: 'Travis Kelce', position: 'TE' },
             contract: { years: 2, totalValue: 34000000, guaranteed: 20000000 },
           })
@@ -373,6 +374,7 @@ describe('TransactionEditor', () => {
         teams: [],
         timestamp: new Date(),
         staff: { name: 'Coach', role: 'Head Coach' },
+        contract: {},
       };
 
       render(<TransactionEditor existingTransaction={existingTransaction} />);

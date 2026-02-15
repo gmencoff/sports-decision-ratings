@@ -1,4 +1,4 @@
-import { Transaction, Team, NFL_TEAMS, createPlayerContract } from '@/lib/data/types';
+import { Transaction, Team, NFL_TEAMS, createPlayerContract, createStaffContract } from '@/lib/data/types';
 import {
   TransactionVisitor,
   visitTransaction,
@@ -90,6 +90,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       ...base,
       teams: [teams[0]],
       type: 'extension',
+      subtype: 'player',
       player: { name: 'Franchise Player', position: 'DE' },
       contract: createPlayerContract(5, 150000000, 100000000),
     }),
@@ -99,6 +100,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'hire',
       staff: { name: 'New Coach', role: 'Head Coach' },
+      contract: createStaffContract(4, 40000000),
     }),
 
     visitFire: () => ({
@@ -155,14 +157,22 @@ export function createFieldAssertionVisitor(
 
     visitExtension: () => {
       if (original.type === 'extension' && decoded.type === 'extension') {
-        expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.contract).toEqual(original.contract);
+        expectFn(decoded.subtype).toBe(original.subtype);
+        if (original.subtype === 'player' && decoded.subtype === 'player') {
+          expectFn(decoded.player).toEqual(original.player);
+          expectFn(decoded.contract).toEqual(original.contract);
+        }
+        if (original.subtype === 'staff' && decoded.subtype === 'staff') {
+          expectFn(decoded.staff).toEqual(original.staff);
+          expectFn(decoded.contract).toEqual(original.contract);
+        }
       }
     },
 
     visitHire: () => {
       if (original.type === 'hire' && decoded.type === 'hire') {
         expectFn(decoded.staff).toEqual(original.staff);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
 

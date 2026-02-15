@@ -93,6 +93,18 @@ export function createPlayerContract(
   return { years, totalValue, guaranteed };
 }
 
+export interface StaffContract {
+  years?: number;
+  totalValue?: number;
+}
+
+export function createStaffContract(
+  years?: number,
+  totalValue?: number
+): StaffContract {
+  return { years, totalValue };
+}
+
 export const ROLES = [
   'President',
   'General Manager',
@@ -105,9 +117,13 @@ export const ROLES = [
   'Wide Receivers Coach',
   'Tight Ends Coach',
   'Offensive Line Coach',
+  'Offensive Quality Control Coach',
+  'Offensive Assistant',
   'Defensive Line Coach',
   'Linebackers Coach',
   'Defensive Backs Coach',
+  'Defensive Quality Control Coach',
+  'Defensive Assistant',
   'Strength and Conditioning Coach',
   'Assistant Coach',
 ] as const;
@@ -188,15 +204,29 @@ export interface Release extends TransactionBase {
   capSavings?: number;
 }
 
-export interface Extension extends TransactionBase {
+export const EXTENSION_SUBTYPES = ['player', 'staff'] as const;
+export type ExtensionSubtype = (typeof EXTENSION_SUBTYPES)[number];
+
+export interface PlayerExtension extends TransactionBase {
   type: 'extension';
+  subtype: 'player';
   player: Player;
   contract: PlayerContract;
 }
 
+export interface StaffExtension extends TransactionBase {
+  type: 'extension';
+  subtype: 'staff';
+  staff: Staff;
+  contract: StaffContract;
+}
+
+export type Extension = PlayerExtension | StaffExtension;
+
 export interface Hire extends TransactionBase {
   type: 'hire';
   staff: Staff;
+  contract: StaffContract;
 }
 
 export interface Fire extends TransactionBase {

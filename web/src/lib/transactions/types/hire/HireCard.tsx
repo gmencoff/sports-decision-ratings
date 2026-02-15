@@ -1,5 +1,6 @@
 import { Hire } from '@/lib/data/types';
 import { CardProps } from '../../interface';
+import { StaffContractDetails } from '../../components/StaffContractDetails';
 
 export function HireCard({ transaction }: CardProps<Hire>) {
   return (
@@ -10,6 +11,7 @@ export function HireCard({ transaction }: CardProps<Hire>) {
       <div className="text-sm text-gray-600">
         {transaction.staff.role}
       </div>
+      <StaffContractDetails contract={transaction.contract} />
     </div>
   );
 }
