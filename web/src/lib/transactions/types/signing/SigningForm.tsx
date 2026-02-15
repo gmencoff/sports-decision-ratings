@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract, createPlayerContract } from '@/lib/data/types';
+import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { ContractFormFields } from '../../components/ContractFormFields';
 
@@ -11,13 +11,7 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
-  const [contract, setContract] = useState<PlayerContract>(
-    createPlayerContract(
-      value.contract.years ?? 1,
-      value.contract.totalValue ?? 0,
-      value.contract.guaranteed ?? 0,
-    )
-  );
+  const [contract, setContract] = useState<PlayerContract>(value.contract);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

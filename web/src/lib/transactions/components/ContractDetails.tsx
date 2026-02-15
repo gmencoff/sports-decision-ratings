@@ -7,17 +7,29 @@ interface ContractDetailsProps {
 }
 
 export function ContractDetails({ contract, label }: ContractDetailsProps) {
+  const hasYears = contract.years != null;
+  const hasTotalValue = contract.totalValue != null;
+  const hasGuaranteed = contract.guaranteed != null;
+
+  if (!hasYears && !hasTotalValue && !hasGuaranteed) {
+    return <div className="text-sm text-gray-400">Contract details unknown</div>;
+  }
+
+  const yearsPart = hasYears
+    ? `${contract.years} year${label ? ` ${label}` : (contract.years !== 1 ? 's' : '')}`
+    : null;
+  const totalPart = hasTotalValue ? `${formatMoney(contract.totalValue!)} total` : null;
+
+  const summaryParts = [yearsPart, totalPart].filter(Boolean).join(', ');
+
   return (
     <>
-      {contract.years != null && contract.totalValue != null && (
-        <div className="text-sm text-gray-600">
-          {contract.years} year{label ? ` ${label}` : (contract.years !== 1 ? 's' : '')},{' '}
-          {formatMoney(contract.totalValue)} total
-        </div>
+      {summaryParts && (
+        <div className="text-sm text-gray-600">{summaryParts}</div>
       )}
-      {contract.guaranteed != null && (
+      {hasGuaranteed && (
         <div className="text-sm text-gray-500">
-          {formatMoney(contract.guaranteed)} guaranteed
+          {formatMoney(contract.guaranteed!)} guaranteed
         </div>
       )}
     </>

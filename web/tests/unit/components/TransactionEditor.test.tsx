@@ -55,12 +55,17 @@ describe('TransactionEditor', () => {
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Patrick Mahomes');
       await user.selectOptions(screen.getByLabelText(/position/i), 'QB');
-      await user.clear(screen.getByLabelText(/contract years/i));
-      await user.type(screen.getByLabelText(/contract years/i), '5');
-      await user.clear(screen.getByLabelText(/total value/i));
-      await user.type(screen.getByLabelText(/total value/i), '50000000');
-      await user.clear(screen.getByLabelText(/guaranteed/i));
-      await user.type(screen.getByLabelText(/guaranteed/i), '40000000');
+      // Enable contract fields (default is unknown) by clicking checkboxes
+      await user.click(screen.getByRole('checkbox', { name: /contract years/i }));
+      await user.click(screen.getByRole('checkbox', { name: /total value/i }));
+      await user.click(screen.getByRole('checkbox', { name: /guaranteed/i }));
+      // Fill in contract values
+      await user.clear(screen.getByRole('spinbutton', { name: /contract years/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /contract years/i }), '5');
+      await user.clear(screen.getByRole('spinbutton', { name: /total value/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /total value/i }), '50000000');
+      await user.clear(screen.getByRole('spinbutton', { name: /guaranteed/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /guaranteed/i }), '40000000');
 
       const submitButton = screen.getByRole('button', { name: /signing/i });
       await user.click(submitButton);
@@ -152,12 +157,17 @@ describe('TransactionEditor', () => {
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Travis Kelce');
       await user.selectOptions(screen.getByLabelText(/position/i), 'TE');
-      await user.clear(screen.getByLabelText(/contract years/i));
-      await user.type(screen.getByLabelText(/contract years/i), '2');
-      await user.clear(screen.getByLabelText(/total value/i));
-      await user.type(screen.getByLabelText(/total value/i), '34000000');
-      await user.clear(screen.getByLabelText(/guaranteed/i));
-      await user.type(screen.getByLabelText(/guaranteed/i), '20000000');
+      // Enable contract fields (default is unknown) by clicking checkboxes
+      await user.click(screen.getByRole('checkbox', { name: /contract years/i }));
+      await user.click(screen.getByRole('checkbox', { name: /total value/i }));
+      await user.click(screen.getByRole('checkbox', { name: /guaranteed/i }));
+      // Fill in contract values
+      await user.clear(screen.getByRole('spinbutton', { name: /contract years/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /contract years/i }), '2');
+      await user.clear(screen.getByRole('spinbutton', { name: /total value/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /total value/i }), '34000000');
+      await user.clear(screen.getByRole('spinbutton', { name: /guaranteed/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /guaranteed/i }), '20000000');
 
       const submitButton = screen.getByRole('button', { name: /extension/i });
       await user.click(submitButton);

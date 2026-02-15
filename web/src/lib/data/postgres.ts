@@ -28,7 +28,6 @@ import {
   Position,
   Role,
   NFL_TEAMS,
-  createPlayerContract,
   PlayerContract,
 } from './types';
 
