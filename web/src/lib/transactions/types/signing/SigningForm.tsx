@@ -30,6 +30,8 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team
@@ -85,8 +87,6 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
       </div>
 
       <ContractFormFields contract={contract} onChange={setContract} />
-
-      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
     </form>
   );
 }

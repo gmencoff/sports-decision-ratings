@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { PlayerExtension, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
 import { ContractFormFields } from '../../components/ContractFormFields';
-import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -17,7 +16,6 @@ export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProp
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [contract, setContract] = useState<PlayerContract>(value.contract);
-  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +25,7 @@ export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProp
       type: 'extension',
       subtype: 'player',
       teams: [selectedTeam],
-      timestamp,
+      timestamp: value.timestamp,
       player: { name: playerName, position: playerPosition },
       contract,
     });
@@ -35,8 +33,6 @@ export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProp
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
-      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
-
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team

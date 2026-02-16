@@ -5,6 +5,7 @@ import { Extension, ExtensionSubtype, EXTENSION_SUBTYPES, PlayerExtension, Staff
 import { FormProps } from '../../interface';
 import { PlayerExtensionForm } from './PlayerExtensionFields';
 import { StaffExtensionForm } from './StaffExtensionFields';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 export const DEFAULT_PLAYER_EXTENSION: PlayerExtension = {
   id: '',
@@ -29,17 +30,20 @@ export const DEFAULT_STAFF_EXTENSION: StaffExtension = {
 export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
   const isCreateMode = value.id === '';
   const [subtype, setSubtype] = useState<ExtensionSubtype>(value.subtype ?? 'player');
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const playerValue: PlayerExtension = value.subtype === 'player'
-    ? value
-    : { ...DEFAULT_PLAYER_EXTENSION, id: value.id, teams: value.teams, timestamp: value.timestamp };
+    ? { ...value, timestamp }
+    : { ...DEFAULT_PLAYER_EXTENSION, id: value.id, teams: value.teams, timestamp };
 
   const staffValue: StaffExtension = value.subtype === 'staff'
-    ? value
-    : { ...DEFAULT_STAFF_EXTENSION, id: value.id, teams: value.teams, timestamp: value.timestamp };
+    ? { ...value, timestamp }
+    : { ...DEFAULT_STAFF_EXTENSION, id: value.id, teams: value.teams, timestamp };
 
   return (
     <div className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       {isCreateMode && (
         <div>
           <label htmlFor="extensionSubtype" className="block text-sm font-medium">
