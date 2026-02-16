@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TransactionEditor } from '@/app/create_edit/TransactionEditor';
-import { Transaction } from '@/lib/data/types';
+import { Transaction, createPlayerContract } from '@/lib/data/types';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -55,12 +55,17 @@ describe('TransactionEditor', () => {
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Patrick Mahomes');
       await user.selectOptions(screen.getByLabelText(/position/i), 'QB');
-      await user.clear(screen.getByLabelText(/contract years/i));
-      await user.type(screen.getByLabelText(/contract years/i), '5');
-      await user.clear(screen.getByLabelText(/total value/i));
-      await user.type(screen.getByLabelText(/total value/i), '50000000');
-      await user.clear(screen.getByLabelText(/guaranteed/i));
-      await user.type(screen.getByLabelText(/guaranteed/i), '40000000');
+      // Enable contract fields (default is unknown) by clicking checkboxes
+      await user.click(screen.getByRole('checkbox', { name: /contract years/i }));
+      await user.click(screen.getByRole('checkbox', { name: /total value/i }));
+      await user.click(screen.getByRole('checkbox', { name: /guaranteed/i }));
+      // Fill in contract values
+      await user.clear(screen.getByRole('spinbutton', { name: /contract years/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /contract years/i }), '5');
+      await user.clear(screen.getByRole('spinbutton', { name: /total value/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /total value/i }), '50000000');
+      await user.clear(screen.getByRole('spinbutton', { name: /guaranteed/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /guaranteed/i }), '40000000');
 
       const submitButton = screen.getByRole('button', { name: /signing/i });
       await user.click(submitButton);
@@ -71,9 +76,7 @@ describe('TransactionEditor', () => {
           expect.objectContaining({
             type: 'signing',
             player: { name: 'Patrick Mahomes', position: 'QB' },
-            contractYears: 5,
-            totalValue: 50000000,
-            guaranteed: 40000000,
+            contract: { years: 5, totalValue: 50000000, guaranteed: 40000000 },
           })
         );
       });
@@ -154,12 +157,17 @@ describe('TransactionEditor', () => {
       // Fill in required fields
       await user.type(screen.getByLabelText(/player name/i), 'Travis Kelce');
       await user.selectOptions(screen.getByLabelText(/position/i), 'TE');
-      await user.clear(screen.getByLabelText(/contract years/i));
-      await user.type(screen.getByLabelText(/contract years/i), '2');
-      await user.clear(screen.getByLabelText(/total value/i));
-      await user.type(screen.getByLabelText(/total value/i), '34000000');
-      await user.clear(screen.getByLabelText(/guaranteed/i));
-      await user.type(screen.getByLabelText(/guaranteed/i), '20000000');
+      // Enable contract fields (default is unknown) by clicking checkboxes
+      await user.click(screen.getByRole('checkbox', { name: /contract years/i }));
+      await user.click(screen.getByRole('checkbox', { name: /total value/i }));
+      await user.click(screen.getByRole('checkbox', { name: /guaranteed/i }));
+      // Fill in contract values
+      await user.clear(screen.getByRole('spinbutton', { name: /contract years/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /contract years/i }), '2');
+      await user.clear(screen.getByRole('spinbutton', { name: /total value/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /total value/i }), '34000000');
+      await user.clear(screen.getByRole('spinbutton', { name: /guaranteed/i }));
+      await user.type(screen.getByRole('spinbutton', { name: /guaranteed/i }), '20000000');
 
       const submitButton = screen.getByRole('button', { name: /extension/i });
       await user.click(submitButton);
@@ -169,10 +177,9 @@ describe('TransactionEditor', () => {
         expect(mockAddTransaction).toHaveBeenCalledWith(
           expect.objectContaining({
             type: 'extension',
+            subtype: 'player',
             player: { name: 'Travis Kelce', position: 'TE' },
-            contractYears: 2,
-            totalValue: 34000000,
-            guaranteed: 20000000,
+            contract: { years: 2, totalValue: 34000000, guaranteed: 20000000 },
           })
         );
       });
@@ -243,9 +250,7 @@ describe('TransactionEditor', () => {
         teams: [{ id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' }],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Old Player', position: 'WR' },
-        contractYears: 2,
-        totalValue: 20000000,
-        guaranteed: 10000000,
+        contract: createPlayerContract(2, 20000000, 10000000),
       };
 
       render(<TransactionEditor existingTransaction={existingTransaction} />);
@@ -343,6 +348,52 @@ describe('TransactionEditor', () => {
     });
   });
 
+  describe('Transaction date selection', () => {
+    it('should default the date field to today', () => {
+      render(<TransactionEditor existingTransaction={null} />);
+      const dateInput = screen.getByLabelText(/transaction date/i);
+      const today = new Date();
+      const expected = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      expect(dateInput).toHaveValue(expected);
+    });
+
+    it('should submit with a past date when changed', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      // Change to a past date
+      const dateInput = screen.getByLabelText(/transaction date/i);
+      await user.clear(dateInput);
+      await user.type(dateInput, '2025-01-15');
+
+      const submitButton = screen.getByRole('button', { name: /trade/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const submittedTransaction = mockAddTransaction.mock.calls[0][0];
+        expect(submittedTransaction.timestamp.getFullYear()).toBe(2025);
+        expect(submittedTransaction.timestamp.getMonth()).toBe(0); // January
+        expect(submittedTransaction.timestamp.getDate()).toBe(15);
+      });
+    });
+
+    it('should show existing date when editing a transaction', () => {
+      const existingTransaction: Transaction = {
+        id: 'tx-date',
+        type: 'fire',
+        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
+        timestamp: new Date(2024, 5, 20), // June 20, 2024
+        staff: { name: 'Coach', role: 'Head Coach' },
+      };
+
+      render(<TransactionEditor existingTransaction={existingTransaction} />);
+
+      const dateInput = screen.getByLabelText(/transaction date/i);
+      expect(dateInput).toHaveValue('2024-06-20');
+    });
+  });
+
   describe('Error handling', () => {
     it('should display error message when addTransaction fails', async () => {
       const user = userEvent.setup();
@@ -369,6 +420,7 @@ describe('TransactionEditor', () => {
         teams: [],
         timestamp: new Date(),
         staff: { name: 'Coach', role: 'Head Coach' },
+        contract: {},
       };
 
       render(<TransactionEditor existingTransaction={existingTransaction} />);

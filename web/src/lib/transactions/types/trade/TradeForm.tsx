@@ -16,6 +16,7 @@ import {
   Team,
 } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -43,6 +44,8 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
   const defaultFromTeamId = value.teams[0]?.id ?? sortedTeams[0].id;
   const defaultToTeamId = value.teams[1]?.id ?? sortedTeams[1]?.id ?? sortedTeams[0].id;
   
+  const [timestamp, setTimestamp] = useState(value.timestamp);
+
   const [assets, setAssets] = useState<AssetFormData[]>(() => {
     if (value.assets.length === 0) {
       return [];
@@ -172,7 +175,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
       id: value.id,
       type: 'trade',
       teams,
-      timestamp: value.timestamp,
+      timestamp,
       assets: tradeAssets,
     });
   };
@@ -386,6 +389,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
 
       <div>
         <div className="flex justify-between items-center mb-4">

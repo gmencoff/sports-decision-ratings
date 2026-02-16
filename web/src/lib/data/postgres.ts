@@ -9,7 +9,6 @@ import {
   Signing,
   DraftSelection,
   Release,
-  Extension,
   Hire,
   Fire,
   Team,
@@ -28,6 +27,10 @@ import {
   Position,
   Role,
   NFL_TEAMS,
+  PlayerContract,
+  StaffContract,
+  PlayerExtension,
+  StaffExtension,
 } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -59,6 +62,17 @@ export function decodePlayer(raw: unknown): Player {
     name: data.name,
     position: data.position as Position,
   };
+}
+
+// Convert raw JSONB contract data to Player type
+export function decodeContract(raw: unknown): PlayerContract {
+  return raw as { years: number; totalValue: number; guaranteed: number };
+}
+
+
+// Convert raw JSONB contract data to StaffContract type
+export function decodeStaffContract(raw: unknown): StaffContract {
+  return raw as { years: number; totalValue: number };
 }
 
 // Convert raw JSONB staff data to Staff type
@@ -147,9 +161,7 @@ function dbTransactionToTransaction(
         ...base,
         type: 'signing',
         player: decodePlayer(data.player),
-        contractYears: data.contractYears as number,
-        totalValue: data.totalValue as number,
-        guaranteed: data.guaranteed as number,
+        contract: decodeContract(data.contract)
       } as Signing;
     case 'draft':
       return {
@@ -167,19 +179,28 @@ function dbTransactionToTransaction(
         capSavings: data.capSavings as number | undefined,
       } as Release;
     case 'extension':
+      if (data.subtype === 'staff') {
+        return {
+          ...base,
+          type: 'extension',
+          subtype: 'staff',
+          staff: decodeStaff(data.staff),
+          contract: decodeStaffContract(data.contract),
+        } as StaffExtension;
+      }
       return {
         ...base,
         type: 'extension',
+        subtype: 'player',
         player: decodePlayer(data.player),
-        contractYears: data.contractYears as number,
-        totalValue: data.totalValue as number,
-        guaranteed: data.guaranteed as number,
-      } as Extension;
+        contract: decodeContract(data.contract),
+      } as PlayerExtension;
     case 'hire':
       return {
         ...base,
         type: 'hire',
         staff: decodeStaff(data.staff),
+        contract: decodeStaffContract(data.contract ?? {}),
       } as Hire;
     case 'fire':
       return {

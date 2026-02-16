@@ -1,6 +1,6 @@
 import { Extension } from '@/lib/data/types';
 import { TransactionModule, ValidationResult } from '../../interface';
-import { ExtensionForm } from './ExtensionForm';
+import { ExtensionForm, DEFAULT_PLAYER_EXTENSION } from './ExtensionForm';
 import { ExtensionCard } from './ExtensionCard';
 
 export class ExtensionModule implements TransactionModule<Extension> {
@@ -11,16 +11,7 @@ export class ExtensionModule implements TransactionModule<Extension> {
   Card = ExtensionCard;
 
   createDefault(): Extension {
-    return {
-      id: '',
-      type: 'extension',
-      teams: [],
-      timestamp: new Date(),
-      player: { name: '', position: 'QB' },
-      contractYears: 1,
-      totalValue: 0,
-      guaranteed: 0,
-    };
+    return { ...DEFAULT_PLAYER_EXTENSION };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

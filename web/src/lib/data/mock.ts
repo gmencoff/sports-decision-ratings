@@ -1,7 +1,9 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS, createPlayerContract, createStaffContract } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function encodeCursor(timestamp: Date, id: string): string {
   return Buffer.from(`${timestamp.toISOString()}:${id}`).toString('base64');
@@ -41,9 +43,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
     player: { name: 'Saquon Barkley', position: 'RB' },
-    contractYears: 3,
-    totalValue: 37750000,
-    guaranteed: 26000000,
+    contract: createPlayerContract(3, 37750000, 26000000),
   },
   {
     id: '3',
@@ -61,11 +61,19 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '4',
     teams: [TEAMS.DET],
     type: 'extension',
+    subtype: 'player',
     timestamp: new Date('2025-01-07T12:00:00Z'),
     player: { name: 'Amon-Ra St. Brown', position: 'WR' },
-    contractYears: 4,
-    totalValue: 120000000,
-    guaranteed: 80000000,
+    contract: createPlayerContract(4, 120000000, 80000000),
+  },
+  {
+    id: '11',
+    teams: [TEAMS.SF],
+    type: 'extension',
+    subtype: 'staff',
+    timestamp: new Date('2025-01-07T11:00:00Z'),
+    staff: { name: 'Kyle Shanahan', role: 'Head Coach' },
+    contract: createStaffContract(6, 60000000),
   },
   {
     id: '5',
@@ -73,6 +81,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
     staff: { name: 'Ben Johnson', role: 'Head Coach' },
+    contract: createStaffContract(5, 50000000),
   },
   {
     id: '6',
@@ -234,6 +243,7 @@ export class MockDataProvider implements DataProvider {
     transactionId: string,
     teamId: string
   ): Promise<VoteCounts> {
+    await delay(1000);
     return calculateVoteCounts(transactionId, teamId);
   }
 
@@ -242,6 +252,7 @@ export class MockDataProvider implements DataProvider {
     teamId: string,
     userId: string
   ): Promise<Sentiment | null> {
+    await delay(1000);
     const key = getVoteKey(transactionId, teamId, userId);
     return voteStorage.get(key) || null;
   }

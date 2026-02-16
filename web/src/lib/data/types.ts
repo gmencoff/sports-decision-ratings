@@ -79,6 +79,32 @@ export interface Player {
   position: Position;
 }
 
+export interface PlayerContract {
+  years?: number;
+  totalValue?: number;
+  guaranteed?: number;
+}
+
+export function createPlayerContract(
+  years?: number,
+  totalValue?: number,
+  guaranteed?: number
+): PlayerContract {
+  return { years, totalValue, guaranteed };
+}
+
+export interface StaffContract {
+  years?: number;
+  totalValue?: number;
+}
+
+export function createStaffContract(
+  years?: number,
+  totalValue?: number
+): StaffContract {
+  return { years, totalValue };
+}
+
 export const ROLES = [
   'President',
   'General Manager',
@@ -91,9 +117,13 @@ export const ROLES = [
   'Wide Receivers Coach',
   'Tight Ends Coach',
   'Offensive Line Coach',
+  'Offensive Quality Control Coach',
+  'Offensive Assistant',
   'Defensive Line Coach',
   'Linebackers Coach',
   'Defensive Backs Coach',
+  'Defensive Quality Control Coach',
+  'Defensive Assistant',
   'Strength and Conditioning Coach',
   'Assistant Coach',
 ] as const;
@@ -144,9 +174,9 @@ export type TradeAsset =
 
 // Shared base fields for all transactions
 interface TransactionBase {
-  id: string;
-  teams: Team[];
-  timestamp: Date;
+  id: string; // unique identifier for the transaction
+  teams: Team[]; // teams involved in the transaction
+  timestamp: Date; // date that the transaction occured
 }
 
 // Type-specific transaction interfaces
@@ -158,9 +188,7 @@ export interface Trade extends TransactionBase {
 export interface Signing extends TransactionBase {
   type: 'signing';
   player: Player;
-  contractYears: number;
-  totalValue: number;
-  guaranteed: number;
+  contract: PlayerContract;
 }
 
 export interface DraftSelection extends TransactionBase {
@@ -176,17 +204,29 @@ export interface Release extends TransactionBase {
   capSavings?: number;
 }
 
-export interface Extension extends TransactionBase {
+export const EXTENSION_SUBTYPES = ['player', 'staff'] as const;
+export type ExtensionSubtype = (typeof EXTENSION_SUBTYPES)[number];
+
+export interface PlayerExtension extends TransactionBase {
   type: 'extension';
+  subtype: 'player';
   player: Player;
-  contractYears: number;
-  totalValue: number;
-  guaranteed: number;
+  contract: PlayerContract;
 }
+
+export interface StaffExtension extends TransactionBase {
+  type: 'extension';
+  subtype: 'staff';
+  staff: Staff;
+  contract: StaffContract;
+}
+
+export type Extension = PlayerExtension | StaffExtension;
 
 export interface Hire extends TransactionBase {
   type: 'hire';
   staff: Staff;
+  contract: StaffContract;
 }
 
 export interface Fire extends TransactionBase {

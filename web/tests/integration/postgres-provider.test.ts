@@ -8,6 +8,8 @@ import {
   assertFieldsPreserved,
   testTeams,
 } from '../helpers/transaction-visitor';
+import type { Signing, PlayerExtension, StaffExtension } from '@/lib/data/types';
+import { createStaffContract } from '@/lib/data/types';
 
 describe('PostgresDataProvider Integration', () => {
   let provider: PostgresDataProvider;
@@ -58,6 +60,154 @@ describe('PostgresDataProvider Integration', () => {
         // Verify type-specific fields still preserved
         assertFieldsPreserved(original, retrieved!, expect);
       });
+    });
+
+    it('should add and retrieve a signing with undefined contract fields', async () => {
+      const signing: Signing = {
+        id: 'signing-partial-contract',
+        type: 'signing',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        player: { name: 'Unknown Deal', position: 'WR' },
+        contract: {},
+      };
+
+      await provider.addTransaction(signing);
+      const retrieved = await provider.getTransaction(signing.id) as Signing;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('signing');
+      expect(retrieved.contract.years).toBeUndefined();
+      expect(retrieved.contract.totalValue).toBeUndefined();
+      expect(retrieved.contract.guaranteed).toBeUndefined();
+    });
+
+    it('should add and retrieve a signing with partially defined contract fields', async () => {
+      const signing: Signing = {
+        id: 'signing-partial-contract-2',
+        type: 'signing',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        player: { name: 'Partial Deal', position: 'QB' },
+        contract: { years: 3 },
+      };
+
+      await provider.addTransaction(signing);
+      const retrieved = await provider.getTransaction(signing.id) as Signing;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('signing');
+      expect(retrieved.contract.years).toBe(3);
+      expect(retrieved.contract.totalValue).toBeUndefined();
+      expect(retrieved.contract.guaranteed).toBeUndefined();
+    });
+
+    it('should add and retrieve a player extension with undefined contract fields', async () => {
+      const extension: PlayerExtension = {
+        id: 'extension-partial-contract',
+        type: 'extension',
+        subtype: 'player',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        player: { name: 'Mystery Extension', position: 'DE' },
+        contract: {},
+      };
+
+      await provider.addTransaction(extension);
+      const retrieved = await provider.getTransaction(extension.id) as PlayerExtension;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('extension');
+      expect(retrieved.subtype).toBe('player');
+      expect(retrieved.contract.years).toBeUndefined();
+      expect(retrieved.contract.totalValue).toBeUndefined();
+      expect(retrieved.contract.guaranteed).toBeUndefined();
+    });
+
+    it('should add and retrieve a player extension with partially defined contract fields', async () => {
+      const extension: PlayerExtension = {
+        id: 'extension-partial-contract-2',
+        type: 'extension',
+        subtype: 'player',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        player: { name: 'Partial Extension', position: 'CB' },
+        contract: { totalValue: 80000000, guaranteed: 50000000 },
+      };
+
+      await provider.addTransaction(extension);
+      const retrieved = await provider.getTransaction(extension.id) as PlayerExtension;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('extension');
+      expect(retrieved.subtype).toBe('player');
+      expect(retrieved.contract.years).toBeUndefined();
+      expect(retrieved.contract.totalValue).toBe(80000000);
+      expect(retrieved.contract.guaranteed).toBe(50000000);
+    });
+
+    it('should add and retrieve a staff extension with full contract', async () => {
+      const extension: StaffExtension = {
+        id: 'staff-extension-full',
+        type: 'extension',
+        subtype: 'staff',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        staff: { name: 'Coach Full', role: 'Head Coach' },
+        contract: createStaffContract(5, 50000000),
+      };
+
+      await provider.addTransaction(extension);
+      const retrieved = await provider.getTransaction(extension.id) as StaffExtension;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('extension');
+      expect(retrieved.subtype).toBe('staff');
+      expect(retrieved.staff).toEqual({ name: 'Coach Full', role: 'Head Coach' });
+      expect(retrieved.contract.years).toBe(5);
+      expect(retrieved.contract.totalValue).toBe(50000000);
+    });
+
+    it('should add and retrieve a staff extension with empty contract', async () => {
+      const extension: StaffExtension = {
+        id: 'staff-extension-empty',
+        type: 'extension',
+        subtype: 'staff',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        staff: { name: 'Coach Empty', role: 'Offensive Coordinator' },
+        contract: {},
+      };
+
+      await provider.addTransaction(extension);
+      const retrieved = await provider.getTransaction(extension.id) as StaffExtension;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('extension');
+      expect(retrieved.subtype).toBe('staff');
+      expect(retrieved.contract.years).toBeUndefined();
+      expect(retrieved.contract.totalValue).toBeUndefined();
+    });
+
+    it('should add and retrieve a staff extension with partial contract', async () => {
+      const extension: StaffExtension = {
+        id: 'staff-extension-partial',
+        type: 'extension',
+        subtype: 'staff',
+        teams: [testTeams[0]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        staff: { name: 'Coach Partial', role: 'Defensive Coordinator' },
+        contract: createStaffContract(3),
+      };
+
+      await provider.addTransaction(extension);
+      const retrieved = await provider.getTransaction(extension.id) as StaffExtension;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('extension');
+      expect(retrieved.subtype).toBe('staff');
+      expect(retrieved.contract.years).toBe(3);
+      expect(retrieved.contract.totalValue).toBeUndefined();
     });
 
     it('should return null for non-existent transaction', async () => {

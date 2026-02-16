@@ -42,6 +42,7 @@ export function TransactionCard({
   showLink = true,
 }: TransactionCardProps) {
   const [teamVotes, setTeamVotes] = useState<Record<string, TeamVoteState>>({});
+  const [votesLoading, setVotesLoading] = useState(true);
 
   const transactionModule = getModule(transaction.type);
   const CardContent = transactionModule.Card;
@@ -54,6 +55,7 @@ export function TransactionCard({
         votesWithLoading[teamId] = { ...voteData, isVoting: false };
       }
       setTeamVotes(votesWithLoading);
+      setVotesLoading(false);
     }
 
     fetchVotes();
@@ -127,7 +129,7 @@ export function TransactionCard({
                 <span className="font-medium text-gray-800">{team.name}</span>
                 <VoteButtons
                   onVote={(sentiment) => handleVote(team.id, sentiment)}
-                  disabled={voteState.isVoting}
+                  disabled={votesLoading || voteState.isVoting}
                   userVote={voteState.userVote}
                 />
               </div>

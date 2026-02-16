@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DraftSelection, Position, POSITIONS, NFL_TEAMS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -12,6 +13,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [round, setRound] = useState(value.round);
   const [pick, setPick] = useState(value.pick);
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
       id: value.id,
       type: 'draft',
       teams: [selectedTeam],
-      timestamp: value.timestamp,
+      timestamp,
       player: { name: playerName, position: playerPosition },
       round,
       pick,
@@ -29,6 +31,8 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team

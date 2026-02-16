@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { getTransactionsImpl, getTransactionImpl, addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
 import { createMockDataProvider, createMockTransaction } from '../../mocks/mockDataProvider';
 import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire, TransactionInput } from '@/lib/data/types';
+import { createPlayerContract, createStaffContract } from '@/lib/data/types';
 
 describe('transactions actions', () => {
   describe('getTransactionsImpl', () => {
@@ -148,9 +149,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Jane Smith', position: 'WR' },
-        contractYears: 4,
-        totalValue: 50000000,
-        guaranteed: 30000000,
+        contract: createPlayerContract(4, 50000000, 30000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -208,15 +207,36 @@ describe('transactions actions', () => {
       }));
     });
 
-    it('should add an Extension transaction and generate id', async () => {
+    it('should add a player Extension transaction and generate id', async () => {
       const extensionInput: TransactionInput = {
         type: 'extension',
+        subtype: 'player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
-        contractYears: 5,
-        totalValue: 200000000,
-        guaranteed: 150000000,
+        contract: createPlayerContract(5, 200000000, 150000000),
+      };
+
+      const mockProvider = createMockDataProvider();
+      const result = await addTransactionImpl(mockProvider, extensionInput);
+
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('extension');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...extensionInput,
+        id: expect.any(String),
+      }));
+    });
+
+    it('should add a staff Extension transaction and generate id', async () => {
+      const extensionInput: TransactionInput = {
+        type: 'extension',
+        subtype: 'staff',
+        teams: [baseTeam],
+        timestamp: baseTimestamp,
+        staff: { name: 'Coach Smith', role: 'Head Coach' },
+        contract: createStaffContract(5, 50000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -237,6 +257,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
+        contract: createStaffContract(4, 40000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -277,9 +298,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Test Player', position: 'QB' },
-        contractYears: 1,
-        totalValue: 1000000,
-        guaranteed: 500000,
+        contract: createPlayerContract(1, 1000000, 500000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -340,9 +359,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Jane Smith', position: 'WR' },
-        contractYears: 5,
-        totalValue: 60000000,
-        guaranteed: 40000000,
+        contract: createPlayerContract(5, 60000000, 40000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -391,12 +408,11 @@ describe('transactions actions', () => {
       const extensionTransaction: Extension = {
         id: 'extension-1',
         type: 'extension',
+        subtype: 'player',
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
-        contractYears: 6,
-        totalValue: 250000000,
-        guaranteed: 180000000,
+        contract: createPlayerContract(6, 250000000, 180000000),
       };
 
       const mockProvider = createMockDataProvider();
@@ -413,6 +429,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Offensive Coordinator' },
+        contract: createStaffContract(3, 30000000),
       };
 
       const mockProvider = createMockDataProvider();

@@ -1,28 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
-import { FormProps } from '../../interface';
+import { PlayerExtension, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
 import { ContractFormFields } from '../../components/ContractFormFields';
-import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
-export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
+interface PlayerExtensionFormProps {
+  value: PlayerExtension;
+  onSubmit: (value: PlayerExtension) => void;
+}
+
+export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProps) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [contract, setContract] = useState<PlayerContract>(value.contract);
-  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedTeam = NFL_TEAMS.find((t) => t.abbreviation === teamAbbreviation)!;
     onSubmit({
       id: value.id,
-      type: 'signing',
+      type: 'extension',
+      subtype: 'player',
       teams: [selectedTeam],
-      timestamp,
+      timestamp: value.timestamp,
       player: { name: playerName, position: playerPosition },
       contract,
     });
@@ -30,8 +33,6 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
-      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
-
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team
