@@ -174,9 +174,9 @@ export type TradeAsset =
 
 // Shared base fields for all transactions
 interface TransactionBase {
-  id: string;
-  teams: Team[];
-  timestamp: Date;
+  id: string; // unique identifier for the transaction
+  teams: Team[]; // teams involved in the transaction
+  timestamp: Date; // date that the transaction occured
 }
 
 // Type-specific transaction interfaces

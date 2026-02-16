@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { ContractFormFields } from '../../components/ContractFormFields';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -12,6 +13,7 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [contract, setContract] = useState<PlayerContract>(value.contract);
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,7 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
       id: value.id,
       type: 'signing',
       teams: [selectedTeam],
-      timestamp: value.timestamp,
+      timestamp,
       player: { name: playerName, position: playerPosition },
       contract,
     });
@@ -83,6 +85,8 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
       </div>
 
       <ContractFormFields contract={contract} onChange={setContract} />
+
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
     </form>
   );
 }

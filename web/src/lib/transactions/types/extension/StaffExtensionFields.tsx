@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { StaffExtension, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
 import { StaffContractFormFields } from '../../components/StaffContractFormFields';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -16,6 +17,7 @@ export function StaffExtensionForm({ value, onSubmit }: StaffExtensionFormProps)
   const [staffName, setStaffName] = useState(value.staff.name);
   const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
   const [contract, setContract] = useState<StaffContract>(value.contract);
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +27,7 @@ export function StaffExtensionForm({ value, onSubmit }: StaffExtensionFormProps)
       type: 'extension',
       subtype: 'staff',
       teams: [selectedTeam],
-      timestamp: value.timestamp,
+      timestamp,
       staff: { name: staffName, role: staffRole },
       contract,
     });
@@ -33,6 +35,8 @@ export function StaffExtensionForm({ value, onSubmit }: StaffExtensionFormProps)
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Hire, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { StaffContractFormFields } from '../../components/StaffContractFormFields';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -12,6 +13,7 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
   const [staffName, setStaffName] = useState(value.staff.name);
   const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
   const [contract, setContract] = useState<StaffContract>(value.contract);
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,7 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
       id: value.id,
       type: 'hire',
       teams: [selectedTeam],
-      timestamp: value.timestamp,
+      timestamp,
       staff: { name: staffName, role: staffRole },
       contract,
     });
@@ -28,6 +30,8 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team

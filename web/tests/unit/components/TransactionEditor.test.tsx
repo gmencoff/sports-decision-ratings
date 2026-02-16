@@ -348,6 +348,52 @@ describe('TransactionEditor', () => {
     });
   });
 
+  describe('Transaction date selection', () => {
+    it('should default the date field to today', () => {
+      render(<TransactionEditor existingTransaction={null} />);
+      const dateInput = screen.getByLabelText(/transaction date/i);
+      const today = new Date();
+      const expected = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      expect(dateInput).toHaveValue(expected);
+    });
+
+    it('should submit with a past date when changed', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      // Change to a past date
+      const dateInput = screen.getByLabelText(/transaction date/i);
+      await user.clear(dateInput);
+      await user.type(dateInput, '2025-01-15');
+
+      const submitButton = screen.getByRole('button', { name: /trade/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const submittedTransaction = mockAddTransaction.mock.calls[0][0];
+        expect(submittedTransaction.timestamp.getFullYear()).toBe(2025);
+        expect(submittedTransaction.timestamp.getMonth()).toBe(0); // January
+        expect(submittedTransaction.timestamp.getDate()).toBe(15);
+      });
+    });
+
+    it('should show existing date when editing a transaction', () => {
+      const existingTransaction: Transaction = {
+        id: 'tx-date',
+        type: 'fire',
+        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
+        timestamp: new Date(2024, 5, 20), // June 20, 2024
+        staff: { name: 'Coach', role: 'Head Coach' },
+      };
+
+      render(<TransactionEditor existingTransaction={existingTransaction} />);
+
+      const dateInput = screen.getByLabelText(/transaction date/i);
+      expect(dateInput).toHaveValue('2024-06-20');
+    });
+  });
+
   describe('Error handling', () => {
     it('should display error message when addTransaction fails', async () => {
       const user = userEvent.setup();
