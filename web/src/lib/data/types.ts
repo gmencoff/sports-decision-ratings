@@ -151,18 +151,21 @@ export interface CoachAsset extends TradeAssetBase {
   staff: Staff;
 }
 
-export interface DraftPickAsset extends TradeAssetBase {
-  type: 'draft_pick';
+export interface DraftPick {
   ogTeamId: string;
   year: number;
   round: number;
+  number?: number;
+}
+
+export interface DraftPickAsset extends TradeAssetBase {
+  type: 'draft_pick';
+  draftPick: DraftPick;
 }
 
 export interface ConditionalDraftPickAsset extends TradeAssetBase {
   type: 'conditional_draft_pick';
-  ogTeamId: string;
-  year: number;
-  round: number;
+  draftPick: DraftPick;
   conditions: string;
 }
 
@@ -194,8 +197,7 @@ export interface Signing extends TransactionBase {
 export interface DraftSelection extends TransactionBase {
   type: 'draft';
   player: Player;
-  round: number;
-  pick: number;
+  draftPick: DraftPick;
 }
 
 export interface Release extends TransactionBase {

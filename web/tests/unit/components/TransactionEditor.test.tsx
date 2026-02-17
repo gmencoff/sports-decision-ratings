@@ -108,8 +108,10 @@ describe('TransactionEditor', () => {
           expect.objectContaining({
             type: 'draft',
             player: { name: 'Caleb Williams', position: 'QB' },
-            round: 1,
-            pick: 1,
+            draftPick: expect.objectContaining({
+              round: 1,
+              number: 1,
+            }),
           })
         );
       });
@@ -320,8 +322,7 @@ describe('TransactionEditor', () => {
         teams: [{ id: 'CHI', name: 'Chicago Bears', abbreviation: 'CHI', conference: 'NFC', division: 'North' }],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Draft Pick', position: 'QB' },
-        round: 1,
-        pick: 1,
+        draftPick: { ogTeamId: 'CHI', year: 2025, round: 1, number: 1 },
       };
 
       render(<TransactionEditor existingTransaction={existingTransaction} />);
@@ -340,7 +341,7 @@ describe('TransactionEditor', () => {
           'tx-789',
           expect.objectContaining({
             type: 'draft',
-            pick: 2,
+            draftPick: expect.objectContaining({ number: 2 }),
           })
         );
       });

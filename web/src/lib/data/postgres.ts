@@ -24,6 +24,7 @@ import {
   CoachAsset,
   DraftPickAsset,
   ConditionalDraftPickAsset,
+  DraftPick,
   Position,
   Role,
   NFL_TEAMS,
@@ -84,6 +85,17 @@ export function decodeStaff(raw: unknown): Staff {
   };
 }
 
+// Convert raw JSONB draft pick data to DraftPick type
+export function decodeDraftPick(raw: unknown): DraftPick {
+  const data = raw as { ogTeamId: string; year: number; round: number; number?: number };
+  return {
+    ogTeamId: data.ogTeamId,
+    year: data.year,
+    round: data.round,
+    ...(data.number != null ? { number: data.number } : {}),
+  };
+}
+
 // Convert raw JSONB trade asset to TradeAsset type
 export function decodeTradeAsset(raw: unknown): TradeAsset {
   const data = raw as { type: string; fromTeamId: string; toTeamId: string; [key: string]: unknown };
@@ -108,18 +120,14 @@ export function decodeTradeAsset(raw: unknown): TradeAsset {
         type: 'draft_pick',
         fromTeamId: data.fromTeamId,
         toTeamId: data.toTeamId,
-        ogTeamId: data.ogTeamId as string,
-        year: data.year as number,
-        round: data.round as number,
+        draftPick: decodeDraftPick(data.draftPick),
       } as DraftPickAsset;
     case 'conditional_draft_pick':
       return {
         type: 'conditional_draft_pick',
         fromTeamId: data.fromTeamId,
         toTeamId: data.toTeamId,
-        ogTeamId: data.ogTeamId as string,
-        year: data.year as number,
-        round: data.round as number,
+        draftPick: decodeDraftPick(data.draftPick),
         conditions: data.conditions as string,
       } as ConditionalDraftPickAsset;
     default:
@@ -168,8 +176,7 @@ function dbTransactionToTransaction(
         ...base,
         type: 'draft',
         player: decodePlayer(data.player),
-        round: data.round as number,
-        pick: data.pick as number,
+        draftPick: decodeDraftPick(data.draftPick),
       } as DraftSelection;
     case 'release':
       return {
