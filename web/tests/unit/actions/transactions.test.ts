@@ -170,8 +170,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Rookie Star', position: 'RB' },
-        round: 1,
-        pick: 5,
+        draftPick: { ogTeamId: baseTeam.id, year: 2025, round: 1, number: 5 },
       };
 
       const mockProvider = createMockDataProvider();
@@ -376,8 +375,7 @@ describe('transactions actions', () => {
         teams: [baseTeam],
         timestamp: baseTimestamp,
         player: { name: 'Rookie Star', position: 'RB' },
-        round: 1,
-        pick: 3,
+        draftPick: { ogTeamId: baseTeam.id, year: 2025, round: 1, number: 3 },
       };
 
       const mockProvider = createMockDataProvider();

@@ -44,18 +44,14 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
           type: 'draft_pick',
           fromTeamId: teams[1]?.id ?? 'MIA',
           toTeamId: teams[0]?.id ?? 'BUF',
-          ogTeamId: teams[1]?.id ?? 'MIA',
-          year: 2025,
-          round: 3,
+          draftPick: { ogTeamId: teams[1]?.id ?? 'MIA', year: 2025, round: 3 },
         },
         // Conditional draft pick asset
         {
           type: 'conditional_draft_pick',
           fromTeamId: teams[0]?.id ?? 'BUF',
           toTeamId: teams[1]?.id ?? 'MIA',
-          ogTeamId: teams[0]?.id ?? 'BUF',
-          year: 2026,
-          round: 5,
+          draftPick: { ogTeamId: teams[0]?.id ?? 'BUF', year: 2026, round: 5 },
           conditions: 'Becomes 4th round if player makes Pro Bowl',
         },
       ],
@@ -74,8 +70,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'draft',
       player: { name: 'Top Prospect', position: 'QB' },
-      round: 1,
-      pick: 1,
+      draftPick: { ogTeamId: teams[0]?.id ?? 'BUF', year: 2024, round: 1, number: 1 },
     }),
 
     visitRelease: () => ({
@@ -143,8 +138,7 @@ export function createFieldAssertionVisitor(
     visitDraft: () => {
       if (original.type === 'draft' && decoded.type === 'draft') {
         expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.round).toBe(original.round);
-        expectFn(decoded.pick).toBe(original.pick);
+        expectFn(decoded.draftPick).toEqual(original.draftPick);
       }
     },
 

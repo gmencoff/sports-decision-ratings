@@ -8,7 +8,7 @@ import {
   assertFieldsPreserved,
   testTeams,
 } from '../helpers/transaction-visitor';
-import type { Signing, PlayerExtension, StaffExtension } from '@/lib/data/types';
+import type { Signing, PlayerExtension, StaffExtension, Trade } from '@/lib/data/types';
 import { createStaffContract } from '@/lib/data/types';
 
 describe('PostgresDataProvider Integration', () => {
@@ -60,6 +60,69 @@ describe('PostgresDataProvider Integration', () => {
         // Verify type-specific fields still preserved
         assertFieldsPreserved(original, retrieved!, expect);
       });
+    });
+
+    it('should add and retrieve a trade with draft pick number specified', async () => {
+      const trade: Trade = {
+        id: 'trade-with-pick-number',
+        type: 'trade',
+        teams: [testTeams[0], testTeams[1]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        assets: [
+          {
+            type: 'draft_pick',
+            fromTeamId: testTeams[0].id,
+            toTeamId: testTeams[1].id,
+            draftPick: { ogTeamId: testTeams[0].id, year: 2025, round: 1, number: 5 },
+          },
+        ],
+      };
+
+      await provider.addTransaction(trade);
+      const retrieved = await provider.getTransaction(trade.id) as Trade;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('trade');
+      expect(retrieved.assets).toHaveLength(1);
+      expect(retrieved.assets[0].type).toBe('draft_pick');
+      if (retrieved.assets[0].type === 'draft_pick') {
+        expect(retrieved.assets[0].draftPick).toEqual({
+          ogTeamId: testTeams[0].id,
+          year: 2025,
+          round: 1,
+          number: 5,
+        });
+      }
+    });
+
+    it('should add and retrieve a trade with draft pick number unspecified', async () => {
+      const trade: Trade = {
+        id: 'trade-without-pick-number',
+        type: 'trade',
+        teams: [testTeams[0], testTeams[1]],
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        assets: [
+          {
+            type: 'draft_pick',
+            fromTeamId: testTeams[0].id,
+            toTeamId: testTeams[1].id,
+            draftPick: { ogTeamId: testTeams[0].id, year: 2025, round: 3 },
+          },
+        ],
+      };
+
+      await provider.addTransaction(trade);
+      const retrieved = await provider.getTransaction(trade.id) as Trade;
+
+      expect(retrieved).not.toBeNull();
+      expect(retrieved.type).toBe('trade');
+      expect(retrieved.assets).toHaveLength(1);
+      if (retrieved.assets[0].type === 'draft_pick') {
+        expect(retrieved.assets[0].draftPick.ogTeamId).toBe(testTeams[0].id);
+        expect(retrieved.assets[0].draftPick.year).toBe(2025);
+        expect(retrieved.assets[0].draftPick.round).toBe(3);
+        expect(retrieved.assets[0].draftPick.number).toBeUndefined();
+      }
     });
 
     it('should add and retrieve a signing with undefined contract fields', async () => {
