@@ -118,6 +118,8 @@ export const ROLES = [
   'Tight Ends Coach',
   'Offensive Line Coach',
   'Offensive Quality Control Coach',
+  'Pass Game Coordinator',
+  'Run Game Coordinator',
   'Offensive Assistant',
   'Defensive Line Coach',
   'Linebackers Coach',

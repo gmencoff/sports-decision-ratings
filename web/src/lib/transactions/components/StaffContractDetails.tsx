@@ -11,10 +11,10 @@ export function StaffContractDetails({ contract, label }: StaffContractDetailsPr
   const hasTotalValue = contract.totalValue != null;
 
   if (!hasYears && !hasTotalValue) {
-    return <div className="text-sm text-gray-400">Contract details unknown</div>;
+    return null;
   }
 
-  const yearsPart = hasYears
+const yearsPart = hasYears
     ? `${contract.years} year${label ? ` ${label}` : (contract.years !== 1 ? 's' : '')}`
     : null;
   const totalPart = hasTotalValue ? `${formatMoney(contract.totalValue!)} total` : null;
