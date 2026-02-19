@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decodePlayer, decodeStaff, decodeTradeAsset } from '@/lib/data/postgres';
+import { decodePlayer, decodeStaff, decodeTradeAsset } from '@/lib/data/postgres-decoder';
 
 describe('postgres decoders', () => {
   describe('decodePlayer', () => {

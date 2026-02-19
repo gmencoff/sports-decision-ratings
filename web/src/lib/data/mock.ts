@@ -125,6 +125,15 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     player: { name: 'Marvin Harrison Jr.', position: 'WR' },
     draftPick: { ogTeamId: 'NYJ', year: 2025, round: 1, number: 4 },
   },
+  {
+    id: '12',
+    teams: [TEAMS.DET],
+    type: 'promotion',
+    timestamp: new Date('2025-01-05T10:00:00Z'),
+    staff: { name: 'Ben Johnson', role: 'Head Coach' },
+    previousRole: 'Offensive Coordinator',
+    contract: createStaffContract(5, 50000000),
+  },
 ];
 
 // In-memory vote storage - stores individual votes
