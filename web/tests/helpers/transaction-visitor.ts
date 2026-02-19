@@ -104,6 +104,15 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       type: 'fire',
       staff: { name: 'Former Coach', role: 'Offensive Coordinator' },
     }),
+
+    visitPromotion: () => ({
+      ...base,
+      teams: [teams[0]],
+      type: 'promotion',
+      staff: { name: 'Promoted Coach', role: 'Head Coach' },
+      previousRole: 'Offensive Coordinator',
+      contract: createStaffContract(5, 50000000),
+    }),
   };
 }
 
@@ -173,6 +182,14 @@ export function createFieldAssertionVisitor(
     visitFire: () => {
       if (original.type === 'fire' && decoded.type === 'fire') {
         expectFn(decoded.staff).toEqual(original.staff);
+      }
+    },
+
+    visitPromotion: () => {
+      if (original.type === 'promotion' && decoded.type === 'promotion') {
+        expectFn(decoded.staff).toEqual(original.staff);
+        expectFn(decoded.previousRole).toBe(original.previousRole);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
   };

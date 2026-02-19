@@ -8,6 +8,7 @@ import {
   Extension,
   Hire,
   Fire,
+  Promotion,
   TRANSACTION_TYPES,
 } from '@/lib/data/types';
 
@@ -23,6 +24,7 @@ export interface TransactionVisitor<R> {
   visitExtension(tx?: Extension): R;
   visitHire(tx?: Hire): R;
   visitFire(tx?: Fire): R;
+  visitPromotion(tx?: Promotion): R;
 }
 
 // Dispatch by transaction object - passes the transaction to the visitor
@@ -42,6 +44,8 @@ export function visitTransaction<R>(tx: Transaction, visitor: TransactionVisitor
       return visitor.visitHire(tx);
     case 'fire':
       return visitor.visitFire(tx);
+    case 'promotion':
+      return visitor.visitPromotion(tx);
   }
 }
 
@@ -62,6 +66,8 @@ export function visitByType<R>(type: TransactionType, visitor: TransactionVisito
       return visitor.visitHire();
     case 'fire':
       return visitor.visitFire();
+    case 'promotion':
+      return visitor.visitPromotion();
   }
 }
 

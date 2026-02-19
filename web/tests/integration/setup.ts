@@ -25,7 +25,7 @@ async function createSchema() {
   // Create enums
   await db.execute(sql`
     DO $$ BEGIN
-      CREATE TYPE transaction_type AS ENUM ('trade', 'signing', 'draft', 'release', 'extension', 'hire', 'fire');
+      CREATE TYPE transaction_type AS ENUM ('trade', 'signing', 'draft', 'release', 'extension', 'hire', 'fire', 'promotion');
     EXCEPTION WHEN duplicate_object THEN null;
     END $$;
   `);

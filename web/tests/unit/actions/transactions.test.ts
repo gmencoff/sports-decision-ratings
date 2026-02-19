@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { getTransactionsImpl, getTransactionImpl, addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
 import { createMockDataProvider, createMockTransaction } from '../../mocks/mockDataProvider';
-import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire, TransactionInput } from '@/lib/data/types';
+import type { Trade, Signing, DraftSelection, Release, Extension, Hire, Fire, Promotion, TransactionInput } from '@/lib/data/types';
 import { createPlayerContract, createStaffContract } from '@/lib/data/types';
 
 describe('transactions actions', () => {
@@ -291,6 +291,28 @@ describe('transactions actions', () => {
       }));
     });
 
+    it('should add a Promotion transaction and generate id', async () => {
+      const promotionInput: TransactionInput = {
+        type: 'promotion',
+        teams: [baseTeam],
+        timestamp: baseTimestamp,
+        staff: { name: 'Coach Smith', role: 'Head Coach' },
+        previousRole: 'Offensive Coordinator',
+        contract: createStaffContract(5, 50000000),
+      };
+
+      const mockProvider = createMockDataProvider();
+      const result = await addTransactionImpl(mockProvider, promotionInput);
+
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(result.type).toBe('promotion');
+      expect(mockProvider.addTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        ...promotionInput,
+        id: expect.any(String),
+      }));
+    });
+
     it('should generate unique ids for each transaction', async () => {
       const input: TransactionInput = {
         type: 'signing',
@@ -451,6 +473,24 @@ describe('transactions actions', () => {
 
       expect(mockProvider.editTransaction).toHaveBeenCalledWith('fire-1', fireTransaction);
       expect(result?.id).toBe('fire-1');
+    });
+
+    it('should edit a Promotion transaction', async () => {
+      const promotionTransaction: Promotion = {
+        id: 'promotion-1',
+        type: 'promotion',
+        teams: [baseTeam],
+        timestamp: baseTimestamp,
+        staff: { name: 'Coach Smith', role: 'Head Coach' },
+        previousRole: 'Offensive Coordinator',
+        contract: createStaffContract(5, 50000000),
+      };
+
+      const mockProvider = createMockDataProvider();
+      const result = await editTransactionImpl(mockProvider, 'promotion-1', promotionTransaction);
+
+      expect(mockProvider.editTransaction).toHaveBeenCalledWith('promotion-1', promotionTransaction);
+      expect(result?.id).toBe('promotion-1');
     });
 
     it('should return null when editing non-existent transaction', async () => {
