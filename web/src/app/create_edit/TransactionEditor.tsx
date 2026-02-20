@@ -61,7 +61,7 @@ export function TransactionEditor({ existingTransaction }: TransactionEditorProp
             id="transactionType"
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value as TransactionType)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border bg-input-bg text-text-primary px-3 py-2"
           >
             {allModules.map((module) => (
               <option key={module.type} value={module.type}>
@@ -73,13 +73,13 @@ export function TransactionEditor({ existingTransaction }: TransactionEditorProp
       )}
 
       {isEditing && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-text-secondary">
           Editing: {currentModule.label}
         </p>
       )}
 
       {error && (
-        <div className="rounded bg-red-50 p-3 text-red-700">
+        <div className="rounded bg-red-50 dark:bg-red-950 p-3 text-red-700 dark:text-red-400">
           {error}
         </div>
       )}

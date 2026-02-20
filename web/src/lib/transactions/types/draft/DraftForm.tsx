@@ -66,7 +66,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
           id="team"
           value={teamAbbreviation}
           onChange={(e) => handleTeamChange(e.target.value)}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+          className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           required
         >
           {sortedTeams.map((team) => (
@@ -98,7 +98,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
             id="ogTeam"
             value={ogTeamId}
             onChange={(e) => setOgTeamId(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           >
             {sortedTeams.map((team) => (
@@ -120,7 +120,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
             id="playerName"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           />
         </div>
@@ -133,7 +133,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
             id="playerPosition"
             value={playerPosition}
             onChange={(e) => setPlayerPosition(e.target.value as Position)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           >
             {POSITIONS.map((pos) => (
@@ -157,7 +157,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
             onChange={(e) => setYear(Number(e.target.value))}
             min={2000}
             max={2100}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           />
         </div>
@@ -173,7 +173,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
             onChange={(e) => setRound(Number(e.target.value))}
             min={1}
             max={7}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           />
         </div>
@@ -188,7 +188,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
             value={pick}
             onChange={(e) => setPick(Number(e.target.value))}
             min={1}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           />
         </div>

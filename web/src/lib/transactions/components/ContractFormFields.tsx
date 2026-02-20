@@ -35,10 +35,10 @@ export function ContractFormFields({ contract, onChange }: ContractFormFieldsPro
             value={contract.years}
             onChange={(e) => onChange({ ...contract, years: Number(e.target.value) })}
             min={1}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           />
         ) : (
-          <div className="mt-1 block w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+          <div className="mt-1 block w-full rounded border border-border-default bg-surface-secondary px-3 py-2 text-sm text-text-muted">
             Unknown
           </div>
         )}
@@ -66,10 +66,10 @@ export function ContractFormFields({ contract, onChange }: ContractFormFieldsPro
             value={contract.totalValue}
             onChange={(e) => onChange({ ...contract, totalValue: Number(e.target.value) })}
             min={0}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           />
         ) : (
-          <div className="mt-1 block w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+          <div className="mt-1 block w-full rounded border border-border-default bg-surface-secondary px-3 py-2 text-sm text-text-muted">
             Unknown
           </div>
         )}
@@ -97,10 +97,10 @@ export function ContractFormFields({ contract, onChange }: ContractFormFieldsPro
             value={contract.guaranteed}
             onChange={(e) => onChange({ ...contract, guaranteed: Number(e.target.value) })}
             min={0}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           />
         ) : (
-          <div className="mt-1 block w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+          <div className="mt-1 block w-full rounded border border-border-default bg-surface-secondary px-3 py-2 text-sm text-text-muted">
             Unknown
           </div>
         )}

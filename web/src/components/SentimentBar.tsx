@@ -10,8 +10,8 @@ export function SentimentBar({ counts }: SentimentBarProps) {
   if (total === 0) {
     return (
       <div className="w-full">
-        <div className="h-8 bg-gray-200 rounded-full" />
-        <p className="text-xs text-gray-500 mt-1">No votes yet</p>
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-full" />
+        <p className="text-xs text-text-muted mt-1">No votes yet</p>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function SentimentBar({ counts }: SentimentBarProps) {
           {badPercent >= 15 && `${badPercent}%`}
         </div>
       </div>
-      <div className="text-xs text-gray-500 text-center mt-1">
+      <div className="text-xs text-text-muted text-center mt-1">
         {total.toLocaleString()} votes
       </div>
     </div>

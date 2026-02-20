@@ -39,7 +39,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
           id="team"
           value={teamAbbreviation}
           onChange={(e) => setTeamAbbreviation(e.target.value)}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+          className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           required
         >
           {sortedTeams.map((team) => (
@@ -60,7 +60,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
             id="playerName"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           />
         </div>
@@ -73,7 +73,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
             id="playerPosition"
             value={playerPosition}
             onChange={(e) => setPlayerPosition(e.target.value as Position)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           >
             {POSITIONS.map((pos) => (
@@ -95,7 +95,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
           value={capSavings}
           onChange={(e) => setCapSavings(Number(e.target.value))}
           min={0}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+          className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
         />
       </div>
     </form>

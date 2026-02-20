@@ -53,7 +53,7 @@ export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
             id="extensionSubtype"
             value={subtype}
             onChange={(e) => setSubtype(e.target.value as ExtensionSubtype)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           >
             {EXTENSION_SUBTYPES.map((st) => (
               <option key={st} value={st}>
