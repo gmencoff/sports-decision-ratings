@@ -7,10 +7,10 @@ export function ReleaseCard({ transaction }: CardProps<Release>) {
     <div className="space-y-2">
       <div className="font-medium">
         {transaction.player.name}
-        <span className="ml-2 text-sm text-gray-500">({transaction.player.position})</span>
+        <span className="ml-2 text-sm text-text-muted">({transaction.player.position})</span>
       </div>
       {transaction.capSavings && (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-text-secondary">
           Cap savings: {formatMoney(transaction.capSavings)}
         </div>
       )}

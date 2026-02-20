@@ -20,7 +20,7 @@ export default async function TransactionPage({ params }: TransactionPageProps) 
     <div>
       <Link
         href="/"
-        className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="inline-flex items-center text-sm text-text-secondary hover:text-text-primary mb-4"
       >
         <svg
           className="w-4 h-4 mr-1"
@@ -43,9 +43,9 @@ export default async function TransactionPage({ params }: TransactionPageProps) 
         showLink={false}
       />
 
-      <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
-        <h2 className="font-semibold text-gray-900 mb-2">Share this transaction</h2>
-        <p className="text-sm text-gray-600">
+      <div className="mt-6 p-4 bg-surface rounded-lg border border-border-default">
+        <h2 className="font-semibold text-text-primary mb-2">Share this transaction</h2>
+        <p className="text-sm text-text-secondary">
           Copy the URL to share this transaction with others.
         </p>
       </div>

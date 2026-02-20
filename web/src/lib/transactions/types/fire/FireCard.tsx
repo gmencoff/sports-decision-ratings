@@ -7,7 +7,7 @@ export function FireCard({ transaction }: CardProps<Fire>) {
       <div className="font-medium">
         {transaction.staff.name}
       </div>
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-text-secondary">
         {transaction.staff.role}
       </div>
     </div>

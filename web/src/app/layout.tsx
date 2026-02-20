@@ -27,11 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-surface border-b border-border-default">
           <div className="max-w-3xl mx-auto px-4 py-4">
-            <Link href="/" className="text-xl font-bold text-gray-900">
+            <Link href="/" className="text-xl font-bold text-text-primary">
               NFL Transactions
             </Link>
           </div>

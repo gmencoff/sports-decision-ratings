@@ -12,7 +12,7 @@ export function ContractDetails({ contract, label }: ContractDetailsProps) {
   const hasGuaranteed = contract.guaranteed != null;
 
   if (!hasYears && !hasTotalValue && !hasGuaranteed) {
-    return <div className="text-sm text-gray-400">Contract details unknown</div>;
+    return <div className="text-sm text-text-muted">Contract details unknown</div>;
   }
 
   const yearsPart = hasYears
@@ -25,10 +25,10 @@ export function ContractDetails({ contract, label }: ContractDetailsProps) {
   return (
     <>
       {summaryParts && (
-        <div className="text-sm text-gray-600">{summaryParts}</div>
+        <div className="text-sm text-text-secondary">{summaryParts}</div>
       )}
       {hasGuaranteed && (
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-text-muted">
           {formatMoney(contract.guaranteed!)} guaranteed
         </div>
       )}
