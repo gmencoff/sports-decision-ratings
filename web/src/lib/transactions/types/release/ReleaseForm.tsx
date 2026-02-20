@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Release, Position, POSITIONS, NFL_TEAMS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -11,6 +12,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [capSavings, setCapSavings] = useState(value.capSavings ?? 0);
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
       id: value.id,
       type: 'release',
       teams: [selectedTeam],
-      timestamp: value.timestamp,
+      timestamp,
       player: { name: playerName, position: playerPosition },
       capSavings: capSavings || undefined,
     });
@@ -27,6 +29,8 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team

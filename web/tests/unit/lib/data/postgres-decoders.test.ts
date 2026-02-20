@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decodePlayer, decodeStaff, decodeTradeAsset } from '@/lib/data/postgres';
+import { decodePlayer, decodeStaff, decodeTradeAsset } from '@/lib/data/postgres-decoder';
 
 describe('postgres decoders', () => {
   describe('decodePlayer', () => {
@@ -82,9 +82,7 @@ describe('postgres decoders', () => {
         type: 'draft_pick',
         fromTeamId: 'KC',
         toTeamId: 'NYJ',
-        ogTeamId: 'KC',
-        year: 2025,
-        round: 3,
+        draftPick: { ogTeamId: 'KC', year: 2025, round: 3 },
       };
 
       const asset = decodeTradeAsset(raw);
@@ -93,9 +91,7 @@ describe('postgres decoders', () => {
         type: 'draft_pick',
         fromTeamId: 'KC',
         toTeamId: 'NYJ',
-        ogTeamId: 'KC',
-        year: 2025,
-        round: 3,
+        draftPick: { ogTeamId: 'KC', year: 2025, round: 3 },
       });
     });
 
@@ -104,9 +100,7 @@ describe('postgres decoders', () => {
         type: 'conditional_draft_pick',
         fromTeamId: 'KC',
         toTeamId: 'NYJ',
-        ogTeamId: 'KC',
-        year: 2025,
-        round: 4,
+        draftPick: { ogTeamId: 'KC', year: 2025, round: 4 },
         conditions: 'Becomes 3rd if player makes Pro Bowl',
       };
 
@@ -116,9 +110,7 @@ describe('postgres decoders', () => {
         type: 'conditional_draft_pick',
         fromTeamId: 'KC',
         toTeamId: 'NYJ',
-        ogTeamId: 'KC',
-        year: 2025,
-        round: 4,
+        draftPick: { ogTeamId: 'KC', year: 2025, round: 4 },
         conditions: 'Becomes 3rd if player makes Pro Bowl',
       });
     });

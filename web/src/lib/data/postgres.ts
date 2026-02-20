@@ -5,30 +5,16 @@ import { VoteService, getVoteService } from '@/server/services/vote-service';
 import { DataProvider } from './index';
 import {
   Transaction,
-  Trade,
-  Signing,
-  DraftSelection,
-  Release,
-  Extension,
-  Hire,
-  Fire,
   Team,
   Vote,
   VoteCounts,
   PaginatedResult,
   Sentiment,
   TransactionType,
-  Player,
-  Staff,
-  TradeAsset,
-  PlayerAsset,
-  CoachAsset,
-  DraftPickAsset,
-  ConditionalDraftPickAsset,
-  Position,
-  Role,
   NFL_TEAMS,
 } from './types';
+import { visitByType } from '@/lib/transactions/visitor';
+import { DbDecoderVisitor } from './postgres-decoder';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -52,67 +38,6 @@ function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
 // Build team map from hardcoded NFL_TEAMS
 const TEAM_MAP = new Map<string, Team>(NFL_TEAMS.map((t) => [t.id, t]));
 
-// Convert raw JSONB player data to Player type
-export function decodePlayer(raw: unknown): Player {
-  const data = raw as { name: string; position: string };
-  return {
-    name: data.name,
-    position: data.position as Position,
-  };
-}
-
-// Convert raw JSONB staff data to Staff type
-export function decodeStaff(raw: unknown): Staff {
-  const data = raw as { name: string; role: string };
-  return {
-    name: data.name,
-    role: data.role as Role,
-  };
-}
-
-// Convert raw JSONB trade asset to TradeAsset type
-export function decodeTradeAsset(raw: unknown): TradeAsset {
-  const data = raw as { type: string; fromTeamId: string; toTeamId: string; [key: string]: unknown };
-
-  switch (data.type) {
-    case 'player':
-      return {
-        type: 'player',
-        fromTeamId: data.fromTeamId,
-        toTeamId: data.toTeamId,
-        player: decodePlayer(data.player),
-      } as PlayerAsset;
-    case 'coach':
-      return {
-        type: 'coach',
-        fromTeamId: data.fromTeamId,
-        toTeamId: data.toTeamId,
-        staff: decodeStaff(data.staff),
-      } as CoachAsset;
-    case 'draft_pick':
-      return {
-        type: 'draft_pick',
-        fromTeamId: data.fromTeamId,
-        toTeamId: data.toTeamId,
-        ogTeamId: data.ogTeamId as string,
-        year: data.year as number,
-        round: data.round as number,
-      } as DraftPickAsset;
-    case 'conditional_draft_pick':
-      return {
-        type: 'conditional_draft_pick',
-        fromTeamId: data.fromTeamId,
-        toTeamId: data.toTeamId,
-        ogTeamId: data.ogTeamId as string,
-        year: data.year as number,
-        round: data.round as number,
-        conditions: data.conditions as string,
-      } as ConditionalDraftPickAsset;
-    default:
-      throw new Error(`Unknown trade asset type: ${data.type}`);
-  }
-}
-
 // Convert DB transaction to domain Transaction
 function dbTransactionToTransaction(
   dbTxn: {
@@ -124,72 +49,8 @@ function dbTransactionToTransaction(
   },
   teamMap: Map<string, Team>
 ): Transaction {
-  const data = dbTxn.data as Record<string, unknown>;
-  const txnTeams = dbTxn.teamIds.map((id) => teamMap.get(id)!).filter(Boolean);
-
-  const base = {
-    id: dbTxn.id,
-    teams: txnTeams,
-    timestamp: dbTxn.timestamp,
-  };
-
-  switch (dbTxn.type) {
-    case 'trade': {
-      const rawAssets = data.assets as unknown[];
-      return {
-        ...base,
-        type: 'trade',
-        assets: rawAssets.map(decodeTradeAsset),
-      } as Trade;
-    }
-    case 'signing':
-      return {
-        ...base,
-        type: 'signing',
-        player: decodePlayer(data.player),
-        contractYears: data.contractYears as number,
-        totalValue: data.totalValue as number,
-        guaranteed: data.guaranteed as number,
-      } as Signing;
-    case 'draft':
-      return {
-        ...base,
-        type: 'draft',
-        player: decodePlayer(data.player),
-        round: data.round as number,
-        pick: data.pick as number,
-      } as DraftSelection;
-    case 'release':
-      return {
-        ...base,
-        type: 'release',
-        player: decodePlayer(data.player),
-        capSavings: data.capSavings as number | undefined,
-      } as Release;
-    case 'extension':
-      return {
-        ...base,
-        type: 'extension',
-        player: decodePlayer(data.player),
-        contractYears: data.contractYears as number,
-        totalValue: data.totalValue as number,
-        guaranteed: data.guaranteed as number,
-      } as Extension;
-    case 'hire':
-      return {
-        ...base,
-        type: 'hire',
-        staff: decodeStaff(data.staff),
-      } as Hire;
-    case 'fire':
-      return {
-        ...base,
-        type: 'fire',
-        staff: decodeStaff(data.staff),
-      } as Fire;
-    default:
-      throw new Error(`Unknown transaction type: ${dbTxn.type}`);
-  }
+  const visitor = new DbDecoderVisitor(dbTxn, teamMap);
+  return visitByType<Transaction>(dbTxn.type as TransactionType, visitor);
 }
 
 // Convert domain Transaction to DB format

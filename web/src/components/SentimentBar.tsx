@@ -10,7 +10,7 @@ export function SentimentBar({ counts }: SentimentBarProps) {
   if (total === 0) {
     return (
       <div className="w-full">
-        <div className="h-2 bg-gray-200 rounded-full" />
+        <div className="h-8 bg-gray-200 rounded-full" />
         <p className="text-xs text-gray-500 mt-1">No votes yet</p>
       </div>
     );

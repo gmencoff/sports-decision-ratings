@@ -16,6 +16,7 @@ import {
   Team,
 } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -35,6 +36,8 @@ interface AssetFormData {
   ogTeamId?: string; // Team that originally owns the draft pick
   year?: number;
   round?: number;
+  pickNumber?: number;
+  pickNumberKnown?: boolean;
   // Conditional draft pick fields
   conditions?: string;
 }
@@ -43,6 +46,8 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
   const defaultFromTeamId = value.teams[0]?.id ?? sortedTeams[0].id;
   const defaultToTeamId = value.teams[1]?.id ?? sortedTeams[1]?.id ?? sortedTeams[0].id;
   
+  const [timestamp, setTimestamp] = useState(value.timestamp);
+
   const [assets, setAssets] = useState<AssetFormData[]>(() => {
     if (value.assets.length === 0) {
       return [];
@@ -68,16 +73,20 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
       } else if (asset.type === 'draft_pick') {
         return {
           ...base,
-          ogTeamId: asset.ogTeamId,
-          year: asset.year,
-          round: asset.round,
+          ogTeamId: asset.draftPick.ogTeamId,
+          year: asset.draftPick.year,
+          round: asset.draftPick.round,
+          pickNumber: asset.draftPick.number,
+          pickNumberKnown: asset.draftPick.number != null,
         };
       } else {
         return {
           ...base,
-          ogTeamId: asset.ogTeamId,
-          year: asset.year,
-          round: asset.round,
+          ogTeamId: asset.draftPick.ogTeamId,
+          year: asset.draftPick.year,
+          round: asset.draftPick.round,
+          pickNumber: asset.draftPick.number,
+          pickNumberKnown: asset.draftPick.number != null,
           conditions: asset.conditions,
         };
       }
@@ -138,17 +147,23 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
         return {
           ...base,
           type: 'draft_pick' as const,
-          ogTeamId: asset.ogTeamId!,
-          year: asset.year!,
-          round: asset.round!,
+          draftPick: {
+            ogTeamId: asset.ogTeamId!,
+            year: asset.year!,
+            round: asset.round!,
+            ...(asset.pickNumberKnown && asset.pickNumber != null ? { number: asset.pickNumber } : {}),
+          },
         } as DraftPickAsset;
       } else {
         return {
           ...base,
           type: 'conditional_draft_pick' as const,
-          ogTeamId: asset.ogTeamId!,
-          year: asset.year!,
-          round: asset.round!,
+          draftPick: {
+            ogTeamId: asset.ogTeamId!,
+            year: asset.year!,
+            round: asset.round!,
+            ...(asset.pickNumberKnown && asset.pickNumber != null ? { number: asset.pickNumber } : {}),
+          },
           conditions: asset.conditions!,
         } as ConditionalDraftPickAsset;
       }
@@ -161,7 +176,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
       teamIds.add(asset.toTeamId);
       // For draft picks, also include the team that originally owns the pick
       if (asset.type === 'draft_pick' || asset.type === 'conditional_draft_pick') {
-        teamIds.add(asset.ogTeamId);
+        teamIds.add(asset.draftPick.ogTeamId);
       }
     });
     const teams: Team[] = Array.from(teamIds)
@@ -172,7 +187,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
       id: value.id,
       type: 'trade',
       teams,
-      timestamp: value.timestamp,
+      timestamp,
       assets: tradeAssets,
     });
   };
@@ -364,6 +379,38 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
                 />
               </div>
             </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id={`pickNumberKnown-${index}`}
+                  checked={asset.pickNumberKnown || false}
+                  onChange={(e) =>
+                    updateAsset(index, {
+                      pickNumberKnown: e.target.checked,
+                      pickNumber: e.target.checked ? (asset.pickNumber ?? 1) : undefined,
+                    })
+                  }
+                />
+                <label htmlFor={`pickNumberKnown-${index}`} className="text-sm font-medium">
+                  Pick Number
+                </label>
+              </div>
+              {asset.pickNumberKnown ? (
+                <input
+                  type="number"
+                  aria-label="Pick Number"
+                  value={asset.pickNumber ?? 1}
+                  onChange={(e) => updateAsset(index, { pickNumber: Number(e.target.value) })}
+                  min={1}
+                  className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                />
+              ) : (
+                <div className="mt-1 block w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+                  Unknown
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -386,6 +433,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
 
       <div>
         <div className="flex justify-between items-center mb-4">

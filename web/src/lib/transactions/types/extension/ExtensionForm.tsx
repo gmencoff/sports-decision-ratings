@@ -1,136 +1,74 @@
 'use client';
 
 import { useState } from 'react';
-import { Extension, Position, POSITIONS, NFL_TEAMS } from '@/lib/data/types';
+import { Extension, ExtensionSubtype, EXTENSION_SUBTYPES, PlayerExtension, StaffExtension } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { PlayerExtensionForm } from './PlayerExtensionFields';
+import { StaffExtensionForm } from './StaffExtensionFields';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
-const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+export const DEFAULT_PLAYER_EXTENSION: PlayerExtension = {
+  id: '',
+  type: 'extension',
+  subtype: 'player',
+  teams: [],
+  timestamp: new Date(),
+  player: { name: '', position: 'QB' },
+  contract: {},
+};
+
+export const DEFAULT_STAFF_EXTENSION: StaffExtension = {
+  id: '',
+  type: 'extension',
+  subtype: 'staff',
+  teams: [],
+  timestamp: new Date(),
+  staff: { name: '', role: 'Head Coach' },
+  contract: {},
+};
 
 export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
-  const [playerName, setPlayerName] = useState(value.player.name);
-  const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
-  const [contractYears, setContractYears] = useState(value.contractYears);
-  const [totalValue, setTotalValue] = useState(value.totalValue);
-  const [guaranteed, setGuaranteed] = useState(value.guaranteed);
+  const isCreateMode = value.id === '';
+  const [subtype, setSubtype] = useState<ExtensionSubtype>(value.subtype ?? 'player');
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const selectedTeam = NFL_TEAMS.find((t) => t.abbreviation === teamAbbreviation)!;
-    onSubmit({
-      id: value.id,
-      type: 'extension',
-      teams: [selectedTeam],
-      timestamp: value.timestamp,
-      player: { name: playerName, position: playerPosition },
-      contractYears,
-      totalValue,
-      guaranteed,
-    });
-  };
+  const playerValue: PlayerExtension = value.subtype === 'player'
+    ? { ...value, timestamp }
+    : { ...DEFAULT_PLAYER_EXTENSION, id: value.id, teams: value.teams, timestamp };
+
+  const staffValue: StaffExtension = value.subtype === 'staff'
+    ? { ...value, timestamp }
+    : { ...DEFAULT_STAFF_EXTENSION, id: value.id, teams: value.teams, timestamp };
 
   return (
-    <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="team" className="block text-sm font-medium">
-          Team
-        </label>
-        <select
-          id="team"
-          value={teamAbbreviation}
-          onChange={(e) => setTeamAbbreviation(e.target.value)}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-          required
-        >
-          {sortedTeams.map((team) => (
-            <option key={team.abbreviation} value={team.abbreviation}>
-              {team.abbreviation} - {team.name}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
 
-      <div className="grid grid-cols-2 gap-4">
+      {isCreateMode && (
         <div>
-          <label htmlFor="playerName" className="block text-sm font-medium">
-            Player Name
-          </label>
-          <input
-            type="text"
-            id="playerName"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="playerPosition" className="block text-sm font-medium">
-            Position
+          <label htmlFor="extensionSubtype" className="block text-sm font-medium">
+            Extension Type
           </label>
           <select
-            id="playerPosition"
-            value={playerPosition}
-            onChange={(e) => setPlayerPosition(e.target.value as Position)}
+            id="extensionSubtype"
+            value={subtype}
+            onChange={(e) => setSubtype(e.target.value as ExtensionSubtype)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
           >
-            {POSITIONS.map((pos) => (
-              <option key={pos} value={pos}>
-                {pos}
+            {EXTENSION_SUBTYPES.map((st) => (
+              <option key={st} value={st}>
+                {st.charAt(0).toUpperCase() + st.slice(1)}
               </option>
             ))}
           </select>
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label htmlFor="contractYears" className="block text-sm font-medium">
-            Contract Years
-          </label>
-          <input
-            type="number"
-            id="contractYears"
-            value={contractYears}
-            onChange={(e) => setContractYears(Number(e.target.value))}
-            min={1}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="totalValue" className="block text-sm font-medium">
-            Total Value ($)
-          </label>
-          <input
-            type="number"
-            id="totalValue"
-            value={totalValue}
-            onChange={(e) => setTotalValue(Number(e.target.value))}
-            min={0}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="guaranteed" className="block text-sm font-medium">
-            Guaranteed ($)
-          </label>
-          <input
-            type="number"
-            id="guaranteed"
-            value={guaranteed}
-            onChange={(e) => setGuaranteed(Number(e.target.value))}
-            min={0}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-      </div>
-    </form>
+      {subtype === 'player' ? (
+        <PlayerExtensionForm value={playerValue} onSubmit={onSubmit} />
+      ) : (
+        <StaffExtensionForm value={staffValue} onSubmit={onSubmit} />
+      )}
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Transaction, Team, NFL_TEAMS } from '@/lib/data/types';
+import { Transaction, Team, NFL_TEAMS, createPlayerContract, createStaffContract } from '@/lib/data/types';
 import {
   TransactionVisitor,
   visitTransaction,
@@ -44,18 +44,14 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
           type: 'draft_pick',
           fromTeamId: teams[1]?.id ?? 'MIA',
           toTeamId: teams[0]?.id ?? 'BUF',
-          ogTeamId: teams[1]?.id ?? 'MIA',
-          year: 2025,
-          round: 3,
+          draftPick: { ogTeamId: teams[1]?.id ?? 'MIA', year: 2025, round: 3 },
         },
         // Conditional draft pick asset
         {
           type: 'conditional_draft_pick',
           fromTeamId: teams[0]?.id ?? 'BUF',
           toTeamId: teams[1]?.id ?? 'MIA',
-          ogTeamId: teams[0]?.id ?? 'BUF',
-          year: 2026,
-          round: 5,
+          draftPick: { ogTeamId: teams[0]?.id ?? 'BUF', year: 2026, round: 5 },
           conditions: 'Becomes 4th round if player makes Pro Bowl',
         },
       ],
@@ -66,9 +62,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'signing',
       player: { name: 'Free Agent Star', position: 'CB' },
-      contractYears: 4,
-      totalValue: 80000000,
-      guaranteed: 50000000,
+      contract: createPlayerContract(4, 80000000, 50000000),
     }),
 
     visitDraft: () => ({
@@ -76,8 +70,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'draft',
       player: { name: 'Top Prospect', position: 'QB' },
-      round: 1,
-      pick: 1,
+      draftPick: { ogTeamId: teams[0]?.id ?? 'BUF', year: 2024, round: 1, number: 1 },
     }),
 
     visitRelease: () => ({
@@ -92,10 +85,9 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       ...base,
       teams: [teams[0]],
       type: 'extension',
+      subtype: 'player',
       player: { name: 'Franchise Player', position: 'DE' },
-      contractYears: 5,
-      totalValue: 150000000,
-      guaranteed: 100000000,
+      contract: createPlayerContract(5, 150000000, 100000000),
     }),
 
     visitHire: () => ({
@@ -103,6 +95,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'hire',
       staff: { name: 'New Coach', role: 'Head Coach' },
+      contract: createStaffContract(4, 40000000),
     }),
 
     visitFire: () => ({
@@ -110,6 +103,15 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
       teams: [teams[0]],
       type: 'fire',
       staff: { name: 'Former Coach', role: 'Offensive Coordinator' },
+    }),
+
+    visitPromotion: () => ({
+      ...base,
+      teams: [teams[0]],
+      type: 'promotion',
+      staff: { name: 'Promoted Coach', role: 'Head Coach' },
+      previousRole: 'Offensive Coordinator',
+      contract: createStaffContract(5, 50000000),
     }),
   };
 }
@@ -138,17 +140,14 @@ export function createFieldAssertionVisitor(
     visitSigning: () => {
       if (original.type === 'signing' && decoded.type === 'signing') {
         expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.contractYears).toBe(original.contractYears);
-        expectFn(decoded.totalValue).toBe(original.totalValue);
-        expectFn(decoded.guaranteed).toBe(original.guaranteed);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
 
     visitDraft: () => {
       if (original.type === 'draft' && decoded.type === 'draft') {
         expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.round).toBe(original.round);
-        expectFn(decoded.pick).toBe(original.pick);
+        expectFn(decoded.draftPick).toEqual(original.draftPick);
       }
     },
 
@@ -161,22 +160,36 @@ export function createFieldAssertionVisitor(
 
     visitExtension: () => {
       if (original.type === 'extension' && decoded.type === 'extension') {
-        expectFn(decoded.player).toEqual(original.player);
-        expectFn(decoded.contractYears).toBe(original.contractYears);
-        expectFn(decoded.totalValue).toBe(original.totalValue);
-        expectFn(decoded.guaranteed).toBe(original.guaranteed);
+        expectFn(decoded.subtype).toBe(original.subtype);
+        if (original.subtype === 'player' && decoded.subtype === 'player') {
+          expectFn(decoded.player).toEqual(original.player);
+          expectFn(decoded.contract).toEqual(original.contract);
+        }
+        if (original.subtype === 'staff' && decoded.subtype === 'staff') {
+          expectFn(decoded.staff).toEqual(original.staff);
+          expectFn(decoded.contract).toEqual(original.contract);
+        }
       }
     },
 
     visitHire: () => {
       if (original.type === 'hire' && decoded.type === 'hire') {
         expectFn(decoded.staff).toEqual(original.staff);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
 
     visitFire: () => {
       if (original.type === 'fire' && decoded.type === 'fire') {
         expectFn(decoded.staff).toEqual(original.staff);
+      }
+    },
+
+    visitPromotion: () => {
+      if (original.type === 'promotion' && decoded.type === 'promotion') {
+        expectFn(decoded.staff).toEqual(original.staff);
+        expectFn(decoded.previousRole).toBe(original.previousRole);
+        expectFn(decoded.contract).toEqual(original.contract);
       }
     },
   };

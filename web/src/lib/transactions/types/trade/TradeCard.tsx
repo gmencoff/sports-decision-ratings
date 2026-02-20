@@ -23,10 +23,18 @@ export function TradeCard({ transaction }: CardProps<Trade>) {
               <span>{asset.staff.name} ({asset.staff.role})</span>
             )}
             {asset.type === 'draft_pick' && (
-              <span>{asset.year} Round {asset.round} pick ({getTeamAbbreviation(asset.ogTeamId)})</span>
+              <span>
+                {asset.draftPick.year} Round {asset.draftPick.round}
+                {asset.draftPick.number != null && `, Pick ${asset.draftPick.number}`}
+                {' '}({getTeamAbbreviation(asset.draftPick.ogTeamId)})
+              </span>
             )}
             {asset.type === 'conditional_draft_pick' && (
-              <span>{asset.year} Round {asset.round} pick ({getTeamAbbreviation(asset.ogTeamId)}) (conditional)</span>
+              <span>
+                {asset.draftPick.year} Round {asset.draftPick.round}
+                {asset.draftPick.number != null && `, Pick ${asset.draftPick.number}`}
+                {' '}({getTeamAbbreviation(asset.draftPick.ogTeamId)}) (conditional)
+              </span>
             )}
           </li>
         ))}

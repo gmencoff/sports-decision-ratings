@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, "./"),
   // Enable source maps for debugging
   serverExternalPackages: [],
+  turbopack: {},
   webpack: (config, { dev }) => {
     if (dev) {
       config.devtool = 'source-map';

@@ -79,6 +79,32 @@ export interface Player {
   position: Position;
 }
 
+export interface PlayerContract {
+  years?: number;
+  totalValue?: number;
+  guaranteed?: number;
+}
+
+export function createPlayerContract(
+  years?: number,
+  totalValue?: number,
+  guaranteed?: number
+): PlayerContract {
+  return { years, totalValue, guaranteed };
+}
+
+export interface StaffContract {
+  years?: number;
+  totalValue?: number;
+}
+
+export function createStaffContract(
+  years?: number,
+  totalValue?: number
+): StaffContract {
+  return { years, totalValue };
+}
+
 export const ROLES = [
   'President',
   'General Manager',
@@ -91,9 +117,15 @@ export const ROLES = [
   'Wide Receivers Coach',
   'Tight Ends Coach',
   'Offensive Line Coach',
+  'Offensive Quality Control Coach',
+  'Pass Game Coordinator',
+  'Run Game Coordinator',
+  'Offensive Assistant',
   'Defensive Line Coach',
   'Linebackers Coach',
   'Defensive Backs Coach',
+  'Defensive Quality Control Coach',
+  'Defensive Assistant',
   'Strength and Conditioning Coach',
   'Assistant Coach',
 ] as const;
@@ -103,141 +135,4 @@ export type Role = (typeof ROLES)[number];
 export interface Staff {
   name: string;
   role: Role;
-}
-
-// Trade asset types
-interface TradeAssetBase {
-  fromTeamId: string;
-  toTeamId: string;
-}
-
-export interface PlayerAsset extends TradeAssetBase {
-  type: 'player';
-  player: Player;
-}
-
-export interface CoachAsset extends TradeAssetBase {
-  type: 'coach';
-  staff: Staff;
-}
-
-export interface DraftPickAsset extends TradeAssetBase {
-  type: 'draft_pick';
-  ogTeamId: string;
-  year: number;
-  round: number;
-}
-
-export interface ConditionalDraftPickAsset extends TradeAssetBase {
-  type: 'conditional_draft_pick';
-  ogTeamId: string;
-  year: number;
-  round: number;
-  conditions: string;
-}
-
-export type TradeAsset =
-  | PlayerAsset
-  | CoachAsset
-  | DraftPickAsset
-  | ConditionalDraftPickAsset;
-
-// Shared base fields for all transactions
-interface TransactionBase {
-  id: string;
-  teams: Team[];
-  timestamp: Date;
-}
-
-// Type-specific transaction interfaces
-export interface Trade extends TransactionBase {
-  type: 'trade';
-  assets: TradeAsset[];
-}
-
-export interface Signing extends TransactionBase {
-  type: 'signing';
-  player: Player;
-  contractYears: number;
-  totalValue: number;
-  guaranteed: number;
-}
-
-export interface DraftSelection extends TransactionBase {
-  type: 'draft';
-  player: Player;
-  round: number;
-  pick: number;
-}
-
-export interface Release extends TransactionBase {
-  type: 'release';
-  player: Player;
-  capSavings?: number;
-}
-
-export interface Extension extends TransactionBase {
-  type: 'extension';
-  player: Player;
-  contractYears: number;
-  totalValue: number;
-  guaranteed: number;
-}
-
-export interface Hire extends TransactionBase {
-  type: 'hire';
-  staff: Staff;
-}
-
-export interface Fire extends TransactionBase {
-  type: 'fire';
-  staff: Staff;
-}
-
-// Discriminated union of all transaction types
-export type Transaction =
-  | Trade
-  | Signing
-  | DraftSelection
-  | Release
-  | Extension
-  | Hire
-  | Fire;
-
-// Distributive Omit that works properly with union types
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
-
-// Input type for creating transactions (id is generated server-side)
-export type TransactionInput = DistributiveOmit<Transaction, 'id'>;
-
-// Single source of truth for transaction types
-export const TRANSACTION_TYPES = ['trade', 'signing', 'draft', 'release', 'extension', 'hire', 'fire'] as const;
-export type TransactionType = (typeof TRANSACTION_TYPES)[number];
-
-export const SENTIMENTS = ['good', 'bad', 'unsure'] as const;
-export type Sentiment = (typeof SENTIMENTS)[number];
-
-export interface Vote {
-  transactionId: string;
-  teamId: string;
-  userId: string;
-  sentiment: Sentiment;
-}
-
-export interface VoteCounts {
-  good: number;
-  bad: number;
-  unsure: number;
-}
-
-export interface TeamVoteCounts {
-  teamId: string;
-  counts: VoteCounts;
-}
-
-// Pagination types
-export interface PaginatedResult<T> {
-  data: T[];
-  nextCursor?: string;
-  hasMore: boolean;
 }

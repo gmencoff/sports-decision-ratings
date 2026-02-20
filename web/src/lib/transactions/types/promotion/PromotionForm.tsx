@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
+import { Promotion, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
-import { ContractFormFields } from '../../components/ContractFormFields';
+import { StaffContractFormFields } from '../../components/StaffContractFormFields';
 import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
-export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
+export function PromotionForm({ value, onSubmit }: FormProps<Promotion>) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
-  const [playerName, setPlayerName] = useState(value.player.name);
-  const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
-  const [contract, setContract] = useState<PlayerContract>(value.contract);
+  const [staffName, setStaffName] = useState(value.staff.name);
+  const [previousRole, setPreviousRole] = useState<Role>(value.previousRole);
+  const [newRole, setNewRole] = useState<Role>(value.staff.role);
+  const [contract, setContract] = useState<StaffContract>(value.contract);
   const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -20,10 +21,11 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
     const selectedTeam = NFL_TEAMS.find((t) => t.abbreviation === teamAbbreviation)!;
     onSubmit({
       id: value.id,
-      type: 'signing',
+      type: 'promotion',
       teams: [selectedTeam],
       timestamp,
-      player: { name: playerName, position: playerPosition },
+      staff: { name: staffName, role: newRole },
+      previousRole,
       contract,
     });
   };
@@ -51,42 +53,61 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
         </select>
       </div>
 
+      <div>
+        <label htmlFor="staffName" className="block text-sm font-medium">
+          Staff Name
+        </label>
+        <input
+          type="text"
+          id="staffName"
+          value={staffName}
+          onChange={(e) => setStaffName(e.target.value)}
+          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+          required
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="playerName" className="block text-sm font-medium">
-            Player Name
-          </label>
-          <input
-            type="text"
-            id="playerName"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="playerPosition" className="block text-sm font-medium">
-            Position
+          <label htmlFor="previousRole" className="block text-sm font-medium">
+            Previous Role
           </label>
           <select
-            id="playerPosition"
-            value={playerPosition}
-            onChange={(e) => setPlayerPosition(e.target.value as Position)}
+            id="previousRole"
+            value={previousRole}
+            onChange={(e) => setPreviousRole(e.target.value as Role)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
           >
-            {POSITIONS.map((pos) => (
-              <option key={pos} value={pos}>
-                {pos}
+            {ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="newRole" className="block text-sm font-medium">
+            New Role
+          </label>
+          <select
+            id="newRole"
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value as Role)}
+            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            required
+          >
+            {ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      <ContractFormFields contract={contract} onChange={setContract} />
+      <StaffContractFormFields contract={contract} onChange={setContract} />
     </form>
   );
 }

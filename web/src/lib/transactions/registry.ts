@@ -7,6 +7,7 @@ import { ReleaseModule } from './types/release';
 import { ExtensionModule } from './types/extension';
 import { HireModule } from './types/hire';
 import { FireModule } from './types/fire';
+import { PromotionModule } from './types/promotion';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const modules: Record<TransactionType, TransactionModule<any>> = {
@@ -17,6 +18,7 @@ const modules: Record<TransactionType, TransactionModule<any>> = {
   extension: new ExtensionModule(),
   hire: new HireModule(),
   fire: new FireModule(),
+  promotion: new PromotionModule(),
 };
 
 export function getModule<T extends Transaction>(type: T['type']): TransactionModule<T> {

@@ -1,7 +1,9 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS } from './types';
+import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS, createPlayerContract, createStaffContract } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function encodeCursor(timestamp: Date, id: string): string {
   return Buffer.from(`${timestamp.toISOString()}:${id}`).toString('base64');
@@ -31,8 +33,8 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     timestamp: new Date('2025-01-10T14:30:00Z'),
     assets: [
       { type: 'player', fromTeamId: 'TEN', toTeamId: 'KC', player: { name: 'DeAndre Hopkins', position: 'WR' } },
-      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', ogTeamId: 'KC', year: 2025, round: 3 },
-      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', ogTeamId: 'KC', year: 2026, round: 5 },
+      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', draftPick: { ogTeamId: 'KC', year: 2025, round: 3 } },
+      { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'TEN', draftPick: { ogTeamId: 'KC', year: 2026, round: 5 } },
     ],
   },
   {
@@ -41,9 +43,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
     player: { name: 'Saquon Barkley', position: 'RB' },
-    contractYears: 3,
-    totalValue: 37750000,
-    guaranteed: 26000000,
+    contract: createPlayerContract(3, 37750000, 26000000),
   },
   {
     id: '3',
@@ -52,8 +52,8 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     timestamp: new Date('2025-01-08T16:45:00Z'),
     assets: [
       { type: 'player', fromTeamId: 'DAL', toTeamId: 'NYJ', player: { name: 'Micah Parsons', position: 'LB' } },
-      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', ogTeamId: 'NYJ', year: 2025, round: 1 },
-      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', ogTeamId: 'NYJ', year: 2026, round: 1 },
+      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', draftPick: { ogTeamId: 'NYJ', year: 2025, round: 1 } },
+      { type: 'draft_pick', fromTeamId: 'NYJ', toTeamId: 'DAL', draftPick: { ogTeamId: 'NYJ', year: 2026, round: 1 } },
       { type: 'player', fromTeamId: 'NYJ', toTeamId: 'DAL', player: { name: 'Sauce Gardner', position: 'CB' } },
     ],
   },
@@ -61,11 +61,19 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '4',
     teams: [TEAMS.DET],
     type: 'extension',
+    subtype: 'player',
     timestamp: new Date('2025-01-07T12:00:00Z'),
     player: { name: 'Amon-Ra St. Brown', position: 'WR' },
-    contractYears: 4,
-    totalValue: 120000000,
-    guaranteed: 80000000,
+    contract: createPlayerContract(4, 120000000, 80000000),
+  },
+  {
+    id: '11',
+    teams: [TEAMS.SF],
+    type: 'extension',
+    subtype: 'staff',
+    timestamp: new Date('2025-01-07T11:00:00Z'),
+    staff: { name: 'Kyle Shanahan', role: 'Head Coach' },
+    contract: createStaffContract(6, 60000000),
   },
   {
     id: '5',
@@ -73,6 +81,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
     staff: { name: 'Ben Johnson', role: 'Head Coach' },
+    contract: createStaffContract(5, 50000000),
   },
   {
     id: '6',
@@ -88,9 +97,9 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'trade',
     timestamp: new Date('2025-01-04T11:20:00Z'),
     assets: [
-      { type: 'draft_pick', fromTeamId: 'BAL', toTeamId: 'BUF', ogTeamId: 'BAL', year: 2025, round: 2 },
+      { type: 'draft_pick', fromTeamId: 'BAL', toTeamId: 'BUF', draftPick: { ogTeamId: 'BAL', year: 2025, round: 2 } },
       { type: 'player', fromTeamId: 'BUF', toTeamId: 'BAL', player: { name: 'Stefon Diggs', position: 'WR' } },
-      { type: 'draft_pick', fromTeamId: 'BUF', toTeamId: 'BAL', ogTeamId: 'BUF', year: 2026, round: 4 },
+      { type: 'draft_pick', fromTeamId: 'BUF', toTeamId: 'BAL', draftPick: { ogTeamId: 'BUF', year: 2026, round: 4 } },
     ],
   },
   {
@@ -99,8 +108,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'draft',
     timestamp: new Date('2025-01-03T20:00:00Z'),
     player: { name: 'Caleb Williams', position: 'QB' },
-    round: 1,
-    pick: 1,
+    draftPick: { ogTeamId: 'GB', year: 2025, round: 1, number: 1 },
   },
   {
     id: '9',
@@ -115,8 +123,16 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'draft',
     timestamp: new Date('2025-01-01T19:00:00Z'),
     player: { name: 'Marvin Harrison Jr.', position: 'WR' },
-    round: 1,
-    pick: 4,
+    draftPick: { ogTeamId: 'NYJ', year: 2025, round: 1, number: 4 },
+  },
+  {
+    id: '12',
+    teams: [TEAMS.DET],
+    type: 'promotion',
+    timestamp: new Date('2025-01-05T10:00:00Z'),
+    staff: { name: 'Ben Johnson', role: 'Head Coach' },
+    previousRole: 'Offensive Coordinator',
+    contract: createStaffContract(5, 50000000),
   },
 ];
 
@@ -234,6 +250,7 @@ export class MockDataProvider implements DataProvider {
     transactionId: string,
     teamId: string
   ): Promise<VoteCounts> {
+    await delay(1000);
     return calculateVoteCounts(transactionId, teamId);
   }
 
@@ -242,6 +259,7 @@ export class MockDataProvider implements DataProvider {
     teamId: string,
     userId: string
   ): Promise<Sentiment | null> {
+    await delay(1000);
     const key = getVoteKey(transactionId, teamId, userId);
     return voteStorage.get(key) || null;
   }

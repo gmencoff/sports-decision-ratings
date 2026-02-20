@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Fire, Role, ROLES, NFL_TEAMS } from '@/lib/data/types';
 import { FormProps } from '../../interface';
+import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -10,6 +11,7 @@ export function FireForm({ value, onSubmit }: FormProps<Fire>) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
   const [staffName, setStaffName] = useState(value.staff.name);
   const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
+  const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,13 +20,15 @@ export function FireForm({ value, onSubmit }: FormProps<Fire>) {
       id: value.id,
       type: 'fire',
       teams: [selectedTeam],
-      timestamp: value.timestamp,
+      timestamp,
       staff: { name: staffName, role: staffRole },
     });
   };
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
+      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
+
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team

@@ -1,37 +1,38 @@
 'use client';
 
 import { useState } from 'react';
-import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
-import { FormProps } from '../../interface';
-import { ContractFormFields } from '../../components/ContractFormFields';
-import { TransactionDateField } from '../../components/TransactionDateField';
+import { StaffExtension, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
+import { StaffContractFormFields } from '../../components/StaffContractFormFields';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
-export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
+interface StaffExtensionFormProps {
+  value: StaffExtension;
+  onSubmit: (value: StaffExtension) => void;
+}
+
+export function StaffExtensionForm({ value, onSubmit }: StaffExtensionFormProps) {
   const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
-  const [playerName, setPlayerName] = useState(value.player.name);
-  const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
-  const [contract, setContract] = useState<PlayerContract>(value.contract);
-  const [timestamp, setTimestamp] = useState(value.timestamp);
+  const [staffName, setStaffName] = useState(value.staff.name);
+  const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
+  const [contract, setContract] = useState<StaffContract>(value.contract);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedTeam = NFL_TEAMS.find((t) => t.abbreviation === teamAbbreviation)!;
     onSubmit({
       id: value.id,
-      type: 'signing',
+      type: 'extension',
+      subtype: 'staff',
       teams: [selectedTeam],
-      timestamp,
-      player: { name: playerName, position: playerPosition },
+      timestamp: value.timestamp,
+      staff: { name: staffName, role: staffRole },
       contract,
     });
   };
 
   return (
     <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
-      <TransactionDateField timestamp={timestamp} onChange={setTimestamp} />
-
       <div>
         <label htmlFor="team" className="block text-sm font-medium">
           Team
@@ -53,40 +54,40 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="playerName" className="block text-sm font-medium">
-            Player Name
+          <label htmlFor="staffName" className="block text-sm font-medium">
+            Staff Name
           </label>
           <input
             type="text"
-            id="playerName"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
+            id="staffName"
+            value={staffName}
+            onChange={(e) => setStaffName(e.target.value)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="playerPosition" className="block text-sm font-medium">
-            Position
+          <label htmlFor="staffRole" className="block text-sm font-medium">
+            Role
           </label>
           <select
-            id="playerPosition"
-            value={playerPosition}
-            onChange={(e) => setPlayerPosition(e.target.value as Position)}
+            id="staffRole"
+            value={staffRole}
+            onChange={(e) => setStaffRole(e.target.value as Role)}
             className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
             required
           >
-            {POSITIONS.map((pos) => (
-              <option key={pos} value={pos}>
-                {pos}
+            {ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      <ContractFormFields contract={contract} onChange={setContract} />
+      <StaffContractFormFields contract={contract} onChange={setContract} />
     </form>
   );
 }
