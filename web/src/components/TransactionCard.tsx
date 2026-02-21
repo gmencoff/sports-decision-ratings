@@ -98,12 +98,12 @@ export function TransactionCard({
   }
 
   const cardContent = (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+    <div className="bg-surface rounded-xl shadow-sm border border-border-default p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
-        <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
+        <span className="inline-block px-2 py-1 text-xs font-medium bg-badge-bg text-badge-text rounded">
           {transactionModule.label}
         </span>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-text-muted">
           {formatTimestamp(transaction.timestamp)}
         </span>
       </div>
@@ -123,10 +123,10 @@ export function TransactionCard({
           return (
             <div
               key={team.id}
-              className="pt-4 border-t border-gray-100 first:pt-0 first:border-t-0"
+              className="pt-4 border-t border-border-subtle first:pt-0 first:border-t-0"
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-medium text-gray-800">{team.name}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                <span className="font-medium text-text-primary">{team.name}</span>
                 <VoteButtons
                   onVote={(sentiment) => handleVote(team.id, sentiment)}
                   disabled={votesLoading || voteState.isVoting}

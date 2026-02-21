@@ -9,13 +9,13 @@ export function TradeCard({ transaction }: CardProps<Trade>) {
 
   return (
     <div className="space-y-2">
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-text-secondary">
         {transaction.assets.length} asset{transaction.assets.length !== 1 ? 's' : ''} exchanged
       </div>
       <ul className="text-sm space-y-1">
         {transaction.assets.map((asset, index) => (
           <li key={index} className="flex items-center gap-2">
-            <span className="text-gray-400">{asset.fromTeamId} → {asset.toTeamId}:</span>
+            <span className="text-text-muted">{asset.fromTeamId} → {asset.toTeamId}:</span>
             {asset.type === 'player' && (
               <span>{asset.player.name} ({asset.player.position})</span>
             )}
