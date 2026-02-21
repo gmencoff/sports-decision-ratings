@@ -10,7 +10,7 @@ export function PlayerExtensionCard({ transaction }: PlayerExtensionCardProps) {
     <div className="space-y-2">
       <div className="font-medium">
         {transaction.player.name}
-        <span className="ml-2 text-sm text-gray-500">({transaction.player.position})</span>
+        <span className="ml-2 text-sm text-text-muted">({transaction.player.position})</span>
       </div>
       <ContractDetails contract={transaction.contract} label="extension" />
     </div>

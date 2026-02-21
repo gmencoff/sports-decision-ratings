@@ -10,7 +10,7 @@ export function StaffExtensionCard({ transaction }: StaffExtensionCardProps) {
     <div className="space-y-2">
       <div className="font-medium">
         {transaction.staff.name}
-        <span className="ml-2 text-sm text-gray-500">({transaction.staff.role})</span>
+        <span className="ml-2 text-sm text-text-muted">({transaction.staff.role})</span>
       </div>
       <StaffContractDetails contract={transaction.contract} label="extension" />
     </div>

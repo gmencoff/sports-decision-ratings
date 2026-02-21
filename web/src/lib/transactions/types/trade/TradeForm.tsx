@@ -194,13 +194,13 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
 
   const renderAssetForm = (asset: AssetFormData, index: number) => {
     return (
-      <div key={index} className="border border-gray-300 rounded-lg p-4 space-y-4">
+      <div key={index} className="border border-border-default rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Asset {index + 1}</h3>
           <button
             type="button"
             onClick={() => removeAsset(index)}
-            className="text-red-600 hover:text-red-800 text-sm"
+            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
           >
             Remove
           </button>
@@ -212,7 +212,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
             <select
               value={asset.fromTeamId}
               onChange={(e) => updateAsset(index, { fromTeamId: e.target.value })}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+              className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
               required
             >
               {sortedTeams.map((team) => (
@@ -228,7 +228,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
             <select
               value={asset.toTeamId}
               onChange={(e) => updateAsset(index, { toTeamId: e.target.value })}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+              className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
               required
             >
               {sortedTeams.map((team) => (
@@ -266,7 +266,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
               
               updateAsset(index, baseUpdate);
             }}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           >
             <option value="player">Player</option>
@@ -284,7 +284,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
                 type="text"
                 value={asset.playerName || ''}
                 onChange={(e) => updateAsset(index, { playerName: e.target.value })}
-                className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 required
               />
             </div>
@@ -293,7 +293,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
               <select
                 value={asset.playerPosition || 'QB'}
                 onChange={(e) => updateAsset(index, { playerPosition: e.target.value as Position })}
-                className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 required
               >
                 {POSITIONS.map((pos) => (
@@ -314,7 +314,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
                 type="text"
                 value={asset.staffName || ''}
                 onChange={(e) => updateAsset(index, { staffName: e.target.value })}
-                className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 required
               />
             </div>
@@ -323,7 +323,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
               <select
                 value={asset.staffRole || 'Head Coach'}
                 onChange={(e) => updateAsset(index, { staffRole: e.target.value as Role })}
-                className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 required
               >
                 {ROLES.map((role) => (
@@ -343,7 +343,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
               <select
                 value={asset.ogTeamId || asset.fromTeamId}
                 onChange={(e) => updateAsset(index, { ogTeamId: e.target.value })}
-                className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 required
               >
                 {sortedTeams.map((team) => (
@@ -362,7 +362,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
                   onChange={(e) => updateAsset(index, { year: Number(e.target.value) })}
                   min={2000}
                   max={2100}
-                  className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                  className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                   required
                 />
               </div>
@@ -374,7 +374,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
                   onChange={(e) => updateAsset(index, { round: Number(e.target.value) })}
                   min={1}
                   max={7}
-                  className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                  className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                   required
                 />
               </div>
@@ -403,10 +403,10 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
                   value={asset.pickNumber ?? 1}
                   onChange={(e) => updateAsset(index, { pickNumber: Number(e.target.value) })}
                   min={1}
-                  className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+                  className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 />
               ) : (
-                <div className="mt-1 block w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+                <div className="mt-1 block w-full rounded border border-border-default bg-surface-secondary px-3 py-2 text-sm text-text-muted">
                   Unknown
                 </div>
               )}
@@ -420,7 +420,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
             <textarea
               value={asset.conditions || ''}
               onChange={(e) => updateAsset(index, { conditions: e.target.value })}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+              className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
               rows={3}
               required
               placeholder="e.g., If player makes Pro Bowl, becomes 2nd round pick"
@@ -448,7 +448,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
         </div>
 
         {assets.length === 0 ? (
-          <p className="text-sm text-gray-500 py-4 text-center border border-gray-200 rounded">
+          <p className="text-sm text-text-muted py-4 text-center border border-border-default rounded">
             No assets added yet. Click &quot;Add Asset&quot; to get started.
           </p>
         ) : (

@@ -24,7 +24,7 @@ const yearsPart = hasYears
   return (
     <>
       {summaryParts && (
-        <div className="text-sm text-gray-600">{summaryParts}</div>
+        <div className="text-sm text-text-secondary">{summaryParts}</div>
       )}
     </>
   );

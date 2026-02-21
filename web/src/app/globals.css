@@ -1,8 +1,56 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — extend these when adding new UI elements so that dark mode
+ * and any future themes are covered automatically.
+ */
 :root {
-  --background: #ffffff;
+  --background: #f9fafb;   /* page / body background  */
   --foreground: #171717;
+
+  /* Surfaces */
+  --surface: #ffffff;            /* card / panel background */
+  --surface-secondary: #f3f4f6; /* subtle inset background  */
+
+  /* Borders */
+  --border: #e5e7eb;       /* default border (gray-200) */
+  --border-subtle: #f3f4f6; /* separator inside a card   */
+
+  /* Text */
+  --text-primary: #111827;   /* headings / labels */
+  --text-secondary: #4b5563; /* body copy         */
+  --text-muted: #6b7280;     /* timestamps / hints */
+
+  /* Badge */
+  --badge-bg: #f3f4f6;
+  --badge-text: #374151;
+
+  /* Form inputs */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+
+    --surface: #1e293b;
+    --surface-secondary: #0f172a;
+
+    --border: #334155;
+    --border-subtle: #1e293b;
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --badge-bg: #334155;
+    --badge-text: #cbd5e1;
+
+    --input-bg: #1e293b;
+    --input-border: #475569;
+  }
 }
 
 @theme inline {
@@ -10,13 +58,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Expose design tokens as Tailwind utilities (bg-surface, text-muted, etc.) */
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-border-default: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-badge-bg: var(--badge-bg);
+  --color-badge-text: var(--badge-text);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
 }
 
 body {

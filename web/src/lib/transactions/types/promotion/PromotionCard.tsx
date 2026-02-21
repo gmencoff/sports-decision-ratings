@@ -8,7 +8,7 @@ export function PromotionCard({ transaction }: CardProps<Promotion>) {
       <div className="font-medium">
         {transaction.staff.name}
       </div>
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-text-secondary">
         {transaction.previousRole} &rarr; {transaction.staff.role}
       </div>
       <StaffContractDetails contract={transaction.contract} />

@@ -40,7 +40,7 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
           id="team"
           value={teamAbbreviation}
           onChange={(e) => setTeamAbbreviation(e.target.value)}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+          className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
           required
         >
           {sortedTeams.map((team) => (
@@ -61,7 +61,7 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
             id="staffName"
             value={staffName}
             onChange={(e) => setStaffName(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           />
         </div>
@@ -74,7 +74,7 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
             id="staffRole"
             value={staffRole}
             onChange={(e) => setStaffRole(e.target.value as Role)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           >
             {ROLES.map((role) => (
