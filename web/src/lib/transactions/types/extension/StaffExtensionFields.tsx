@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { StaffExtension, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
+import { StaffExtension, Role, ROLES, NFL_TEAMS, getTeamById, StaffContract } from '@/lib/data/types';
 import { StaffContractFormFields } from '../../components/StaffContractFormFields';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
@@ -12,7 +12,9 @@ interface StaffExtensionFormProps {
 }
 
 export function StaffExtensionForm({ value, onSubmit }: StaffExtensionFormProps) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [staffName, setStaffName] = useState(value.staff.name);
   const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
   const [contract, setContract] = useState<StaffContract>(value.contract);
@@ -24,7 +26,7 @@ export function StaffExtensionForm({ value, onSubmit }: StaffExtensionFormProps)
       id: value.id,
       type: 'extension',
       subtype: 'staff',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp: value.timestamp,
       staff: { name: staffName, role: staffRole },
       contract,

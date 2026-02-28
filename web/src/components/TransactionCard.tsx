@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Transaction, Team, VoteCounts, Sentiment } from '@/lib/data/types';
+import { Transaction, TeamId, VoteCounts, Sentiment, getTeamById } from '@/lib/data/types';
 import { VoteButtons } from './VoteButtons';
 import { SentimentBar } from './SentimentBar';
 import { getModule } from '@/lib/transactions';
@@ -19,7 +19,7 @@ interface TeamVoteState extends TeamVoteData {
 
 export type LoadVotesAction = (
   transactionId: string,
-  teams: Team[]
+  teamIds: TeamId[]
 ) => Promise<Record<string, TeamVoteData>>;
 
 export type SubmitVoteAction = (
@@ -49,7 +49,7 @@ export function TransactionCard({
 
   useEffect(() => {
     async function fetchVotes() {
-      const votes = await loadVotes(transaction.id, transaction.teams);
+      const votes = await loadVotes(transaction.id, transaction.teamIds);
       const votesWithLoading: Record<string, TeamVoteState> = {};
       for (const [teamId, voteData] of Object.entries(votes)) {
         votesWithLoading[teamId] = { ...voteData, isVoting: false };
@@ -59,7 +59,7 @@ export function TransactionCard({
     }
 
     fetchVotes();
-  }, [loadVotes, transaction.id, transaction.teams]);
+  }, [loadVotes, transaction.id, transaction.teamIds]);
 
   async function handleVote(teamId: string, sentiment: Sentiment) {
     const currentState = teamVotes[teamId];
@@ -113,8 +113,9 @@ export function TransactionCard({
       </div>
 
       <div className="space-y-4">
-        {transaction.teams.map((team) => {
-          const voteState = teamVotes[team.id] || {
+        {transaction.teamIds.map((teamId) => {
+          const team = getTeamById(teamId);
+          const voteState = teamVotes[teamId] || {
             counts: { good: 0, bad: 0, unsure: 0 },
             userVote: null,
             isVoting: false,
@@ -122,13 +123,13 @@ export function TransactionCard({
 
           return (
             <div
-              key={team.id}
+              key={teamId}
               className="pt-4 border-t border-border-subtle first:pt-0 first:border-t-0"
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                <span className="font-medium text-text-primary">{team.name}</span>
+                <span className="font-medium text-text-primary">{team?.name ?? teamId}</span>
                 <VoteButtons
-                  onVote={(sentiment) => handleVote(team.id, sentiment)}
+                  onVote={(sentiment) => handleVote(teamId, sentiment)}
                   disabled={votesLoading || voteState.isVoting}
                   userVote={voteState.userVote}
                 />

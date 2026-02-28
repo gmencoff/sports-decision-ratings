@@ -8,12 +8,12 @@ import {
   CoachAsset,
   DraftPickAsset,
   ConditionalDraftPickAsset,
+  TeamId,
   NFL_TEAMS,
   Position,
   POSITIONS,
   Role,
   ROLES,
-  Team,
 } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { TransactionDateField } from '../../components/TransactionDateField';
@@ -24,8 +24,8 @@ type AssetType = 'player' | 'coach' | 'draft_pick' | 'conditional_draft_pick';
 
 interface AssetFormData {
   type: AssetType;
-  fromTeamId: string;
-  toTeamId: string;
+  fromTeamId: TeamId;
+  toTeamId: TeamId;
   // Player fields
   playerName?: string;
   playerPosition?: Position;
@@ -33,7 +33,7 @@ interface AssetFormData {
   staffName?: string;
   staffRole?: Role;
   // Draft pick fields
-  ogTeamId?: string; // Team that originally owns the draft pick
+  ogTeamId?: TeamId; // Team that originally owns the draft pick
   year?: number;
   round?: number;
   pickNumber?: number;
@@ -43,8 +43,8 @@ interface AssetFormData {
 }
 
 export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
-  const defaultFromTeamId = value.teams[0]?.id ?? sortedTeams[0].id;
-  const defaultToTeamId = value.teams[1]?.id ?? sortedTeams[1]?.id ?? sortedTeams[0].id;
+  const defaultFromTeamId = value.teamIds[0] ?? sortedTeams[0].id;
+  const defaultToTeamId = value.teamIds[1] ?? sortedTeams[1]?.id ?? sortedTeams[0].id;
   
   const [timestamp, setTimestamp] = useState(value.timestamp);
 
@@ -169,24 +169,21 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
       }
     });
 
-    // Collect all unique teams from assets
-    const teamIds = new Set<string>();
+    // Collect all unique team IDs from assets
+    const teamIdSet = new Set<TeamId>();
     tradeAssets.forEach((asset) => {
-      teamIds.add(asset.fromTeamId);
-      teamIds.add(asset.toTeamId);
+      teamIdSet.add(asset.fromTeamId);
+      teamIdSet.add(asset.toTeamId);
       // For draft picks, also include the team that originally owns the pick
       if (asset.type === 'draft_pick' || asset.type === 'conditional_draft_pick') {
-        teamIds.add(asset.draftPick.ogTeamId);
+        teamIdSet.add(asset.draftPick.ogTeamId);
       }
     });
-    const teams: Team[] = Array.from(teamIds)
-      .map((id) => NFL_TEAMS.find((t) => t.id === id))
-      .filter((t): t is Team => t !== undefined);
 
     onSubmit({
       id: value.id,
       type: 'trade',
-      teams,
+      teamIds: Array.from(teamIdSet),
       timestamp,
       assets: tradeAssets,
     });
@@ -211,7 +208,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
             <label className="block text-sm font-medium">From Team</label>
             <select
               value={asset.fromTeamId}
-              onChange={(e) => updateAsset(index, { fromTeamId: e.target.value })}
+              onChange={(e) => updateAsset(index, { fromTeamId: e.target.value as TeamId })}
               className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
               required
             >
@@ -227,7 +224,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
             <label className="block text-sm font-medium">To Team</label>
             <select
               value={asset.toTeamId}
-              onChange={(e) => updateAsset(index, { toTeamId: e.target.value })}
+              onChange={(e) => updateAsset(index, { toTeamId: e.target.value as TeamId })}
               className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
               required
             >
@@ -342,7 +339,7 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
               <label className="block text-sm font-medium">Original Owner</label>
               <select
                 value={asset.ogTeamId || asset.fromTeamId}
-                onChange={(e) => updateAsset(index, { ogTeamId: e.target.value })}
+                onChange={(e) => updateAsset(index, { ogTeamId: e.target.value as TeamId })}
                 className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
                 required
               >

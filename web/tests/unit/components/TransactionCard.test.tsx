@@ -14,10 +14,7 @@ vi.mock('next/link', () => ({
 describe('TransactionCard', () => {
   const mockTransaction = createMockTransaction({
     id: 'tx-1',
-    teams: [
-      { id: 'team-1', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' },
-      { id: 'team-2', name: 'Tennessee Titans', abbreviation: 'TEN', conference: 'AFC', division: 'South' },
-    ],
+    teamIds: ['KC', 'TEN'],
   });
 
   const mockLoadVotes = vi.fn();
@@ -26,8 +23,8 @@ describe('TransactionCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLoadVotes.mockResolvedValue({
-      'team-1': { counts: { good: 10, bad: 5, unsure: 2 }, userVote: null },
-      'team-2': { counts: { good: 3, bad: 8, unsure: 1 }, userVote: 'bad' },
+      'KC': { counts: { good: 10, bad: 5, unsure: 2 }, userVote: null },
+      'TEN': { counts: { good: 3, bad: 8, unsure: 1 }, userVote: 'bad' },
     });
     mockSubmitVote.mockResolvedValue({ good: 11, bad: 5, unsure: 2 });
   });
@@ -61,7 +58,7 @@ describe('TransactionCard', () => {
       // User ID is now handled server-side, not passed from client
       expect(mockLoadVotes).toHaveBeenCalledWith(
         'tx-1',
-        mockTransaction.teams
+        mockTransaction.teamIds
       );
     });
   });
@@ -118,7 +115,7 @@ describe('TransactionCard', () => {
       // User ID is now handled server-side, not passed from client
       expect(mockSubmitVote).toHaveBeenCalledWith(
         'tx-1',
-        'team-1',
+        'KC',
         'good'
       );
     });
@@ -127,10 +124,10 @@ describe('TransactionCard', () => {
   it('should not submit same vote twice', async () => {
     const user = userEvent.setup();
 
-    // User already voted 'bad' on team-2
+    // User already voted 'bad' on TEN
     mockLoadVotes.mockResolvedValue({
-      'team-1': { counts: { good: 10, bad: 5, unsure: 2 }, userVote: null },
-      'team-2': { counts: { good: 3, bad: 8, unsure: 1 }, userVote: 'bad' },
+      'KC': { counts: { good: 10, bad: 5, unsure: 2 }, userVote: null },
+      'TEN': { counts: { good: 3, bad: 8, unsure: 1 }, userVote: 'bad' },
     });
 
     render(

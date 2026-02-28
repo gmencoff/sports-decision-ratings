@@ -1,4 +1,4 @@
-import { Team, Sentiment, VoteCounts } from '@/lib/data/types';
+import { TeamId, Sentiment, VoteCounts } from '@/lib/data/types';
 
 export interface TeamVoteData {
   counts: VoteCounts;
@@ -11,11 +11,11 @@ export interface TeamVoteData {
  */
 export async function loadVotes(
   transactionId: string,
-  teams: Team[]
+  teamIds: TeamId[]
 ): Promise<Record<string, TeamVoteData>> {
   const params = new URLSearchParams({
     transactionId,
-    teams: JSON.stringify(teams),
+    teamIds: JSON.stringify(teamIds),
   });
 
   const response = await fetch(`/api/votes?${params}`, {

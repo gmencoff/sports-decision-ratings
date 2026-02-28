@@ -249,7 +249,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-123',
         type: 'signing',
-        teams: [{ id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' }],
+        teamIds: ['KC'],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Old Player', position: 'WR' },
         contract: createPlayerContract(2, 20000000, 10000000),
@@ -288,7 +288,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-456',
         type: 'fire',
-        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
+        teamIds: ['DAL'],
         timestamp: new Date('2025-01-01'),
         staff: { name: 'Old Coach', role: 'Offensive Coordinator' },
       };
@@ -319,7 +319,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-789',
         type: 'draft',
-        teams: [{ id: 'CHI', name: 'Chicago Bears', abbreviation: 'CHI', conference: 'NFC', division: 'North' }],
+        teamIds: ['CHI'],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Draft Pick', position: 'QB' },
         draftPick: { ogTeamId: 'CHI', year: 2025, round: 1, number: 1 },
@@ -383,7 +383,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-date',
         type: 'fire',
-        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
+        teamIds: ['DAL'],
         timestamp: new Date(2024, 5, 20), // June 20, 2024
         staff: { name: 'Coach', role: 'Head Coach' },
       };
@@ -418,7 +418,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-123',
         type: 'hire',
-        teams: [],
+        teamIds: [],
         timestamp: new Date(),
         staff: { name: 'Coach', role: 'Head Coach' },
         contract: {},

@@ -1,6 +1,6 @@
 // Core types
-export type { Conference, Division, Team, Position, Player, PlayerContract, StaffContract, Role, Staff } from './core';
-export { NFL_TEAMS, POSITIONS, ROLES, createPlayerContract, createStaffContract } from './core';
+export type { Conference, Division, TeamId, Team, Position, Player, PlayerContract, StaffContract, Role, Staff } from './core';
+export { NFL_TEAM_IDS, NFL_TEAMS, getTeamById, POSITIONS, ROLES, createPlayerContract, createStaffContract } from './core';
 
 // Trade types
 export type { PlayerAsset, CoachAsset, DraftPick, DraftPickAsset, ConditionalDraftPickAsset, TradeAsset } from './trade';
