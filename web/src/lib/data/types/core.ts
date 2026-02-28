@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type Conference = 'AFC' | 'NFC';
 export type Division = 'North' | 'South' | 'East' | 'West';
 
@@ -12,7 +14,8 @@ export const NFL_TEAM_IDS = [
   'ARI', 'LAR', 'SF', 'SEA',
 ] as const;
 
-export type TeamId = (typeof NFL_TEAM_IDS)[number];
+export const TeamIdSchema = z.enum(NFL_TEAM_IDS);
+export type TeamId = z.infer<typeof TeamIdSchema>;
 
 export interface Team {
   id: TeamId;
@@ -92,18 +95,21 @@ export const POSITIONS = [
   'LS',
 ] as const;
 
-export type Position = (typeof POSITIONS)[number];
+export const PositionSchema = z.enum(POSITIONS);
+export type Position = z.infer<typeof PositionSchema>;
 
-export interface Player {
-  name: string;
-  position: Position;
-}
+export const PlayerSchema = z.object({
+  name: z.string(),
+  position: PositionSchema,
+});
+export type Player = z.infer<typeof PlayerSchema>;
 
-export interface PlayerContract {
-  years?: number;
-  totalValue?: number;
-  guaranteed?: number;
-}
+export const PlayerContractSchema = z.object({
+  years: z.number().optional(),
+  totalValue: z.number().optional(),
+  guaranteed: z.number().optional(),
+});
+export type PlayerContract = z.infer<typeof PlayerContractSchema>;
 
 export function createPlayerContract(
   years?: number,
@@ -113,10 +119,11 @@ export function createPlayerContract(
   return { years, totalValue, guaranteed };
 }
 
-export interface StaffContract {
-  years?: number;
-  totalValue?: number;
-}
+export const StaffContractSchema = z.object({
+  years: z.number().optional(),
+  totalValue: z.number().optional(),
+});
+export type StaffContract = z.infer<typeof StaffContractSchema>;
 
 export function createStaffContract(
   years?: number,
@@ -150,9 +157,11 @@ export const ROLES = [
   'Assistant Coach',
 ] as const;
 
-export type Role = (typeof ROLES)[number];
+export const RoleSchema = z.enum(ROLES);
+export type Role = z.infer<typeof RoleSchema>;
 
-export interface Staff {
-  name: string;
-  role: Role;
-}
+export const StaffSchema = z.object({
+  name: z.string(),
+  role: RoleSchema,
+});
+export type Staff = z.infer<typeof StaffSchema>;
