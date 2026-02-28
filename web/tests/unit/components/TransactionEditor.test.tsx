@@ -44,6 +44,40 @@ describe('TransactionEditor', () => {
       expect(mockPush).toHaveBeenCalledWith('/');
     });
 
+    it('should not include draft pick original team in teamIds when it differs from the trading teams', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      // Add an asset to the trade
+      await user.click(screen.getByRole('button', { name: /add asset/i }));
+
+      // Comboboxes at this point: [0] Transaction Type, [1] From Team, [2] To Team, [3] Asset Type, [4] Position
+      const comboboxesAfterAdd = screen.getAllByRole('combobox');
+      expect(comboboxesAfterAdd).toHaveLength(5);
+
+      // Change asset type to Draft Pick — Position is replaced by Original Owner
+      await user.selectOptions(comboboxesAfterAdd[3], 'draft_pick');
+
+      // Comboboxes now: [0] Transaction Type, [1] From Team, [2] To Team, [3] Asset Type, [4] Original Owner
+      const comboboxesAfterType = screen.getAllByRole('combobox');
+      expect(comboboxesAfterType).toHaveLength(5);
+
+      // The From/To teams default to the first two alphabetical teams (ARI, ATL).
+      // Change Original Owner to NE — a third team not involved in the trade.
+      await user.selectOptions(comboboxesAfterType[4], 'NE');
+
+      await user.click(screen.getByRole('button', { name: /create trade/i }));
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const submitted = mockAddTransaction.mock.calls[0][0];
+        expect(submitted.type).toBe('trade');
+        // teamIds must only contain the fromTeamId and toTeamId of the asset, not ogTeamId
+        expect(submitted.teamIds).not.toContain('NE');
+        expect(submitted.teamIds).toHaveLength(2);
+      });
+    });
+
     it('should call addTransaction when submitting a new Signing', async () => {
       const user = userEvent.setup();
       render(<TransactionEditor existingTransaction={null} />);
@@ -249,7 +283,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-123',
         type: 'signing',
-        teams: [{ id: 'KC', name: 'Kansas City Chiefs', abbreviation: 'KC', conference: 'AFC', division: 'West' }],
+        teamIds: ['KC'],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Old Player', position: 'WR' },
         contract: createPlayerContract(2, 20000000, 10000000),
@@ -288,7 +322,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-456',
         type: 'fire',
-        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
+        teamIds: ['DAL'],
         timestamp: new Date('2025-01-01'),
         staff: { name: 'Old Coach', role: 'Offensive Coordinator' },
       };
@@ -319,7 +353,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-789',
         type: 'draft',
-        teams: [{ id: 'CHI', name: 'Chicago Bears', abbreviation: 'CHI', conference: 'NFC', division: 'North' }],
+        teamIds: ['CHI'],
         timestamp: new Date('2025-01-01'),
         player: { name: 'Draft Pick', position: 'QB' },
         draftPick: { ogTeamId: 'CHI', year: 2025, round: 1, number: 1 },
@@ -383,7 +417,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-date',
         type: 'fire',
-        teams: [{ id: 'DAL', name: 'Dallas Cowboys', abbreviation: 'DAL', conference: 'NFC', division: 'East' }],
+        teamIds: ['DAL'],
         timestamp: new Date(2024, 5, 20), // June 20, 2024
         staff: { name: 'Coach', role: 'Head Coach' },
       };
@@ -418,7 +452,7 @@ describe('TransactionEditor', () => {
       const existingTransaction: Transaction = {
         id: 'tx-123',
         type: 'hire',
-        teams: [],
+        teamIds: [],
         timestamp: new Date(),
         staff: { name: 'Coach', role: 'Head Coach' },
         contract: {},

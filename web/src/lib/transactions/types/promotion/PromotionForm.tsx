@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Promotion, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
+import { Promotion, Role, ROLES, NFL_TEAMS, getTeamById, StaffContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { StaffContractFormFields } from '../../components/StaffContractFormFields';
 import { TransactionDateField } from '../../components/TransactionDateField';
@@ -9,7 +9,9 @@ import { TransactionDateField } from '../../components/TransactionDateField';
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
 export function PromotionForm({ value, onSubmit }: FormProps<Promotion>) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [staffName, setStaffName] = useState(value.staff.name);
   const [previousRole, setPreviousRole] = useState<Role>(value.previousRole);
   const [newRole, setNewRole] = useState<Role>(value.staff.role);
@@ -22,7 +24,7 @@ export function PromotionForm({ value, onSubmit }: FormProps<Promotion>) {
     onSubmit({
       id: value.id,
       type: 'promotion',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp,
       staff: { name: staffName, role: newRole },
       previousRole,

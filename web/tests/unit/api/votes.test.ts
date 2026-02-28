@@ -27,12 +27,9 @@ describe('GET /api/votes', () => {
     });
     (mockProvider.getUserVote as ReturnType<typeof vi.fn>).mockResolvedValue('good');
 
-    const teams = [
-      { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC', division: 'East' },
-    ];
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
-    url.searchParams.set('teams', JSON.stringify(teams));
+    url.searchParams.set('teamIds', JSON.stringify(['team-1']));
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -58,13 +55,9 @@ describe('GET /api/votes', () => {
       .mockResolvedValueOnce('good')
       .mockResolvedValueOnce(null);
 
-    const teams = [
-      { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC', division: 'East' },
-      { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC', division: 'West' },
-    ];
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
-    url.searchParams.set('teams', JSON.stringify(teams));
+    url.searchParams.set('teamIds', JSON.stringify(['team-1', 'team-2']));
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -85,7 +78,7 @@ describe('GET /api/votes', () => {
 
   it('should return 400 when transactionId is missing', async () => {
     const url = new URL('http://localhost/api/votes');
-    url.searchParams.set('teams', JSON.stringify([]));
+    url.searchParams.set('teamIds', JSON.stringify([]));
 
     const request = new NextRequest(url);
     const response = await GET(request);
@@ -95,7 +88,7 @@ describe('GET /api/votes', () => {
     expect(data.error).toContain('Missing required parameters');
   });
 
-  it('should return 400 when teams is missing', async () => {
+  it('should return 400 when teamIds is missing', async () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
 
@@ -107,17 +100,17 @@ describe('GET /api/votes', () => {
     expect(data.error).toContain('Missing required parameters');
   });
 
-  it('should return 400 when teams is invalid JSON', async () => {
+  it('should return 400 when teamIds is invalid JSON', async () => {
     const url = new URL('http://localhost/api/votes');
     url.searchParams.set('transactionId', 'tx-1');
-    url.searchParams.set('teams', 'invalid-json');
+    url.searchParams.set('teamIds', 'invalid-json');
 
     const request = new NextRequest(url);
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('Invalid teams parameter');
+    expect(data.error).toContain('Invalid teamIds parameter');
   });
 });
 

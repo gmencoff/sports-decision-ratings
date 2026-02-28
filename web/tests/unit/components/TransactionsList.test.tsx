@@ -56,7 +56,7 @@ describe('TransactionsList', () => {
     );
 
     // Both transaction cards should be rendered (each team appears multiple times across cards)
-    expect(screen.getAllByText('Team A').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Buffalo Bills').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should show empty state when no transactions', () => {

@@ -1,5 +1,5 @@
 import { DataProvider } from './index';
-import { Transaction, Team, Vote, VoteCounts, PaginatedResult, Sentiment, NFL_TEAMS, createPlayerContract, createStaffContract } from './types';
+import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment, createPlayerContract, createStaffContract } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -19,16 +19,11 @@ function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
   }
 }
 
-// Create a lookup map from NFL_TEAMS
-const TEAMS: Record<string, Team> = Object.fromEntries(
-  NFL_TEAMS.map((team) => [team.id, team])
-);
-
 // Sample transactions
 const MOCK_TRANSACTIONS: Transaction[] = [
   {
     id: '1',
-    teams: [TEAMS.KC],
+    teamIds: ['KC'],
     type: 'trade',
     timestamp: new Date('2025-01-10T14:30:00Z'),
     assets: [
@@ -39,7 +34,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '2',
-    teams: [TEAMS.PHI],
+    teamIds: ['PHI'],
     type: 'signing',
     timestamp: new Date('2025-01-09T10:00:00Z'),
     player: { name: 'Saquon Barkley', position: 'RB' },
@@ -47,7 +42,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '3',
-    teams: [TEAMS.DAL, TEAMS.NYJ],
+    teamIds: ['DAL', 'NYJ'],
     type: 'trade',
     timestamp: new Date('2025-01-08T16:45:00Z'),
     assets: [
@@ -59,7 +54,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '4',
-    teams: [TEAMS.DET],
+    teamIds: ['DET'],
     type: 'extension',
     subtype: 'player',
     timestamp: new Date('2025-01-07T12:00:00Z'),
@@ -68,7 +63,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '11',
-    teams: [TEAMS.SF],
+    teamIds: ['SF'],
     type: 'extension',
     subtype: 'staff',
     timestamp: new Date('2025-01-07T11:00:00Z'),
@@ -77,7 +72,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '5',
-    teams: [TEAMS.CHI],
+    teamIds: ['CHI'],
     type: 'hire',
     timestamp: new Date('2025-01-06T09:30:00Z'),
     staff: { name: 'Ben Johnson', role: 'Head Coach' },
@@ -85,7 +80,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '6',
-    teams: [TEAMS.LV],
+    teamIds: ['LV'],
     type: 'release',
     timestamp: new Date('2025-01-05T15:00:00Z'),
     player: { name: 'Jimmy Garoppolo', position: 'QB' },
@@ -93,7 +88,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '7',
-    teams: [TEAMS.BAL, TEAMS.BUF],
+    teamIds: ['BAL', 'BUF'],
     type: 'trade',
     timestamp: new Date('2025-01-04T11:20:00Z'),
     assets: [
@@ -104,7 +99,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '8',
-    teams: [TEAMS.GB],
+    teamIds: ['GB'],
     type: 'draft',
     timestamp: new Date('2025-01-03T20:00:00Z'),
     player: { name: 'Caleb Williams', position: 'QB' },
@@ -112,14 +107,14 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '9',
-    teams: [TEAMS.DAL],
+    teamIds: ['DAL'],
     type: 'fire',
     timestamp: new Date('2025-01-02T08:00:00Z'),
     staff: { name: 'Mike McCarthy', role: 'Head Coach' },
   },
   {
     id: '10',
-    teams: [TEAMS.NYJ],
+    teamIds: ['NYJ'],
     type: 'draft',
     timestamp: new Date('2025-01-01T19:00:00Z'),
     player: { name: 'Marvin Harrison Jr.', position: 'WR' },
@@ -127,7 +122,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '12',
-    teams: [TEAMS.DET],
+    teamIds: ['DET'],
     type: 'promotion',
     timestamp: new Date('2025-01-05T10:00:00Z'),
     staff: { name: 'Ben Johnson', role: 'Head Coach' },
@@ -162,22 +157,22 @@ function calculateVoteCounts(transactionId: string, teamId: string): VoteCounts 
 // Initialize with some random votes for demo purposes
 function initializeVotes(): void {
   MOCK_TRANSACTIONS.forEach((transaction) => {
-    transaction.teams.forEach((team) => {
+    transaction.teamIds.forEach((teamId) => {
       // Generate random votes from fake users
       const goodVotes = Math.floor(Math.random() * 500) + 50;
       const badVotes = Math.floor(Math.random() * 300) + 20;
       const unsureVotes = Math.floor(Math.random() * 200) + 10;
 
       for (let i = 0; i < goodVotes; i++) {
-        const key = getVoteKey(transaction.id, team.id, `fake-user-good-${i}`);
+        const key = getVoteKey(transaction.id, teamId, `fake-user-good-${i}`);
         voteStorage.set(key, 'good');
       }
       for (let i = 0; i < badVotes; i++) {
-        const key = getVoteKey(transaction.id, team.id, `fake-user-bad-${i}`);
+        const key = getVoteKey(transaction.id, teamId, `fake-user-bad-${i}`);
         voteStorage.set(key, 'bad');
       }
       for (let i = 0; i < unsureVotes; i++) {
-        const key = getVoteKey(transaction.id, team.id, `fake-user-unsure-${i}`);
+        const key = getVoteKey(transaction.id, teamId, `fake-user-unsure-${i}`);
         voteStorage.set(key, 'unsure');
       }
     });

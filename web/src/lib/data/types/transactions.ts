@@ -1,10 +1,10 @@
-import { Team, Player, Staff, PlayerContract, StaffContract, Role } from './core';
+import { TeamId, Player, Staff, PlayerContract, StaffContract, Role } from './core';
 import { TradeAsset, DraftPick } from './trade';
 
 // Shared base fields for all transactions
 interface TransactionBase {
   id: string; // unique identifier for the transaction
-  teams: Team[]; // teams involved in the transaction
+  teamIds: TeamId[]; // IDs of teams involved in the transaction
   timestamp: Date; // date that the transaction occured
 }
 

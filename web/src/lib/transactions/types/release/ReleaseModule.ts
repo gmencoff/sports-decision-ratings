@@ -14,7 +14,7 @@ export class ReleaseModule implements TransactionModule<Release> {
     return {
       id: '',
       type: 'release',
-      teams: [],
+      teamIds: [],
       timestamp: new Date(),
       player: { name: '', position: 'QB' },
     };

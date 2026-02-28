@@ -1,9 +1,9 @@
-import { Player, Staff } from './core';
+import { TeamId, Player, Staff } from './core';
 
 // Trade asset types
 interface TradeAssetBase {
-  fromTeamId: string;
-  toTeamId: string;
+  fromTeamId: TeamId;
+  toTeamId: TeamId;
 }
 
 export interface PlayerAsset extends TradeAssetBase {
@@ -17,7 +17,7 @@ export interface CoachAsset extends TradeAssetBase {
 }
 
 export interface DraftPick {
-  ogTeamId: string;
+  ogTeamId: TeamId;
   year: number;
   round: number;
   number?: number;

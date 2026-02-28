@@ -7,7 +7,7 @@ import {
   Hire,
   Fire,
   Promotion,
-  Team,
+  TeamId,
   Role,
   Player,
   Staff,
@@ -59,7 +59,7 @@ export function decodeStaff(raw: unknown): Staff {
 
 // Convert raw JSONB draft pick data to DraftPick type
 export function decodeDraftPick(raw: unknown): DraftPick {
-  const data = raw as { ogTeamId: string; year: number; round: number; number?: number };
+  const data = raw as { ogTeamId: TeamId; year: number; round: number; number?: number };
   return {
     ogTeamId: data.ogTeamId,
     year: data.year,
@@ -120,14 +120,14 @@ interface DbRow {
 }
 
 export class DbDecoderVisitor implements TransactionVisitor<Transaction> {
-  private readonly base: { id: string; teams: Team[]; timestamp: Date };
+  private readonly base: { id: string; teamIds: TeamId[]; timestamp: Date };
   private readonly data: Record<string, unknown>;
 
-  constructor(dbTxn: DbRow, teamMap: Map<string, Team>) {
+  constructor(dbTxn: DbRow) {
     this.data = dbTxn.data as Record<string, unknown>;
     this.base = {
       id: dbTxn.id,
-      teams: dbTxn.teamIds.map((id) => teamMap.get(id)!).filter(Boolean),
+      teamIds: dbTxn.teamIds as TeamId[],
       timestamp: dbTxn.timestamp,
     };
   }

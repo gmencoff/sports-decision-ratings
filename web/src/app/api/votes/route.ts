@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Team, Sentiment, VoteCounts } from '@/lib/data/types';
+import { Sentiment, VoteCounts } from '@/lib/data/types';
 import { DataProvider, getDataProvider } from '@/lib/data';
 import { getVoterId } from '@/server/auth/voter-session';
 
@@ -11,17 +11,17 @@ export interface TeamVoteData {
 export async function loadVotesImpl(
   provider: DataProvider,
   transactionId: string,
-  teams: Team[],
+  teamIds: string[],
   userId: string
 ): Promise<Record<string, TeamVoteData>> {
   const result: Record<string, TeamVoteData> = {};
 
-  for (const team of teams) {
+  for (const teamId of teamIds) {
     const [counts, userVote] = await Promise.all([
-      provider.getVoteCounts(transactionId, team.id),
-      provider.getUserVote(transactionId, team.id, userId),
+      provider.getVoteCounts(transactionId, teamId),
+      provider.getUserVote(transactionId, teamId, userId),
     ]);
-    result[team.id] = { counts, userVote };
+    result[teamId] = { counts, userVote };
   }
 
   return result;
@@ -43,26 +43,26 @@ export async function submitVoteImpl(
   return provider.getVoteCounts(transactionId, teamId);
 }
 
-// GET /api/votes?transactionId=...&teams=...
+// GET /api/votes?transactionId=...&teamIds=...
 // userId is now derived from server-side session cookie
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const transactionId = searchParams.get('transactionId');
-  const teamsJson = searchParams.get('teams');
+  const teamIdsJson = searchParams.get('teamIds');
 
-  if (!transactionId || !teamsJson) {
+  if (!transactionId || !teamIdsJson) {
     return NextResponse.json(
-      { error: 'Missing required parameters: transactionId, teams' },
+      { error: 'Missing required parameters: transactionId, teamIds' },
       { status: 400 }
     );
   }
 
-  let teams: Team[];
+  let teamIds: string[];
   try {
-    teams = JSON.parse(teamsJson);
+    teamIds = JSON.parse(teamIdsJson);
   } catch {
     return NextResponse.json(
-      { error: 'Invalid teams parameter: must be valid JSON' },
+      { error: 'Invalid teamIds parameter: must be valid JSON' },
       { status: 400 }
     );
   }
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
   const voterId = await getVoterId();
 
   const provider = await getDataProvider();
-  const votes = await loadVotesImpl(provider, transactionId, teams, voterId);
+  const votes = await loadVotesImpl(provider, transactionId, teamIds, voterId);
 
   return NextResponse.json(votes);
 }

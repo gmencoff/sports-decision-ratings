@@ -5,13 +5,11 @@ import { VoteService, getVoteService } from '@/server/services/vote-service';
 import { DataProvider } from './index';
 import {
   Transaction,
-  Team,
   Vote,
   VoteCounts,
   PaginatedResult,
   Sentiment,
   TransactionType,
-  NFL_TEAMS,
 } from './types';
 import { visitByType } from '@/lib/transactions/visitor';
 import { DbDecoderVisitor } from './postgres-decoder';
@@ -35,9 +33,6 @@ function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
   }
 }
 
-// Build team map from hardcoded NFL_TEAMS
-const TEAM_MAP = new Map<string, Team>(NFL_TEAMS.map((t) => [t.id, t]));
-
 // Convert DB transaction to domain Transaction
 function dbTransactionToTransaction(
   dbTxn: {
@@ -46,10 +41,9 @@ function dbTransactionToTransaction(
     teamIds: string[];
     timestamp: Date;
     data: unknown;
-  },
-  teamMap: Map<string, Team>
+  }
 ): Transaction {
-  const visitor = new DbDecoderVisitor(dbTxn, teamMap);
+  const visitor = new DbDecoderVisitor(dbTxn);
   return visitByType<Transaction>(dbTxn.type as TransactionType, visitor);
 }
 
@@ -61,11 +55,11 @@ function transactionToDbFormat(transaction: Transaction): {
   timestamp: Date;
   data: Record<string, unknown>;
 } {
-  const { id, type, teams: txnTeams, timestamp, ...rest } = transaction;
+  const { id, type, teamIds, timestamp, ...rest } = transaction;
   return {
     id,
     type,
-    teamIds: txnTeams.map((t) => t.id),
+    teamIds,
     timestamp,
     data: rest,
   };
@@ -80,15 +74,10 @@ export class PostgresDataProvider implements DataProvider {
     this.voteService = voteService ?? getVoteService();
   }
 
-  private getTeamMap(): Map<string, Team> {
-    return TEAM_MAP;
-  }
-
   async getTransactions(
     limit: number = DEFAULT_PAGE_SIZE,
     cursor?: string
   ): Promise<PaginatedResult<Transaction>> {
-    const teamMap = this.getTeamMap();
 
     let results;
 
@@ -127,7 +116,7 @@ export class PostgresDataProvider implements DataProvider {
     const hasMore = results.length > limit;
     const pageData = hasMore ? results.slice(0, limit) : results;
 
-    const txns = pageData.map((row) => dbTransactionToTransaction(row, teamMap));
+    const txns = pageData.map((row) => dbTransactionToTransaction(row));
 
     const nextCursor =
       hasMore && pageData.length > 0
@@ -142,8 +131,6 @@ export class PostgresDataProvider implements DataProvider {
   }
 
   async getTransaction(id: string): Promise<Transaction | null> {
-    const teamMap = this.getTeamMap();
-
     const result = await this.db
       .select()
       .from(transactions)
@@ -154,7 +141,7 @@ export class PostgresDataProvider implements DataProvider {
       return null;
     }
 
-    return dbTransactionToTransaction(result[0], teamMap);
+    return dbTransactionToTransaction(result[0]);
   }
 
   async addTransaction(transaction: Transaction): Promise<Transaction> {

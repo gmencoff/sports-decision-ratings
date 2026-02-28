@@ -19,13 +19,10 @@ export function createMockTransaction(overrides: Partial<Transaction> = {}): Tra
   return {
     id: 'tx-1',
     type: 'trade',
-    teams: [
-      { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC', division: 'East' },
-      { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC', division: 'West' },
-    ],
+    teamIds: ['BUF', 'MIA'],
     timestamp: new Date('2024-01-15'),
     assets: [
-      { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'Test Player', position: 'QB' } },
+      { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'Test Player', position: 'QB' } },
     ],
     ...overrides,
   } as Transaction;

@@ -1,8 +1,21 @@
 export type Conference = 'AFC' | 'NFC';
 export type Division = 'North' | 'South' | 'East' | 'West';
 
+export const NFL_TEAM_IDS = [
+  'BUF', 'MIA', 'NE', 'NYJ',
+  'BAL', 'CIN', 'CLE', 'PIT',
+  'HOU', 'IND', 'JAX', 'TEN',
+  'DEN', 'KC', 'LV', 'LAC',
+  'DAL', 'NYG', 'PHI', 'WAS',
+  'CHI', 'DET', 'GB', 'MIN',
+  'ATL', 'CAR', 'NO', 'TB',
+  'ARI', 'LAR', 'SF', 'SEA',
+] as const;
+
+export type TeamId = (typeof NFL_TEAM_IDS)[number];
+
 export interface Team {
-  id: string;
+  id: TeamId;
   name: string;
   abbreviation: string;
   conference: Conference;
@@ -51,6 +64,13 @@ export const NFL_TEAMS: Team[] = [
   { id: 'SF', name: 'San Francisco 49ers', abbreviation: 'SF', conference: 'NFC', division: 'West' },
   { id: 'SEA', name: 'Seattle Seahawks', abbreviation: 'SEA', conference: 'NFC', division: 'West' },
 ];
+
+// Lookup map for O(1) team retrieval by ID
+const TEAM_MAP = new Map<TeamId, Team>(NFL_TEAMS.map((t) => [t.id, t]));
+
+export function getTeamById(id: string): Team | undefined {
+  return TEAM_MAP.get(id as TeamId);
+}
 
 export const POSITIONS = [
   'QB',
