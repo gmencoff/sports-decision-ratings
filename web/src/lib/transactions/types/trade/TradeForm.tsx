@@ -174,10 +174,6 @@ export function TradeForm({ value, onSubmit }: FormProps<Trade>) {
     tradeAssets.forEach((asset) => {
       teamIdSet.add(asset.fromTeamId);
       teamIdSet.add(asset.toTeamId);
-      // For draft picks, also include the team that originally owns the pick
-      if (asset.type === 'draft_pick' || asset.type === 'conditional_draft_pick') {
-        teamIdSet.add(asset.draftPick.ogTeamId);
-      }
     });
 
     onSubmit({

@@ -44,6 +44,40 @@ describe('TransactionEditor', () => {
       expect(mockPush).toHaveBeenCalledWith('/');
     });
 
+    it('should not include draft pick original team in teamIds when it differs from the trading teams', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      // Add an asset to the trade
+      await user.click(screen.getByRole('button', { name: /add asset/i }));
+
+      // Comboboxes at this point: [0] Transaction Type, [1] From Team, [2] To Team, [3] Asset Type, [4] Position
+      const comboboxesAfterAdd = screen.getAllByRole('combobox');
+      expect(comboboxesAfterAdd).toHaveLength(5);
+
+      // Change asset type to Draft Pick — Position is replaced by Original Owner
+      await user.selectOptions(comboboxesAfterAdd[3], 'draft_pick');
+
+      // Comboboxes now: [0] Transaction Type, [1] From Team, [2] To Team, [3] Asset Type, [4] Original Owner
+      const comboboxesAfterType = screen.getAllByRole('combobox');
+      expect(comboboxesAfterType).toHaveLength(5);
+
+      // The From/To teams default to the first two alphabetical teams (ARI, ATL).
+      // Change Original Owner to NE — a third team not involved in the trade.
+      await user.selectOptions(comboboxesAfterType[4], 'NE');
+
+      await user.click(screen.getByRole('button', { name: /create trade/i }));
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const submitted = mockAddTransaction.mock.calls[0][0];
+        expect(submitted.type).toBe('trade');
+        // teamIds must only contain the fromTeamId and toTeamId of the asset, not ogTeamId
+        expect(submitted.teamIds).not.toContain('NE');
+        expect(submitted.teamIds).toHaveLength(2);
+      });
+    });
+
     it('should call addTransaction when submitting a new Signing', async () => {
       const user = userEvent.setup();
       render(<TransactionEditor existingTransaction={null} />);
