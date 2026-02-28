@@ -11,8 +11,7 @@ import {
   Sentiment,
   TransactionType,
 } from './types';
-import { visitByType } from '@/lib/transactions/visitor';
-import { DbDecoderVisitor } from './postgres-decoder';
+import { decodeTransaction } from './postgres-decoder';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -43,8 +42,7 @@ function dbTransactionToTransaction(
     data: unknown;
   }
 ): Transaction {
-  const visitor = new DbDecoderVisitor(dbTxn);
-  return visitByType<Transaction>(dbTxn.type as TransactionType, visitor);
+  return decodeTransaction(dbTxn);
 }
 
 // Convert domain Transaction to DB format
