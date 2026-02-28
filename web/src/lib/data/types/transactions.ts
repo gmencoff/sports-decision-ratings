@@ -1,84 +1,100 @@
-import { TeamId, Player, Staff, PlayerContract, StaffContract, Role } from './core';
-import { TradeAsset, DraftPick } from './trade';
+import { z } from 'zod';
+import { TeamIdSchema, PlayerSchema, PlayerContractSchema, StaffSchema, StaffContractSchema, RoleSchema } from './core';
+import { TradeAssetSchema, DraftPickSchema } from './trade';
 
-// Shared base fields for all transactions
-interface TransactionBase {
-  id: string; // unique identifier for the transaction
-  teamIds: TeamId[]; // IDs of teams involved in the transaction
-  timestamp: Date; // date that the transaction occured
-}
+const TransactionBaseSchema = z.object({
+  id: z.string(),
+  teamIds: z.array(TeamIdSchema),
+  timestamp: z.date(),
+});
 
-// Type-specific transaction interfaces
-export interface Trade extends TransactionBase {
-  type: 'trade';
-  assets: TradeAsset[];
-}
+export const TradeSchema = TransactionBaseSchema.extend({
+  type: z.literal('trade'),
+  assets: z.array(TradeAssetSchema),
+});
 
-export interface Signing extends TransactionBase {
-  type: 'signing';
-  player: Player;
-  contract: PlayerContract;
-}
+export const SigningSchema = TransactionBaseSchema.extend({
+  type: z.literal('signing'),
+  player: PlayerSchema,
+  contract: PlayerContractSchema,
+});
 
-export interface DraftSelection extends TransactionBase {
-  type: 'draft';
-  player: Player;
-  draftPick: DraftPick;
-}
+export const DraftSelectionSchema = TransactionBaseSchema.extend({
+  type: z.literal('draft'),
+  player: PlayerSchema,
+  draftPick: DraftPickSchema,
+});
 
-export interface Release extends TransactionBase {
-  type: 'release';
-  player: Player;
-  capSavings?: number;
-}
+export const ReleaseSchema = TransactionBaseSchema.extend({
+  type: z.literal('release'),
+  player: PlayerSchema,
+  capSavings: z.number().optional(),
+});
 
 export const EXTENSION_SUBTYPES = ['player', 'staff'] as const;
 export type ExtensionSubtype = (typeof EXTENSION_SUBTYPES)[number];
 
-export interface PlayerExtension extends TransactionBase {
-  type: 'extension';
-  subtype: 'player';
-  player: Player;
-  contract: PlayerContract;
-}
+export const PlayerExtensionSchema = TransactionBaseSchema.extend({
+  type: z.literal('extension'),
+  subtype: z.literal('player'),
+  player: PlayerSchema,
+  contract: PlayerContractSchema,
+});
 
-export interface StaffExtension extends TransactionBase {
-  type: 'extension';
-  subtype: 'staff';
-  staff: Staff;
-  contract: StaffContract;
-}
+export const StaffExtensionSchema = TransactionBaseSchema.extend({
+  type: z.literal('extension'),
+  subtype: z.literal('staff'),
+  staff: StaffSchema,
+  contract: StaffContractSchema,
+});
 
-export type Extension = PlayerExtension | StaffExtension;
+export const ExtensionSchema = z.discriminatedUnion('subtype', [
+  PlayerExtensionSchema,
+  StaffExtensionSchema,
+]);
 
-export interface Hire extends TransactionBase {
-  type: 'hire';
-  staff: Staff;
-  contract: StaffContract;
-}
+export const HireSchema = TransactionBaseSchema.extend({
+  type: z.literal('hire'),
+  staff: StaffSchema,
+  contract: StaffContractSchema,
+});
 
-export interface Fire extends TransactionBase {
-  type: 'fire';
-  staff: Staff;
-}
+export const FireSchema = TransactionBaseSchema.extend({
+  type: z.literal('fire'),
+  staff: StaffSchema,
+});
 
-export interface Promotion extends TransactionBase {
-  type: 'promotion';
-  staff: Staff;            // staff with their NEW role
-  previousRole: Role;      // what they were before
-  contract: StaffContract; // new contract terms
-}
+export const PromotionSchema = TransactionBaseSchema.extend({
+  type: z.literal('promotion'),
+  staff: StaffSchema,
+  previousRole: RoleSchema,
+  contract: StaffContractSchema,
+});
 
-// Discriminated union of all transaction types
-export type Transaction =
-  | Trade
-  | Signing
-  | DraftSelection
-  | Release
-  | Extension
-  | Hire
-  | Fire
-  | Promotion;
+// z.union used instead of z.discriminatedUnion because 'extension' maps to two subtypes
+export const TransactionSchema = z.union([
+  TradeSchema,
+  SigningSchema,
+  DraftSelectionSchema,
+  ReleaseSchema,
+  PlayerExtensionSchema,
+  StaffExtensionSchema,
+  HireSchema,
+  FireSchema,
+  PromotionSchema,
+]);
+
+export type Trade = z.infer<typeof TradeSchema>;
+export type Signing = z.infer<typeof SigningSchema>;
+export type DraftSelection = z.infer<typeof DraftSelectionSchema>;
+export type Release = z.infer<typeof ReleaseSchema>;
+export type PlayerExtension = z.infer<typeof PlayerExtensionSchema>;
+export type StaffExtension = z.infer<typeof StaffExtensionSchema>;
+export type Extension = z.infer<typeof ExtensionSchema>;
+export type Hire = z.infer<typeof HireSchema>;
+export type Fire = z.infer<typeof FireSchema>;
+export type Promotion = z.infer<typeof PromotionSchema>;
+export type Transaction = z.infer<typeof TransactionSchema>;
 
 // Distributive Omit that works properly with union types
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
