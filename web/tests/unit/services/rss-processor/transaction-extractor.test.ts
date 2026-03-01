@@ -1,17 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { extractTransactions } from '@/server/services/rss-processor/transaction-extractor';
-import type { RssItem } from '@/server/services/rss-processor/feed-fetcher';
-import type Anthropic from '@anthropic-ai/sdk';
+import type { RssItem } from '@/lib/data';
+import type { LlmClient } from '@/server/services/rss-processor/llm-client';
 import { visitByType, allTransactionTypes, type TransactionVisitor } from '@/lib/transactions/visitor';
 
-function createMockAnthropic(responseText: string): Anthropic {
+function createMockLlmClient(responseText: string): LlmClient {
   return {
-    messages: {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: 'text', text: responseText }],
-      }),
-    },
-  } as unknown as Anthropic;
+    createMessage: vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: responseText }],
+    }),
+  };
 }
 
 const mockItem: RssItem = {
@@ -47,9 +45,9 @@ describe('transaction-extractor', () => {
   });
 
   it('returns parsed TransactionInput array for valid JSON signing', async () => {
-    const anthropic = createMockAnthropic(validSigningJson);
+    const llm = createMockLlmClient(validSigningJson);
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe('signing');
@@ -58,9 +56,9 @@ describe('transaction-extractor', () => {
   });
 
   it('returns parsed TransactionInput array for valid JSON trade', async () => {
-    const anthropic = createMockAnthropic(validTradeJson);
+    const llm = createMockLlmClient(validTradeJson);
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe('trade');
@@ -68,25 +66,25 @@ describe('transaction-extractor', () => {
   });
 
   it('returns empty array when LLM returns []', async () => {
-    const anthropic = createMockAnthropic('[]');
+    const llm = createMockLlmClient('[]');
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
 
   it('returns empty array when LLM returns rumor/no transactions explanation', async () => {
-    const anthropic = createMockAnthropic('This article contains only rumors, no confirmed transactions.');
+    const llm = createMockLlmClient('This article contains only rumors, no confirmed transactions.');
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
 
   it('returns empty array for invalid JSON', async () => {
-    const anthropic = createMockAnthropic('{ invalid json }');
+    const llm = createMockLlmClient('{ invalid json }');
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
@@ -99,9 +97,9 @@ describe('transaction-extractor', () => {
       player: { name: 'John Doe', position: 'INVALID_POS' },
       contract: {},
     }]);
-    const anthropic = createMockAnthropic(badJson);
+    const llm = createMockLlmClient(badJson);
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
@@ -114,53 +112,49 @@ describe('transaction-extractor', () => {
       player: { name: 'John Doe', position: 'WR' },
       contract: {},
     }]);
-    const anthropic = createMockAnthropic(badJson);
+    const llm = createMockLlmClient(badJson);
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
 
   it('strips markdown code blocks from LLM response', async () => {
     const wrappedJson = `\`\`\`json\n${validSigningJson}\n\`\`\``;
-    const anthropic = createMockAnthropic(wrappedJson);
+    const llm = createMockLlmClient(wrappedJson);
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe('signing');
   });
 
-  it('returns empty array when anthropic.messages.create throws', async () => {
-    const anthropic = {
-      messages: {
-        create: vi.fn().mockRejectedValue(new Error('API error')),
-      },
-    } as unknown as Anthropic;
+  it('returns empty array when llm.createMessage throws', async () => {
+    const llm: LlmClient = {
+      createMessage: vi.fn().mockRejectedValue(new Error('API error')),
+    };
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
 
   it('returns empty array when LLM returns non-text content', async () => {
-    const anthropic = {
-      messages: {
-        create: vi.fn().mockResolvedValue({
-          content: [{ type: 'tool_use', id: 'tool-1', name: 'tool', input: {} }],
-        }),
-      },
-    } as unknown as Anthropic;
+    const llm: LlmClient = {
+      createMessage: vi.fn().mockResolvedValue({
+        content: [{ type: 'tool_use' }],
+      }),
+    };
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toEqual([]);
   });
 
   it('sets timestamp from the LLM output converted to Date', async () => {
-    const anthropic = createMockAnthropic(validSigningJson);
+    const llm = createMockLlmClient(validSigningJson);
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result[0].timestamp).toBeInstanceOf(Date);
     expect(result[0].timestamp.toISOString()).toBe('2026-02-28T10:00:00.000Z');
@@ -240,9 +234,9 @@ describe('parses all transaction types through the full pipeline', () => {
   for (const type of allTransactionTypes()) {
     it(`round-trips a ${type} through preprocess → TransactionSchema → id strip`, async () => {
       const fixture = visitByType(type, llmFixtureVisitor);
-      const anthropic = createMockAnthropic(JSON.stringify([fixture]));
+      const llm = createMockLlmClient(JSON.stringify([fixture]));
 
-      const result = await extractTransactions(mockItem, anthropic);
+      const result = await extractTransactions(mockItem, llm);
 
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe(type);
@@ -260,9 +254,9 @@ describe('parses all transaction types through the full pipeline', () => {
       staff: { name: 'Kyle Head', role: 'Head Coach' },
       contract: { years: 4, totalValue: 40000000 },
     };
-    const anthropic = createMockAnthropic(JSON.stringify([fixture]));
+    const llm = createMockLlmClient(JSON.stringify([fixture]));
 
-    const result = await extractTransactions(mockItem, anthropic);
+    const result = await extractTransactions(mockItem, llm);
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe('extension');

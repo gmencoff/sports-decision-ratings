@@ -1,13 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
+import { type RssItem } from '@/lib/data';
 
-export interface RssItem {
-  guid: string;
-  source: 'espn' | 'yahoo';
-  title: string;
-  description: string;
-  link: string;
-  pubDate: Date;
-}
+export type { RssItem };
 
 const ESPN_RSS_URL = 'https://www.espn.com/espn/rss/nfl/news';
 const YAHOO_RSS_URL = 'https://sports.yahoo.com/nfl/rss.xml';

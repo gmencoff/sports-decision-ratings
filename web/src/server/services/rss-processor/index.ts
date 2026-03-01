@@ -1,12 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { type Database } from '@/server/db';
 import { type DataProvider } from '@/lib/data';
 import { addTransactionImpl } from '@/app/actions/transactions';
 import { fetchRssItems } from './feed-fetcher';
 import { saveNewItems, markItemStatus } from './item-store';
-
 import { extractTransactions } from './transaction-extractor';
 import { isDuplicate } from './duplicate-detector';
+import { type LlmClient } from './llm-client';
 
 export interface ProcessingResult {
   itemsChecked: number;
@@ -17,9 +15,8 @@ export interface ProcessingResult {
 }
 
 export async function processRssFeeds(
-  db: Database,
   provider: DataProvider,
-  anthropic: Anthropic
+  llm: LlmClient
 ): Promise<ProcessingResult> {
   const result: ProcessingResult = {
     itemsChecked: 0,
@@ -40,7 +37,7 @@ export async function processRssFeeds(
   result.itemsChecked = rssItems.length;
 
   // Step 2: Save new items (dedup by GUID)
-  const newItems = await saveNewItems(db, rssItems);
+  const newItems = await saveNewItems(provider, rssItems);
   result.newItemsFound = newItems.length;
 
   // Step 3: Process each new item
@@ -49,13 +46,13 @@ export async function processRssFeeds(
 
     try {
       // Extract candidate transactions from this RSS item
-      const candidates = await extractTransactions(item, anthropic);
+      const candidates = await extractTransactions(item, llm);
       result.transactionsExtracted += candidates.length;
 
       // Check each candidate for duplicates and add if new
       for (const candidate of candidates) {
         try {
-          const dup = await isDuplicate(candidate, db, anthropic);
+          const dup = await isDuplicate(candidate, provider, llm);
           if (!dup) {
             const added = await addTransactionImpl(provider, candidate);
             addedTransactionIds.push(added.id);
@@ -66,11 +63,11 @@ export async function processRssFeeds(
         }
       }
 
-      await markItemStatus(db, item.guid, 'processed', addedTransactionIds);
+      await markItemStatus(provider, item.guid, 'processed', addedTransactionIds);
     } catch (err) {
       const errMsg = `Error processing item ${item.guid}: ${err}`;
       result.errors.push(errMsg);
-      await markItemStatus(db, item.guid, 'failed', [], String(err)).catch(() => {});
+      await markItemStatus(provider, item.guid, 'failed', [], String(err)).catch(() => {});
     }
   }
 

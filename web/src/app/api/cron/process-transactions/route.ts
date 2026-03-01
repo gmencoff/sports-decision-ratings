@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { getDb } from '@/server/db';
 import { getDataProvider } from '@/lib/data';
 import { processRssFeeds } from '@/server/services/rss-processor';
+import { type LlmClient } from '@/server/services/rss-processor/llm-client';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // Verify cron secret
@@ -14,11 +14,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const db = getDb();
     const provider = await getDataProvider();
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const llmClient: LlmClient = {
+      createMessage(params) {
+        return anthropic.messages.create({
+          model: params.model,
+          max_tokens: params.max_tokens,
+          messages: params.messages.map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+        });
+      },
+    };
 
-    const result = await processRssFeeds(db, provider, anthropic);
+    const result = await processRssFeeds(provider, llmClient);
 
     return NextResponse.json(result, { status: 200 });
   } catch (err) {

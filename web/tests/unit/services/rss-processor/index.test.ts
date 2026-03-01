@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Database } from '@/server/db';
 import type { DataProvider } from '@/lib/data';
-import type Anthropic from '@anthropic-ai/sdk';
+import type { LlmClient } from '@/server/services/rss-processor/llm-client';
 
 // Module mocks must be at top level
 vi.mock('@/server/services/rss-processor/feed-fetcher', () => ({
@@ -27,12 +26,11 @@ import { saveNewItems, markItemStatus } from '@/server/services/rss-processor/it
 import { extractTransactions } from '@/server/services/rss-processor/transaction-extractor';
 import { isDuplicate } from '@/server/services/rss-processor/duplicate-detector';
 import { addTransactionImpl } from '@/app/actions/transactions';
-import type { RssItem } from '@/server/services/rss-processor/feed-fetcher';
+import type { RssItem } from '@/lib/data';
 import type { TransactionInput } from '@/lib/data/types';
 
-const mockDb = {} as Database;
 const mockProvider = {} as DataProvider;
-const mockAnthropic = {} as Anthropic;
+const mockLlm = {} as LlmClient;
 
 const mockRssItem: RssItem = {
   guid: 'guid-1',
@@ -69,7 +67,7 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(extractTransactions).mockResolvedValue([mockSigningInput]);
     vi.mocked(isDuplicate).mockResolvedValue(false);
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.itemsChecked).toBe(1);
     expect(result.newItemsFound).toBe(1);
@@ -77,7 +75,7 @@ describe('processRssFeeds (orchestrator)', () => {
     expect(result.transactionsAdded).toBe(1);
     expect(result.errors).toEqual([]);
     expect(addTransactionImpl).toHaveBeenCalledWith(mockProvider, mockSigningInput);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', ['tx-new-1']);
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', ['tx-new-1']);
   });
 
   it('marks item as processed with empty transactionIds when extraction returns []', async () => {
@@ -85,11 +83,11 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockResolvedValue([]);
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.transactionsExtracted).toBe(0);
     expect(result.transactionsAdded).toBe(0);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', []);
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', []);
   });
 
   it('skips duplicate transactions and marks item processed with empty transactionIds', async () => {
@@ -98,12 +96,12 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(extractTransactions).mockResolvedValue([mockSigningInput]);
     vi.mocked(isDuplicate).mockResolvedValue(true);
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.transactionsExtracted).toBe(1);
     expect(result.transactionsAdded).toBe(0);
     expect(addTransactionImpl).not.toHaveBeenCalled();
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', []);
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', []);
   });
 
   it('marks item as failed when processing throws', async () => {
@@ -111,17 +109,17 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockRejectedValue(new Error('LLM exploded'));
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('LLM exploded');
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'failed', [], expect.any(String));
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'failed', [], expect.any(String));
   });
 
   it('returns early with error when RSS fetch fails', async () => {
     vi.mocked(fetchRssItems).mockRejectedValue(new Error('Network failure'));
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.itemsChecked).toBe(0);
     expect(result.errors).toHaveLength(1);
@@ -133,7 +131,7 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([]); // All already seen
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.itemsChecked).toBe(1);
     expect(result.newItemsFound).toBe(0);
@@ -151,13 +149,13 @@ describe('processRssFeeds (orchestrator)', () => {
       .mockResolvedValueOnce([mockSigningInput, mockSigningInput]); // 2 transactions in item2
     vi.mocked(isDuplicate).mockResolvedValue(false);
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.newItemsFound).toBe(2);
     expect(result.transactionsExtracted).toBe(3);
     expect(result.transactionsAdded).toBe(3);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', ['tx-new-1']);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-2', 'processed', ['tx-new-1', 'tx-new-1']);
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', ['tx-new-1']);
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-2', 'processed', ['tx-new-1', 'tx-new-1']);
   });
 
   it('adds addTransaction error to errors array but continues processing', async () => {
@@ -167,11 +165,11 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(isDuplicate).mockResolvedValue(false);
     vi.mocked(addTransactionImpl).mockRejectedValue(new Error('DB insert failed'));
 
-    const result = await processRssFeeds(mockDb, mockProvider, mockAnthropic);
+    const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('DB insert failed');
     expect(result.transactionsAdded).toBe(0);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', []);
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', []);
   });
 });

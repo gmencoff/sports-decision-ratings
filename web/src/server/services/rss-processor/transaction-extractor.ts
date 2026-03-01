@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { TransactionSchema, type TransactionInput } from '@/lib/data/types';
 import { NFL_TEAMS } from '@/lib/data/types';
-import { type RssItem } from './feed-fetcher';
+import { type RssItem } from '@/lib/data';
+import { type LlmClient } from './llm-client';
 
 // Preprocess each item to inject a placeholder id and coerce the ISO timestamp
 // string to a Date, then validate against the canonical TransactionSchema.
@@ -45,7 +45,7 @@ const TRANSACTION_JSON_SCHEMA = JSON.stringify(
 
 export async function extractTransactions(
   item: RssItem,
-  anthropic: Anthropic
+  llm: LlmClient
 ): Promise<TransactionInput[]> {
   const prompt = `You are an NFL transaction parser. Extract only CONFIRMED transactions — not rumors, speculation, or unverified reports.
 
@@ -69,14 +69,14 @@ Description: ${item.description}
 - Only include transactions you are highly confident about`;
 
   try {
-    const message = await anthropic.messages.create({
+    const message = await llm.createMessage({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
     });
 
     const content = message.content[0];
-    if (content.type !== 'text') return [];
+    if (content.type !== 'text' || !content.text) return [];
 
     const rawText = content.text.trim();
 

@@ -1,6 +1,6 @@
-import { eq, desc, and, lt, or } from 'drizzle-orm';
+import { eq, desc, and, lt, or, gte, inArray, sql } from 'drizzle-orm';
 import { getDb, type Database } from '@/server/db';
-import { transactions } from '@/server/db/schema';
+import { transactions, rssItems } from '@/server/db/schema';
 import { VoteService, getVoteService } from '@/server/services/vote-service';
 import { DataProvider } from './index';
 import {
@@ -10,6 +10,8 @@ import {
   PaginatedResult,
   Sentiment,
   TransactionType,
+  RssItem,
+  RssItemStatus,
 } from './types';
 import { decodeTransaction } from './postgres-decoder';
 
@@ -190,5 +192,66 @@ export class PostgresDataProvider implements DataProvider {
       vote.userId,
       vote.sentiment
     );
+  }
+
+  async getTransactionsInDateRange(type: TransactionType, teamIds: string[], from: Date, to: Date): Promise<Transaction[]> {
+    const results = await this.db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.type, type),
+          gte(transactions.timestamp, from),
+          lt(transactions.timestamp, to),
+          sql`${transactions.teamIds} && ${teamIds}`
+        )
+      );
+    return results.map((row) => dbTransactionToTransaction(row));
+  }
+
+  async saveNewRssItems(items: RssItem[]): Promise<RssItem[]> {
+    if (items.length === 0) return [];
+
+    const guids = items.map((i) => i.guid);
+    const existing = await this.db
+      .select({ guid: rssItems.guid })
+      .from(rssItems)
+      .where(inArray(rssItems.guid, guids));
+
+    const existingGuids = new Set(existing.map((r) => r.guid));
+    const newItems = items.filter((i) => !existingGuids.has(i.guid));
+
+    if (newItems.length === 0) return [];
+
+    await this.db.insert(rssItems).values(
+      newItems.map((item) => ({
+        guid: item.guid,
+        source: item.source,
+        title: item.title,
+        description: item.description,
+        link: item.link,
+        pubDate: item.pubDate,
+        status: 'pending' as RssItemStatus,
+      }))
+    );
+
+    return newItems;
+  }
+
+  async markRssItemStatus(
+    guid: string,
+    status: RssItemStatus,
+    transactionIds?: string[],
+    error?: string
+  ): Promise<void> {
+    await this.db
+      .update(rssItems)
+      .set({
+        status,
+        processedAt: new Date(),
+        ...(transactionIds !== undefined ? { transactionIds } : {}),
+        ...(error !== undefined ? { error } : {}),
+      })
+      .where(eq(rssItems.guid, guid));
   }
 }
