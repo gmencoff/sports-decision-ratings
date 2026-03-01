@@ -77,10 +77,10 @@ describe('processRssFeeds (orchestrator)', () => {
     expect(result.transactionsAdded).toBe(1);
     expect(result.errors).toEqual([]);
     expect(addTransactionImpl).toHaveBeenCalledWith(mockProvider, mockSigningInput);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed');
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', ['tx-new-1']);
   });
 
-  it('marks item as no_transactions when extraction returns []', async () => {
+  it('marks item as processed with empty transactionIds when extraction returns []', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockResolvedValue([]);
@@ -89,10 +89,10 @@ describe('processRssFeeds (orchestrator)', () => {
 
     expect(result.transactionsExtracted).toBe(0);
     expect(result.transactionsAdded).toBe(0);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'no_transactions');
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', []);
   });
 
-  it('skips duplicate transactions', async () => {
+  it('skips duplicate transactions and marks item processed with empty transactionIds', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockResolvedValue([mockSigningInput]);
@@ -103,7 +103,7 @@ describe('processRssFeeds (orchestrator)', () => {
     expect(result.transactionsExtracted).toBe(1);
     expect(result.transactionsAdded).toBe(0);
     expect(addTransactionImpl).not.toHaveBeenCalled();
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'no_transactions');
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', []);
   });
 
   it('marks item as failed when processing throws', async () => {
@@ -115,7 +115,7 @@ describe('processRssFeeds (orchestrator)', () => {
 
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('LLM exploded');
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'failed', expect.any(String));
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'failed', [], expect.any(String));
   });
 
   it('returns early with error when RSS fetch fails', async () => {
@@ -156,8 +156,8 @@ describe('processRssFeeds (orchestrator)', () => {
     expect(result.newItemsFound).toBe(2);
     expect(result.transactionsExtracted).toBe(3);
     expect(result.transactionsAdded).toBe(3);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed');
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-2', 'processed');
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', ['tx-new-1']);
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-2', 'processed', ['tx-new-1', 'tx-new-1']);
   });
 
   it('adds addTransaction error to errors array but continues processing', async () => {
@@ -172,6 +172,6 @@ describe('processRssFeeds (orchestrator)', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('DB insert failed');
     expect(result.transactionsAdded).toBe(0);
-    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'no_transactions');
+    expect(markItemStatus).toHaveBeenCalledWith(mockDb, 'guid-1', 'processed', []);
   });
 });

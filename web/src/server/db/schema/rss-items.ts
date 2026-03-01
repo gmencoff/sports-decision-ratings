@@ -3,7 +3,6 @@ import { pgTable, varchar, text, timestamp, pgEnum, index } from 'drizzle-orm/pg
 export const rssItemStatusEnum = pgEnum('rss_item_status', [
   'pending',
   'processed',
-  'no_transactions',
   'failed',
 ]);
 
@@ -20,6 +19,7 @@ export const rssItems = pgTable(
     pubDate: timestamp('pub_date', { withTimezone: true }).notNull(),
     status: rssItemStatusEnum('status').notNull().default('pending'),
     processedAt: timestamp('processed_at', { withTimezone: true }),
+    transactionIds: varchar('transaction_ids', { length: 50 }).array().notNull().default([]),
     error: text('error'),
   },
   (table) => [index('rss_items_status_idx').on(table.status)]

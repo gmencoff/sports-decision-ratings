@@ -4,6 +4,7 @@ import { type DataProvider } from '@/lib/data';
 import { addTransactionImpl } from '@/app/actions/transactions';
 import { fetchRssItems } from './feed-fetcher';
 import { saveNewItems, markItemStatus } from './item-store';
+
 import { extractTransactions } from './transaction-extractor';
 import { isDuplicate } from './duplicate-detector';
 
@@ -44,41 +45,32 @@ export async function processRssFeeds(
 
   // Step 3: Process each new item
   for (const item of newItems) {
-    let transactionsAddedForItem = 0;
+    const addedTransactionIds: string[] = [];
 
     try {
       // Extract candidate transactions from this RSS item
       const candidates = await extractTransactions(item, anthropic);
       result.transactionsExtracted += candidates.length;
 
-      if (candidates.length === 0) {
-        await markItemStatus(db, item.guid, 'no_transactions');
-        continue;
-      }
-
       // Check each candidate for duplicates and add if new
       for (const candidate of candidates) {
         try {
           const dup = await isDuplicate(candidate, db, anthropic);
           if (!dup) {
-            await addTransactionImpl(provider, candidate);
+            const added = await addTransactionImpl(provider, candidate);
+            addedTransactionIds.push(added.id);
             result.transactionsAdded++;
-            transactionsAddedForItem++;
           }
         } catch (err) {
           result.errors.push(`Failed to add transaction from ${item.guid}: ${err}`);
         }
       }
 
-      await markItemStatus(
-        db,
-        item.guid,
-        transactionsAddedForItem > 0 ? 'processed' : 'no_transactions'
-      );
+      await markItemStatus(db, item.guid, 'processed', addedTransactionIds);
     } catch (err) {
       const errMsg = `Error processing item ${item.guid}: ${err}`;
       result.errors.push(errMsg);
-      await markItemStatus(db, item.guid, 'failed', String(err)).catch(() => {});
+      await markItemStatus(db, item.guid, 'failed', [], String(err)).catch(() => {});
     }
   }
 

@@ -144,7 +144,7 @@ describe('item-store', () => {
     it('updates status to failed with error message', async () => {
       const db = createMockDb();
 
-      await markItemStatus(db, 'guid-1', 'failed', 'Something went wrong');
+      await markItemStatus(db, 'guid-1', 'failed', [], 'Something went wrong');
 
       const updateChain = (db.update as ReturnType<typeof vi.fn>).mock.results[0].value;
       expect(updateChain.set).toHaveBeenCalledWith(
@@ -152,14 +152,25 @@ describe('item-store', () => {
       );
     });
 
-    it('updates status to no_transactions', async () => {
+    it('stores transactionIds on processed status', async () => {
       const db = createMockDb();
 
-      await markItemStatus(db, 'guid-1', 'no_transactions');
+      await markItemStatus(db, 'guid-1', 'processed', ['tx-1', 'tx-2']);
 
       const updateChain = (db.update as ReturnType<typeof vi.fn>).mock.results[0].value;
       expect(updateChain.set).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'no_transactions' })
+        expect.objectContaining({ transactionIds: ['tx-1', 'tx-2'] })
+      );
+    });
+
+    it('stores empty transactionIds when no transactions were added', async () => {
+      const db = createMockDb();
+
+      await markItemStatus(db, 'guid-1', 'processed', []);
+
+      const updateChain = (db.update as ReturnType<typeof vi.fn>).mock.results[0].value;
+      expect(updateChain.set).toHaveBeenCalledWith(
+        expect.objectContaining({ transactionIds: [] })
       );
     });
 

@@ -45,6 +45,7 @@ export async function markItemStatus(
   db: Database,
   guid: string,
   status: RssItemStatus,
+  transactionIds?: string[],
   error?: string
 ): Promise<void> {
   await db
@@ -52,6 +53,7 @@ export async function markItemStatus(
     .set({
       status,
       processedAt: new Date(),
+      ...(transactionIds !== undefined ? { transactionIds } : {}),
       ...(error !== undefined ? { error } : {}),
     })
     .where(eq(rssItems.guid, guid));
