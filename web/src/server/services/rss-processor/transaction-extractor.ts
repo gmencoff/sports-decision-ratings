@@ -1,71 +1,47 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import {
-  TradeSchema,
-  SigningSchema,
-  DraftSelectionSchema,
-  ReleaseSchema,
-  PlayerExtensionSchema,
-  StaffExtensionSchema,
-  HireSchema,
-  FireSchema,
-  PromotionSchema,
-  type TransactionInput,
-} from '@/lib/data/types';
+import { TransactionSchema, type TransactionInput } from '@/lib/data/types';
 import { NFL_TEAMS } from '@/lib/data/types';
 import { type RssItem } from './feed-fetcher';
 
-// Schemas without `id` (LLM does not produce IDs) and with timestamp as a string (LLM produces ISO strings)
-const LlmTransactionSchema = z.union([
-  TradeSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  SigningSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  DraftSelectionSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  ReleaseSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  PlayerExtensionSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  StaffExtensionSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  HireSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  FireSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-  PromotionSchema.omit({ id: true }).extend({ timestamp: z.string() }),
-]);
-
-const LlmTransactionArraySchema = z.array(LlmTransactionSchema);
+// Preprocess each item to inject a placeholder id and coerce the ISO timestamp
+// string to a Date, then validate against the canonical TransactionSchema.
+// This means new transaction types are automatically supported.
+const LlmTransactionArraySchema = z.preprocess(
+  (arr) => {
+    if (!Array.isArray(arr)) return arr;
+    return arr.map((item) => {
+      if (typeof item !== 'object' || item === null) return item;
+      const i = item as Record<string, unknown>;
+      return {
+        ...i,
+        id: '__llm_placeholder__',
+        timestamp: typeof i.timestamp === 'string' ? new Date(i.timestamp) : i.timestamp,
+      };
+    });
+  },
+  z.array(TransactionSchema)
+);
 
 const TEAM_MAP_TEXT = NFL_TEAMS.map((t) => `${t.id}: ${t.name}`).join('\n');
 
-const TRANSACTION_INPUT_SCHEMA_DESCRIPTION = `
-Each transaction must be one of these types (all include teamIds: string[], timestamp: ISO string):
-
-trade: { type: "trade", teamIds, timestamp, assets: TradeAsset[] }
-  TradeAsset is one of:
-    { type: "player", fromTeamId, toTeamId, player: { name, position } }
-    { type: "coach", fromTeamId, toTeamId, staff: { name, role } }
-    { type: "draft_pick", fromTeamId, toTeamId, draftPick: { ogTeamId, year, round, number? } }
-    { type: "conditional_draft_pick", fromTeamId, toTeamId, draftPick: { ogTeamId, year, round, number? }, conditions: string }
-  position must be one of: QB, RB, FB, WR, TE, OT, OG, C, DE, DT, NT, LB, CB, S, K, P, LS
-  role must be one of: President, General Manager, Head Coach, Offensive Coordinator, Defensive Coordinator,
-    Special Teams Coordinator, Quarterbacks Coach, Running Backs Coach, Wide Receivers Coach, Tight Ends Coach,
-    Offensive Line Coach, Offensive Quality Control Coach, Pass Game Coordinator, Run Game Coordinator,
-    Offensive Assistant, Defensive Line Coach, Linebackers Coach, Defensive Backs Coach,
-    Defensive Quality Control Coach, Defensive Assistant, Strength and Conditioning Coach, Assistant Coach
-
-signing: { type: "signing", teamIds, timestamp, player: { name, position }, contract: { years?, totalValue?, guaranteed? } }
-
-draft: { type: "draft", teamIds, timestamp, player: { name, position }, draftPick: { ogTeamId, year, round, number? } }
-
-release: { type: "release", teamIds, timestamp, player: { name, position }, capSavings?: number }
-
-extension (player): { type: "extension", subtype: "player", teamIds, timestamp, player: { name, position }, contract: { years?, totalValue?, guaranteed? } }
-
-extension (staff): { type: "extension", subtype: "staff", teamIds, timestamp, staff: { name, role }, contract: { years?, totalValue? } }
-
-hire: { type: "hire", teamIds, timestamp, staff: { name, role }, contract: { years?, totalValue? } }
-
-fire: { type: "fire", teamIds, timestamp, staff: { name, role } }
-
-promotion: { type: "promotion", teamIds, timestamp, staff: { name, role }, previousRole: role, contract: { years?, totalValue? } }
-
-Money values are in dollars (e.g. 10000000 for $10M). teamIds contains all team abbreviations involved.
-`;
+// Derived directly from TransactionSchema so it stays in sync automatically.
+// z.date() has no native JSON Schema equivalent, so we override it to
+// { type: "string", format: "date-time" } — matching what the LLM produces.
+const TRANSACTION_JSON_SCHEMA = JSON.stringify(
+  z.toJSONSchema(TransactionSchema, {
+    unrepresentable: 'any',
+    override: (ctx) => {
+      if ((ctx.zodSchema as { _zod?: { def?: { type?: string } } })._zod?.def?.type === 'date') {
+        const json = ctx.jsonSchema as Record<string, unknown>;
+        json.type = 'string';
+        json.format = 'date-time';
+      }
+    },
+  }),
+  null,
+  2
+);
 
 export async function extractTransactions(
   item: RssItem,
@@ -76,8 +52,8 @@ export async function extractTransactions(
 ## NFL Team IDs
 ${TEAM_MAP_TEXT}
 
-## Transaction Schema
-${TRANSACTION_INPUT_SCHEMA_DESCRIPTION}
+## Transaction JSON Schema
+${TRANSACTION_JSON_SCHEMA}
 
 ## Article
 Title: ${item.title}
@@ -85,9 +61,10 @@ Published: ${item.pubDate.toISOString()}
 Description: ${item.description}
 
 ## Instructions
-- Return ONLY a valid JSON array of transaction objects
+- Return ONLY a valid JSON array of transaction objects matching the schema above
 - Set timestamp to the article's published date: ${item.pubDate.toISOString()}
 - Do NOT include an "id" field — it is generated server-side
+- Money values are in dollars (e.g. 10000000 for $10M)
 - Return [] if the article contains no confirmed transactions, only rumors/speculation, or is not about NFL roster/staff moves
 - Only include transactions you are highly confident about`;
 
@@ -121,11 +98,9 @@ Description: ${item.description}
       return [];
     }
 
-    // Convert timestamp strings to Date objects
-    return validation.data.map((t) => ({
-      ...t,
-      timestamp: new Date(t.timestamp),
-    })) as TransactionInput[];
+    // Strip the placeholder id — TransactionInput is Transaction without id
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return validation.data.map(({ id: _, ...rest }) => rest) as TransactionInput[];
   } catch (err) {
     console.error('extractTransactions error:', err);
     return [];
