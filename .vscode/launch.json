@@ -57,6 +57,21 @@
       }
     },
     {
+      "name": "Script: test-extractor",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "--inspect-brk", "scripts/test-extractor.ts"],
+      "cwd": "${workspaceFolder}/web",
+      "envFile": "${workspaceFolder}/web/.env",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/web/**",
+        "!**/node_modules/**"
+      ],
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
       "name": "Next.js: attach",
       "type": "node",
       "request": "attach",
