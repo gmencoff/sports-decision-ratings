@@ -23,6 +23,19 @@ const LlmTransactionArraySchema = z.preprocess(
   z.array(TransactionSchema)
 );
 
+// Schema for the full LLM response object, which includes reasoning alongside transactions.
+const LlmResponseSchema = z.object({
+  reasoning: z.string(),
+  transactions: LlmTransactionArraySchema,
+});
+
+export type ExtractionResult = {
+  transactions: TransactionInput[];
+  reasoning: string;
+};
+
+const EMPTY_RESULT: ExtractionResult = { transactions: [], reasoning: '' };
+
 const TEAM_MAP_TEXT = NFL_TEAMS.map((t) => `${t.id}: ${t.name}`).join('\n');
 
 // Derived directly from TransactionSchema so it stays in sync automatically.
@@ -46,7 +59,8 @@ const TRANSACTION_JSON_SCHEMA = JSON.stringify(
 export async function extractTransactions(
   item: RssItem,
   llm: LlmClient
-): Promise<TransactionInput[]> {
+): Promise<ExtractionResult> {
+
   const prompt = `You are an NFL transaction parser. Extract only CONFIRMED transactions — not rumors, speculation, or unverified reports.
 
 ## NFL Team IDs
@@ -61,12 +75,15 @@ Published: ${item.pubDate.toISOString()}
 Description: ${item.description}
 
 ## Instructions
-- Return ONLY a valid JSON array of transaction objects matching the schema above
+- Return ONLY a valid JSON object with exactly two fields:
+  - "reasoning": a string explaining which transactions were included or excluded and why
+  - "transactions": an array of transaction objects matching the schema above
 - Set timestamp to the article's published date: ${item.pubDate.toISOString()}
 - Do NOT include an "id" field — it is generated server-side
 - Money values are in dollars (e.g. 10000000 for $10M)
-- Return [] if the article contains no confirmed transactions, only rumors/speculation, or is not about NFL roster/staff moves
-- Only include transactions you are highly confident about`;
+- Use an empty "transactions" array if the article contains no confirmed transactions, only rumors/speculation, or is not about NFL roster/staff moves
+- Only include transactions you are highly confident about
+- Before omitting a transaction due to missing details, verify those details are actually required by the schema — many fields (e.g. contract sub-fields) are optional and should be omitted or left as {} rather than used as a reason to skip the transaction`;
 
   try {
     const message = await llm.createMessage({
@@ -76,12 +93,12 @@ Description: ${item.description}
     });
 
     const content = message.content[0];
-    if (content.type !== 'text' || !content.text) return [];
+    if (content.type !== 'text' || !content.text) return EMPTY_RESULT;
 
     const rawText = content.text.trim();
 
-    // Extract JSON array from response (may be wrapped in markdown code blocks)
-    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawText.match(/(\[[\s\S]*\])/);
+    // Extract JSON object from response (may be wrapped in markdown code blocks)
+    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawText.match(/(\{[\s\S]*\})/);
     const jsonText = jsonMatch ? jsonMatch[1].trim() : rawText;
 
     let parsed: unknown;
@@ -89,20 +106,24 @@ Description: ${item.description}
       parsed = JSON.parse(jsonText);
     } catch {
       console.error('Failed to parse LLM response as JSON:', rawText.slice(0, 200));
-      return [];
+      return EMPTY_RESULT;
     }
 
-    const validation = LlmTransactionArraySchema.safeParse(parsed);
+    const validation = LlmResponseSchema.safeParse(parsed);
     if (!validation.success) {
       console.error('LLM output failed Zod validation:', validation.error.issues.slice(0, 3));
-      return [];
+      return EMPTY_RESULT;
     }
+
+    const { reasoning } = validation.data;
 
     // Strip the placeholder id — TransactionInput is Transaction without id
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return validation.data.map(({ id: _, ...rest }) => rest) as TransactionInput[];
+    const transactions = validation.data.transactions.map(({ id: _, ...rest }) => rest) as TransactionInput[];
+
+    return { transactions, reasoning };
   } catch (err) {
     console.error('extractTransactions error:', err);
-    return [];
+    return EMPTY_RESULT;
   }
 }

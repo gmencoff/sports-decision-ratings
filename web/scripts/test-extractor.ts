@@ -76,19 +76,42 @@ const sampleItem4: RssItem = {
   pubDate: new Date(),
 };
 
-const sampleItem = sampleItem4; // Change this to test different articles
+const sampleItem5: RssItem = {
+  guid: 'test-extractor-1',
+  source: 'espn',
+  title: 'Falcons signing multiple players',
+  description:
+    'The Atlanta Falcons have officially signed WRs Amari Cooper and Odell Beckham Jr. to their roster.',
+  link: 'https://espn.com/nfl/story/test',
+  pubDate: new Date(),
+};
+
+const sampleItem6: RssItem = {
+  guid: 'test-extractor-1',
+  source: 'espn',
+  title: 'Bears Draft DT',
+  description:
+    'The Chicago Bears have drafted a defensive tackle Jesse Omewe in the first round.',
+  link: 'https://espn.com/nfl/story/test',
+  pubDate: new Date(),
+};
+
+const sampleItem = sampleItem6; // Change this to test different articles
 
 async function main() {
   console.log('Article:', sampleItem.title);
   console.log('---');
 
-  const results = await extractTransactions(sampleItem, llmClient);
+  const { transactions, reasoning } = await extractTransactions(sampleItem, llmClient);
 
-  if (results.length === 0) {
+  console.log('Reasoning:', reasoning);
+  console.log('---');
+
+  if (transactions.length === 0) {
     console.log('No transactions extracted.');
   } else {
-    console.log(`Extracted ${results.length} transaction(s):\n`);
-    for (const txn of results) {
+    console.log(`Extracted ${transactions.length} transaction(s):\n`);
+    for (const txn of transactions) {
       console.log(JSON.stringify(txn, null, 2));
       console.log('---');
     }

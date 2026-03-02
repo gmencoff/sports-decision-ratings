@@ -64,7 +64,7 @@ describe('processRssFeeds (orchestrator)', () => {
   it('happy path: fetches feeds, saves new items, extracts and adds transactions', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
-    vi.mocked(extractTransactions).mockResolvedValue([mockSigningInput]);
+    vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
     vi.mocked(isDuplicate).mockResolvedValue(false);
 
     const result = await processRssFeeds(mockProvider, mockLlm);
@@ -81,7 +81,7 @@ describe('processRssFeeds (orchestrator)', () => {
   it('marks item as processed with empty transactionIds when extraction returns []', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
-    vi.mocked(extractTransactions).mockResolvedValue([]);
+    vi.mocked(extractTransactions).mockResolvedValue({ transactions: [], reasoning: 'No confirmed transactions.' });
 
     const result = await processRssFeeds(mockProvider, mockLlm);
 
@@ -93,7 +93,7 @@ describe('processRssFeeds (orchestrator)', () => {
   it('skips duplicate transactions and marks item processed with empty transactionIds', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
-    vi.mocked(extractTransactions).mockResolvedValue([mockSigningInput]);
+    vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
     vi.mocked(isDuplicate).mockResolvedValue(true);
 
     const result = await processRssFeeds(mockProvider, mockLlm);
@@ -107,7 +107,7 @@ describe('processRssFeeds (orchestrator)', () => {
   it('marks item as failed when processing throws', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
-    vi.mocked(extractTransactions).mockRejectedValue(new Error('LLM exploded'));
+    vi.mocked(extractTransactions).mockRejectedValue(new Error('LLM exploded') as never);
 
     const result = await processRssFeeds(mockProvider, mockLlm);
 
@@ -145,8 +145,8 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem, item2]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem, item2]);
     vi.mocked(extractTransactions)
-      .mockResolvedValueOnce([mockSigningInput])
-      .mockResolvedValueOnce([mockSigningInput, mockSigningInput]); // 2 transactions in item2
+      .mockResolvedValueOnce({ transactions: [mockSigningInput], reasoning: 'Signing confirmed.' })
+      .mockResolvedValueOnce({ transactions: [mockSigningInput, mockSigningInput], reasoning: 'Two signings confirmed.' }); // 2 transactions in item2
     vi.mocked(isDuplicate).mockResolvedValue(false);
 
     const result = await processRssFeeds(mockProvider, mockLlm);
@@ -161,7 +161,7 @@ describe('processRssFeeds (orchestrator)', () => {
   it('adds addTransaction error to errors array but continues processing', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
-    vi.mocked(extractTransactions).mockResolvedValue([mockSigningInput]);
+    vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
     vi.mocked(isDuplicate).mockResolvedValue(false);
     vi.mocked(addTransactionImpl).mockRejectedValue(new Error('DB insert failed'));
 

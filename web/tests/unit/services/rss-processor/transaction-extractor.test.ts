@@ -21,15 +21,15 @@ const mockItem: RssItem = {
   pubDate: new Date('2026-02-28T10:00:00Z'),
 };
 
-const validSigningJson = JSON.stringify([{
+const signingTransaction = {
   type: 'signing',
   teamIds: ['BUF'],
   timestamp: '2026-02-28T10:00:00.000Z',
   player: { name: 'John Doe', position: 'WR' },
   contract: { years: 4, totalValue: 48000000, guaranteed: 28000000 },
-}]);
+};
 
-const validTradeJson = JSON.stringify([{
+const tradeTransaction = {
   type: 'trade',
   teamIds: ['KC', 'DAL'],
   timestamp: '2026-02-28T10:00:00.000Z',
@@ -37,7 +37,17 @@ const validTradeJson = JSON.stringify([{
     { type: 'player', fromTeamId: 'DAL', toTeamId: 'KC', player: { name: 'Tony Brown', position: 'RB' } },
     { type: 'draft_pick', fromTeamId: 'KC', toTeamId: 'DAL', draftPick: { ogTeamId: 'KC', year: 2027, round: 2 } },
   ],
-}]);
+};
+
+const validSigningResponse = JSON.stringify({
+  reasoning: 'The article confirms a signing.',
+  transactions: [signingTransaction],
+});
+
+const validTradeResponse = JSON.stringify({
+  reasoning: 'The article confirms a trade.',
+  transactions: [tradeTransaction],
+});
 
 describe('transaction-extractor', () => {
   beforeEach(() => {
@@ -45,101 +55,125 @@ describe('transaction-extractor', () => {
   });
 
   it('returns parsed TransactionInput array for valid JSON signing', async () => {
-    const llm = createMockLlmClient(validSigningJson);
+    const llm = createMockLlmClient(validSigningResponse);
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('signing');
-    expect(result[0].teamIds).toEqual(['BUF']);
-    expect(result[0].timestamp).toBeInstanceOf(Date);
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions[0].type).toBe('signing');
+    expect(result.transactions[0].teamIds).toEqual(['BUF']);
+    expect(result.transactions[0].timestamp).toBeInstanceOf(Date);
+  });
+
+  it('returns reasoning string', async () => {
+    const llm = createMockLlmClient(validSigningResponse);
+
+    const result = await extractTransactions(mockItem, llm);
+
+    expect(result.reasoning).toBe('The article confirms a signing.');
   });
 
   it('returns parsed TransactionInput array for valid JSON trade', async () => {
-    const llm = createMockLlmClient(validTradeJson);
+    const llm = createMockLlmClient(validTradeResponse);
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('trade');
-    expect(result[0].teamIds).toEqual(['KC', 'DAL']);
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions[0].type).toBe('trade');
+    expect(result.transactions[0].teamIds).toEqual(['KC', 'DAL']);
   });
 
-  it('returns empty array when LLM returns []', async () => {
+  it('returns empty transactions when LLM returns empty transactions array', async () => {
+    const llm = createMockLlmClient(JSON.stringify({ reasoning: 'No confirmed transactions.', transactions: [] }));
+
+    const result = await extractTransactions(mockItem, llm);
+
+    expect(result.transactions).toEqual([]);
+    expect(result.reasoning).toBe('No confirmed transactions.');
+  });
+
+  it('returns empty result when LLM returns bare []', async () => {
     const llm = createMockLlmClient('[]');
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
+    expect(result.reasoning).toBe('');
   });
 
-  it('returns empty array when LLM returns rumor/no transactions explanation', async () => {
+  it('returns empty result when LLM returns rumor/no transactions explanation', async () => {
     const llm = createMockLlmClient('This article contains only rumors, no confirmed transactions.');
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
   });
 
-  it('returns empty array for invalid JSON', async () => {
+  it('returns empty result for invalid JSON', async () => {
     const llm = createMockLlmClient('{ invalid json }');
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
   });
 
-  it('returns empty array when Zod validation fails (invalid position)', async () => {
-    const badJson = JSON.stringify([{
-      type: 'signing',
-      teamIds: ['BUF'],
-      timestamp: '2026-02-28T10:00:00.000Z',
-      player: { name: 'John Doe', position: 'INVALID_POS' },
-      contract: {},
-    }]);
+  it('returns empty result when Zod validation fails (invalid position)', async () => {
+    const badJson = JSON.stringify({
+      reasoning: 'Signing with invalid position.',
+      transactions: [{
+        type: 'signing',
+        teamIds: ['BUF'],
+        timestamp: '2026-02-28T10:00:00.000Z',
+        player: { name: 'John Doe', position: 'INVALID_POS' },
+        contract: {},
+      }],
+    });
     const llm = createMockLlmClient(badJson);
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
   });
 
-  it('returns empty array when Zod validation fails (invalid team ID)', async () => {
-    const badJson = JSON.stringify([{
-      type: 'signing',
-      teamIds: ['INVALID_TEAM'],
-      timestamp: '2026-02-28T10:00:00.000Z',
-      player: { name: 'John Doe', position: 'WR' },
-      contract: {},
-    }]);
+  it('returns empty result when Zod validation fails (invalid team ID)', async () => {
+    const badJson = JSON.stringify({
+      reasoning: 'Signing with invalid team.',
+      transactions: [{
+        type: 'signing',
+        teamIds: ['INVALID_TEAM'],
+        timestamp: '2026-02-28T10:00:00.000Z',
+        player: { name: 'John Doe', position: 'WR' },
+        contract: {},
+      }],
+    });
     const llm = createMockLlmClient(badJson);
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
   });
 
   it('strips markdown code blocks from LLM response', async () => {
-    const wrappedJson = `\`\`\`json\n${validSigningJson}\n\`\`\``;
+    const wrappedJson = `\`\`\`json\n${validSigningResponse}\n\`\`\``;
     const llm = createMockLlmClient(wrappedJson);
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('signing');
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions[0].type).toBe('signing');
   });
 
-  it('returns empty array when llm.createMessage throws', async () => {
+  it('returns empty result when llm.createMessage throws', async () => {
     const llm: LlmClient = {
       createMessage: vi.fn().mockRejectedValue(new Error('API error')),
     };
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
   });
 
-  it('returns empty array when LLM returns non-text content', async () => {
+  it('returns empty result when LLM returns non-text content', async () => {
     const llm: LlmClient = {
       createMessage: vi.fn().mockResolvedValue({
         content: [{ type: 'tool_use' }],
@@ -148,16 +182,16 @@ describe('transaction-extractor', () => {
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toEqual([]);
+    expect(result.transactions).toEqual([]);
   });
 
   it('sets timestamp from the LLM output converted to Date', async () => {
-    const llm = createMockLlmClient(validSigningJson);
+    const llm = createMockLlmClient(validSigningResponse);
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result[0].timestamp).toBeInstanceOf(Date);
-    expect(result[0].timestamp.toISOString()).toBe('2026-02-28T10:00:00.000Z');
+    expect(result.transactions[0].timestamp).toBeInstanceOf(Date);
+    expect(result.transactions[0].timestamp.toISOString()).toBe('2026-02-28T10:00:00.000Z');
   });
 });
 
@@ -234,14 +268,14 @@ describe('parses all transaction types through the full pipeline', () => {
   for (const type of allTransactionTypes()) {
     it(`round-trips a ${type} through preprocess → TransactionSchema → id strip`, async () => {
       const fixture = visitByType(type, llmFixtureVisitor);
-      const llm = createMockLlmClient(JSON.stringify([fixture]));
+      const llm = createMockLlmClient(JSON.stringify({ reasoning: `Confirmed ${type}.`, transactions: [fixture] }));
 
       const result = await extractTransactions(mockItem, llm);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(type);
-      expect(result[0].timestamp).toBeInstanceOf(Date);
-      expect((result[0] as Record<string, unknown>).id).toBeUndefined();
+      expect(result.transactions).toHaveLength(1);
+      expect(result.transactions[0].type).toBe(type);
+      expect(result.transactions[0].timestamp).toBeInstanceOf(Date);
+      expect((result.transactions[0] as Record<string, unknown>).id).toBeUndefined();
     });
   }
 
@@ -254,15 +288,15 @@ describe('parses all transaction types through the full pipeline', () => {
       staff: { name: 'Kyle Head', role: 'Head Coach' },
       contract: { years: 4, totalValue: 40000000 },
     };
-    const llm = createMockLlmClient(JSON.stringify([fixture]));
+    const llm = createMockLlmClient(JSON.stringify({ reasoning: 'Confirmed staff extension.', transactions: [fixture] }));
 
     const result = await extractTransactions(mockItem, llm);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('extension');
-    if (result[0].type === 'extension') {
-      expect(result[0].subtype).toBe('staff');
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions[0].type).toBe('extension');
+    if (result.transactions[0].type === 'extension') {
+      expect(result.transactions[0].subtype).toBe('staff');
     }
-    expect((result[0] as Record<string, unknown>).id).toBeUndefined();
+    expect((result.transactions[0] as Record<string, unknown>).id).toBeUndefined();
   });
 });

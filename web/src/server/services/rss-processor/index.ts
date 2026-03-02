@@ -46,7 +46,7 @@ export async function processRssFeeds(
 
     try {
       // Extract candidate transactions from this RSS item
-      const candidates = await extractTransactions(item, llm);
+      const { transactions: candidates } = await extractTransactions(item, llm);
       result.transactionsExtracted += candidates.length;
 
       // Check each candidate for duplicates and add if new
