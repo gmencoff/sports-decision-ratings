@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Manual smoke test for transaction-extractor using a real Anthropic API call.
  *
