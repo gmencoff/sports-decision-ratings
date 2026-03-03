@@ -17,9 +17,9 @@ export const CoachAssetSchema = TradeAssetBaseSchema.extend({
 });
 
 export const DraftPickSchema = z.object({
-  ogTeamId: TeamIdSchema,
-  year: z.number(),
-  round: z.number(),
+  ogTeamId: TeamIdSchema.optional(),
+  year: z.number().optional(),
+  round: z.number().optional(),
   number: z.number().optional(),
 });
 

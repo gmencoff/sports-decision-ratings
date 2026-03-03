@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TransactionEditor } from '@/app/create_edit/TransactionEditor';
-import { Transaction, createPlayerContract } from '@/lib/data/types';
+import { Transaction, Trade, createPlayerContract } from '@/lib/data/types';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -426,6 +426,120 @@ describe('TransactionEditor', () => {
 
       const dateInput = screen.getByLabelText(/transaction date/i);
       expect(dateInput).toHaveValue('2024-06-20');
+    });
+  });
+
+  describe('Trade draft pick optional fields', () => {
+    it('should submit a draft pick with empty draftPick when all field checkboxes are unchecked', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      await user.click(screen.getByRole('button', { name: /add asset/i }));
+
+      // Switch asset type to Draft Pick
+      const comboboxes = screen.getAllByRole('combobox');
+      await user.selectOptions(comboboxes[3], 'draft_pick');
+
+      // Uncheck all per-field checkboxes (they default to checked)
+      await user.click(screen.getByRole('checkbox', { name: /original owner/i }));
+      await user.click(screen.getByRole('checkbox', { name: /^year$/i }));
+      await user.click(screen.getByRole('checkbox', { name: /^round$/i }));
+
+      await user.click(screen.getByRole('button', { name: /create trade/i }));
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const submitted = mockAddTransaction.mock.calls[0][0];
+        expect(submitted.assets[0].draftPick).toEqual({});
+      });
+    });
+
+    it('should submit a draft pick with only the checked fields included', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      await user.click(screen.getByRole('button', { name: /add asset/i }));
+
+      const comboboxes = screen.getAllByRole('combobox');
+      await user.selectOptions(comboboxes[3], 'draft_pick');
+
+      // Uncheck original owner and year; keep round
+      await user.click(screen.getByRole('checkbox', { name: /original owner/i }));
+      await user.click(screen.getByRole('checkbox', { name: /^year$/i }));
+
+      // Set round to 3
+      const roundInput = screen.getByRole('spinbutton', { name: /draft pick round/i });
+      await user.clear(roundInput);
+      await user.type(roundInput, '3');
+
+      await user.click(screen.getByRole('button', { name: /create trade/i }));
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const pick = mockAddTransaction.mock.calls[0][0].assets[0].draftPick;
+        expect(pick.round).toBe(3);
+        expect(pick.year).toBeUndefined();
+        expect(pick.ogTeamId).toBeUndefined();
+      });
+    });
+
+    it('should reflect which fields are known when loading an existing trade with partial draft pick details', () => {
+      const existingTransaction: Trade = {
+        id: 'tx-partial-pick',
+        type: 'trade',
+        teamIds: ['BUF', 'HOU'],
+        timestamp: new Date('2025-01-01'),
+        assets: [
+          {
+            type: 'draft_pick',
+            fromTeamId: 'BUF',
+            toTeamId: 'HOU',
+            draftPick: { round: 2 },
+          },
+        ],
+      };
+
+      render(<TransactionEditor existingTransaction={existingTransaction} />);
+
+      // Original Owner and Year are unknown → checkboxes unchecked, no inputs shown
+      expect(screen.getByRole('checkbox', { name: /original owner/i })).not.toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /^year$/i })).not.toBeChecked();
+      expect(screen.queryByRole('spinbutton', { name: /draft pick year/i })).not.toBeInTheDocument();
+
+      // Round is known → checkbox checked, input shows correct value
+      expect(screen.getByRole('checkbox', { name: /^round$/i })).toBeChecked();
+      expect(screen.getByRole('spinbutton', { name: /draft pick round/i })).toHaveValue(2);
+    });
+
+    it('should submit a conditional draft pick with empty draftPick when all field checkboxes are unchecked', async () => {
+      const user = userEvent.setup();
+      render(<TransactionEditor existingTransaction={null} />);
+
+      await user.click(screen.getByRole('button', { name: /add asset/i }));
+
+      const comboboxes = screen.getAllByRole('combobox');
+      await user.selectOptions(comboboxes[3], 'conditional_draft_pick');
+
+      // Uncheck all per-field checkboxes
+      await user.click(screen.getByRole('checkbox', { name: /original owner/i }));
+      await user.click(screen.getByRole('checkbox', { name: /^year$/i }));
+      await user.click(screen.getByRole('checkbox', { name: /^round$/i }));
+
+      // Fill in the required conditions field
+      await user.type(
+        screen.getByPlaceholderText(/pro bowl/i),
+        'Becomes 1st round if team wins Super Bowl'
+      );
+
+      await user.click(screen.getByRole('button', { name: /create trade/i }));
+
+      await waitFor(() => {
+        expect(mockAddTransaction).toHaveBeenCalledTimes(1);
+        const asset = mockAddTransaction.mock.calls[0][0].assets[0];
+        expect(asset.type).toBe('conditional_draft_pick');
+        expect(asset.draftPick).toEqual({});
+        expect(asset.conditions).toBe('Becomes 1st round if team wins Super Bowl');
+      });
     });
   });
 

@@ -82,8 +82,8 @@ Description: ${item.description}
 - Do NOT include an "id" field — it is generated server-side
 - Money values are in dollars (e.g. 10000000 for $10M)
 - Use an empty "transactions" array if the article contains no confirmed transactions, only rumors/speculation, or is not about NFL roster/staff moves
-- Only include transactions you are highly confident about
-- Before omitting a transaction due to missing details, verify those details are actually required by the schema — many fields (e.g. contract sub-fields) are optional and should be omitted or left as {} rather than used as a reason to skip the transaction`;
+- Only include transactions you are highly confident actually occurred — confidence refers to whether the event happened, not whether you know every detail
+- When a transaction is confirmed, include it even if some details are unknown; omit the individual unknown fields rather than skipping the transaction entirely (most fields in the schema are optional for exactly this reason)`;
 
   try {
     const message = await llm.createMessage({

@@ -96,7 +96,17 @@ const sampleItem6: RssItem = {
   pubDate: new Date(),
 };
 
-const sampleItem = sampleItem6; // Change this to test different articles
+const sampleItem7: RssItem = {
+  guid: 'test-extractor-1',
+  source: 'espn',
+  title: 'Sources: Texans trade for Lions RB Montgomery',
+  description:
+    'The Lions are trading running back David Montgomery to the Texans for offensive lineman Juice Scruggs and two draft picks, sources told ESPN\'s Adam Schefter on Monday.',
+  link: 'https://www.espn.com/nfl/story/_/id/48081713/sources-texans-trade-draft-pick-lions-rb-david-montgomery',
+  pubDate: new Date(),
+};
+
+const sampleItem = sampleItem7;
 
 async function main() {
   console.log('Article:', sampleItem.title);
