@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Release, Position, POSITIONS, NFL_TEAMS } from '@/lib/data/types';
+import { Release, Position, POSITIONS, NFL_TEAMS, getTeamById } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
 export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [capSavings, setCapSavings] = useState(value.capSavings ?? 0);
@@ -20,7 +22,7 @@ export function ReleaseForm({ value, onSubmit }: FormProps<Release>) {
     onSubmit({
       id: value.id,
       type: 'release',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp,
       player: { name: playerName, position: playerPosition },
       capSavings: capSavings || undefined,

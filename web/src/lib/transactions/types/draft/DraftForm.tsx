@@ -1,23 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { DraftSelection, Position, POSITIONS, NFL_TEAMS } from '@/lib/data/types';
+import { DraftSelection, Position, POSITIONS, NFL_TEAMS, getTeamById } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { TransactionDateField } from '../../components/TransactionDateField';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
 export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [year, setYear] = useState(value.draftPick.year);
   const [round, setRound] = useState(value.draftPick.round);
   const [pick, setPick] = useState(value.draftPick.number ?? 1);
   const [differentOriginalTeam, setDifferentOriginalTeam] = useState(
-    value.draftPick.ogTeamId !== '' && value.draftPick.ogTeamId !== (value.teams[0]?.id ?? '')
+    value.draftPick.ogTeamId !== (value.teamIds[0] ?? '')
   );
-  const [ogTeamId, setOgTeamId] = useState(value.draftPick.ogTeamId || (value.teams[0]?.id ?? sortedTeams[0].id));
+  const [ogTeamId, setOgTeamId] = useState(value.draftPick.ogTeamId || (value.teamIds[0] ?? sortedTeams[0].id));
   const [timestamp, setTimestamp] = useState(value.timestamp);
 
   const handleTeamChange = (abbreviation: string) => {
@@ -42,7 +44,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
     onSubmit({
       id: value.id,
       type: 'draft',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp,
       player: { name: playerName, position: playerPosition },
       draftPick: {
@@ -97,7 +99,7 @@ export function DraftForm({ value, onSubmit }: FormProps<DraftSelection>) {
           <select
             id="ogTeam"
             value={ogTeamId}
-            onChange={(e) => setOgTeamId(e.target.value)}
+            onChange={(e) => setOgTeamId(e.target.value as typeof ogTeamId)}
             className="mt-1 block w-full rounded border border-input-border px-3 py-2 bg-input-bg text-text-primary"
             required
           >

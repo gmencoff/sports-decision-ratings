@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Hire, Role, ROLES, NFL_TEAMS, StaffContract } from '@/lib/data/types';
+import { Hire, Role, ROLES, NFL_TEAMS, getTeamById, StaffContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { StaffContractFormFields } from '../../components/StaffContractFormFields';
 import { TransactionDateField } from '../../components/TransactionDateField';
@@ -9,7 +9,9 @@ import { TransactionDateField } from '../../components/TransactionDateField';
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
 export function HireForm({ value, onSubmit }: FormProps<Hire>) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [staffName, setStaffName] = useState(value.staff.name);
   const [staffRole, setStaffRole] = useState<Role>(value.staff.role);
   const [contract, setContract] = useState<StaffContract>(value.contract);
@@ -21,7 +23,7 @@ export function HireForm({ value, onSubmit }: FormProps<Hire>) {
     onSubmit({
       id: value.id,
       type: 'hire',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp,
       staff: { name: staffName, role: staffRole },
       contract,

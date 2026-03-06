@@ -79,18 +79,15 @@ describe('transactions actions', () => {
   });
 
   describe('addTransactionImpl', () => {
-    const team1 = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
-    const team2 = { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC' as const, division: 'West' as const };
-    const baseTeam = team1;
     const baseTimestamp = new Date('2024-01-15');
 
     it('should add a Trade transaction and generate id', async () => {
       const tradeInput: TransactionInput = {
         type: 'trade',
-        teams: [team1, team2],
+        teamIds: ['BUF', 'MIA'],
         timestamp: baseTimestamp,
         assets: [
-          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+          { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'John Doe', position: 'QB' } },
         ],
       };
 
@@ -109,36 +106,35 @@ describe('transactions actions', () => {
     it('should reject a Trade with missing team in teams list', async () => {
       const invalidTradeInput: TransactionInput = {
         type: 'trade',
-        teams: [team1], // Missing team-2
+        teamIds: ['BUF'], // Missing team-2
         timestamp: baseTimestamp,
         assets: [
-          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+          { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'John Doe', position: 'QB' } },
         ],
       };
 
       const mockProvider = createMockDataProvider();
 
       await expect(addTransactionImpl(mockProvider, invalidTradeInput)).rejects.toThrow(
-        "Invalid transaction: Team 'team-2' referenced in trade assets is not in the teams list"
+        "Invalid transaction: Team 'MIA' referenced in trade assets is not in the teams list"
       );
       expect(mockProvider.addTransaction).not.toHaveBeenCalled();
     });
 
     it('should reject a Trade with extra team not in assets', async () => {
-      const team3 = { id: 'team-3', name: 'Team C', abbreviation: 'TC', conference: 'AFC' as const, division: 'North' as const };
       const invalidTradeInput: TransactionInput = {
         type: 'trade',
-        teams: [team1, team2, team3], // team-3 not in any asset
+        teamIds: ['BUF', 'MIA', 'NE'], // team-3 not in any asset
         timestamp: baseTimestamp,
         assets: [
-          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+          { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'John Doe', position: 'QB' } },
         ],
       };
 
       const mockProvider = createMockDataProvider();
 
       await expect(addTransactionImpl(mockProvider, invalidTradeInput)).rejects.toThrow(
-        "Invalid transaction: Team 'team-3' is in the teams list but not referenced in any trade asset"
+        "Invalid transaction: Team 'NE' is in the teams list but not referenced in any trade asset"
       );
       expect(mockProvider.addTransaction).not.toHaveBeenCalled();
     });
@@ -146,7 +142,7 @@ describe('transactions actions', () => {
     it('should add a Signing transaction and generate id', async () => {
       const signingInput: TransactionInput = {
         type: 'signing',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Jane Smith', position: 'WR' },
         contract: createPlayerContract(4, 50000000, 30000000),
@@ -167,10 +163,10 @@ describe('transactions actions', () => {
     it('should add a DraftSelection transaction and generate id', async () => {
       const draftInput: TransactionInput = {
         type: 'draft',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Rookie Star', position: 'RB' },
-        draftPick: { ogTeamId: baseTeam.id, year: 2025, round: 1, number: 5 },
+        draftPick: { ogTeamId: 'BUF', year: 2025, round: 1, number: 5 },
       };
 
       const mockProvider = createMockDataProvider();
@@ -188,7 +184,7 @@ describe('transactions actions', () => {
     it('should add a Release transaction and generate id', async () => {
       const releaseInput: TransactionInput = {
         type: 'release',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Old Timer', position: 'LB' },
         capSavings: 5000000,
@@ -210,7 +206,7 @@ describe('transactions actions', () => {
       const extensionInput: TransactionInput = {
         type: 'extension',
         subtype: 'player',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
         contract: createPlayerContract(5, 200000000, 150000000),
@@ -232,7 +228,7 @@ describe('transactions actions', () => {
       const extensionInput: TransactionInput = {
         type: 'extension',
         subtype: 'staff',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
         contract: createStaffContract(5, 50000000),
@@ -253,7 +249,7 @@ describe('transactions actions', () => {
     it('should add a Hire transaction and generate id', async () => {
       const hireInput: TransactionInput = {
         type: 'hire',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
         contract: createStaffContract(4, 40000000),
@@ -274,7 +270,7 @@ describe('transactions actions', () => {
     it('should add a Fire transaction and generate id', async () => {
       const fireInput: TransactionInput = {
         type: 'fire',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Jones', role: 'Head Coach' },
       };
@@ -294,7 +290,7 @@ describe('transactions actions', () => {
     it('should add a Promotion transaction and generate id', async () => {
       const promotionInput: TransactionInput = {
         type: 'promotion',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
         previousRole: 'Offensive Coordinator',
@@ -316,7 +312,7 @@ describe('transactions actions', () => {
     it('should generate unique ids for each transaction', async () => {
       const input: TransactionInput = {
         type: 'signing',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Test Player', position: 'QB' },
         contract: createPlayerContract(1, 1000000, 500000),
@@ -331,19 +327,16 @@ describe('transactions actions', () => {
   });
 
   describe('editTransactionImpl', () => {
-    const team1 = { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC' as const, division: 'East' as const };
-    const team2 = { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC' as const, division: 'West' as const };
-    const baseTeam = team1;
     const baseTimestamp = new Date('2024-01-15');
 
     it('should edit a Trade transaction', async () => {
       const tradeTransaction: Trade = {
         id: 'trade-1',
         type: 'trade',
-        teams: [team1, team2],
+        teamIds: ['BUF', 'MIA'],
         timestamp: baseTimestamp,
         assets: [
-          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+          { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'John Doe', position: 'QB' } },
         ],
       };
 
@@ -358,17 +351,17 @@ describe('transactions actions', () => {
       const invalidTradeTransaction: Trade = {
         id: 'trade-1',
         type: 'trade',
-        teams: [team1], // Missing team-2
+        teamIds: ['BUF'], // Missing team-2
         timestamp: baseTimestamp,
         assets: [
-          { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'John Doe', position: 'QB' } },
+          { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'John Doe', position: 'QB' } },
         ],
       };
 
       const mockProvider = createMockDataProvider();
 
       await expect(editTransactionImpl(mockProvider, 'trade-1', invalidTradeTransaction)).rejects.toThrow(
-        "Invalid transaction: Team 'team-2' referenced in trade assets is not in the teams list"
+        "Invalid transaction: Team 'MIA' referenced in trade assets is not in the teams list"
       );
       expect(mockProvider.editTransaction).not.toHaveBeenCalled();
     });
@@ -377,7 +370,7 @@ describe('transactions actions', () => {
       const signingTransaction: Signing = {
         id: 'signing-1',
         type: 'signing',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Jane Smith', position: 'WR' },
         contract: createPlayerContract(5, 60000000, 40000000),
@@ -394,10 +387,10 @@ describe('transactions actions', () => {
       const draftTransaction: DraftSelection = {
         id: 'draft-1',
         type: 'draft',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Rookie Star', position: 'RB' },
-        draftPick: { ogTeamId: baseTeam.id, year: 2025, round: 1, number: 3 },
+        draftPick: { ogTeamId: 'BUF', year: 2025, round: 1, number: 3 },
       };
 
       const mockProvider = createMockDataProvider();
@@ -411,7 +404,7 @@ describe('transactions actions', () => {
       const releaseTransaction: Release = {
         id: 'release-1',
         type: 'release',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Old Timer', position: 'LB' },
         capSavings: 7000000,
@@ -429,7 +422,7 @@ describe('transactions actions', () => {
         id: 'extension-1',
         type: 'extension',
         subtype: 'player',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         player: { name: 'Franchise Player', position: 'QB' },
         contract: createPlayerContract(6, 250000000, 180000000),
@@ -446,7 +439,7 @@ describe('transactions actions', () => {
       const hireTransaction: Hire = {
         id: 'hire-1',
         type: 'hire',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Offensive Coordinator' },
         contract: createStaffContract(3, 30000000),
@@ -463,7 +456,7 @@ describe('transactions actions', () => {
       const fireTransaction: Fire = {
         id: 'fire-1',
         type: 'fire',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Jones', role: 'Defensive Coordinator' },
       };
@@ -479,7 +472,7 @@ describe('transactions actions', () => {
       const promotionTransaction: Promotion = {
         id: 'promotion-1',
         type: 'promotion',
-        teams: [baseTeam],
+        teamIds: ['BUF'],
         timestamp: baseTimestamp,
         staff: { name: 'Coach Smith', role: 'Head Coach' },
         previousRole: 'Offensive Coordinator',

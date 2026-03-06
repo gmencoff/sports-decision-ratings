@@ -1,8 +1,24 @@
+import { z } from 'zod';
+
 export type Conference = 'AFC' | 'NFC';
 export type Division = 'North' | 'South' | 'East' | 'West';
 
+export const NFL_TEAM_IDS = [
+  'BUF', 'MIA', 'NE', 'NYJ',
+  'BAL', 'CIN', 'CLE', 'PIT',
+  'HOU', 'IND', 'JAX', 'TEN',
+  'DEN', 'KC', 'LV', 'LAC',
+  'DAL', 'NYG', 'PHI', 'WAS',
+  'CHI', 'DET', 'GB', 'MIN',
+  'ATL', 'CAR', 'NO', 'TB',
+  'ARI', 'LAR', 'SF', 'SEA',
+] as const;
+
+export const TeamIdSchema = z.enum(NFL_TEAM_IDS);
+export type TeamId = z.infer<typeof TeamIdSchema>;
+
 export interface Team {
-  id: string;
+  id: TeamId;
   name: string;
   abbreviation: string;
   conference: Conference;
@@ -52,6 +68,13 @@ export const NFL_TEAMS: Team[] = [
   { id: 'SEA', name: 'Seattle Seahawks', abbreviation: 'SEA', conference: 'NFC', division: 'West' },
 ];
 
+// Lookup map for O(1) team retrieval by ID
+const TEAM_MAP = new Map<TeamId, Team>(NFL_TEAMS.map((t) => [t.id, t]));
+
+export function getTeamById(id: string): Team | undefined {
+  return TEAM_MAP.get(id as TeamId);
+}
+
 export const POSITIONS = [
   'QB',
   'RB',
@@ -72,18 +95,21 @@ export const POSITIONS = [
   'LS',
 ] as const;
 
-export type Position = (typeof POSITIONS)[number];
+export const PositionSchema = z.enum(POSITIONS);
+export type Position = z.infer<typeof PositionSchema>;
 
-export interface Player {
-  name: string;
-  position: Position;
-}
+export const PlayerSchema = z.object({
+  name: z.string(),
+  position: PositionSchema,
+});
+export type Player = z.infer<typeof PlayerSchema>;
 
-export interface PlayerContract {
-  years?: number;
-  totalValue?: number;
-  guaranteed?: number;
-}
+export const PlayerContractSchema = z.object({
+  years: z.number().optional(),
+  totalValue: z.number().optional(),
+  guaranteed: z.number().optional(),
+});
+export type PlayerContract = z.infer<typeof PlayerContractSchema>;
 
 export function createPlayerContract(
   years?: number,
@@ -93,10 +119,11 @@ export function createPlayerContract(
   return { years, totalValue, guaranteed };
 }
 
-export interface StaffContract {
-  years?: number;
-  totalValue?: number;
-}
+export const StaffContractSchema = z.object({
+  years: z.number().optional(),
+  totalValue: z.number().optional(),
+});
+export type StaffContract = z.infer<typeof StaffContractSchema>;
 
 export function createStaffContract(
   years?: number,
@@ -130,9 +157,11 @@ export const ROLES = [
   'Assistant Coach',
 ] as const;
 
-export type Role = (typeof ROLES)[number];
+export const RoleSchema = z.enum(ROLES);
+export type Role = z.infer<typeof RoleSchema>;
 
-export interface Staff {
-  name: string;
-  role: Role;
-}
+export const StaffSchema = z.object({
+  name: z.string(),
+  role: RoleSchema,
+});
+export type Staff = z.infer<typeof StaffSchema>;

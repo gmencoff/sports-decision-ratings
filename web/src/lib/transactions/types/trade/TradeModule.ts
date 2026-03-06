@@ -14,7 +14,7 @@ export class TradeModule implements TransactionModule<Trade> {
     return {
       id: '',
       type: 'trade',
-      teams: [],
+      teamIds: [],
       timestamp: new Date(),
       assets: [],
     };
@@ -27,7 +27,7 @@ export class TradeModule implements TransactionModule<Trade> {
 
     const errors: string[] = [];
     const trade = input as Omit<Trade, 'id'> | Trade;
-    const teamIds = new Set(trade.teams.map((t) => t.id));
+    const teamIds = new Set<string>(trade.teamIds);
 
     // Collect all team IDs referenced in assets
     const assetTeamIds = new Set<string>();

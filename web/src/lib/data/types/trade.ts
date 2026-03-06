@@ -1,41 +1,49 @@
-import { Player, Staff } from './core';
+import { z } from 'zod';
+import { TeamIdSchema, PlayerSchema, StaffSchema } from './core';
 
-// Trade asset types
-interface TradeAssetBase {
-  fromTeamId: string;
-  toTeamId: string;
-}
+const TradeAssetBaseSchema = z.object({
+  fromTeamId: TeamIdSchema,
+  toTeamId: TeamIdSchema,
+});
 
-export interface PlayerAsset extends TradeAssetBase {
-  type: 'player';
-  player: Player;
-}
+export const PlayerAssetSchema = TradeAssetBaseSchema.extend({
+  type: z.literal('player'),
+  player: PlayerSchema,
+});
 
-export interface CoachAsset extends TradeAssetBase {
-  type: 'coach';
-  staff: Staff;
-}
+export const CoachAssetSchema = TradeAssetBaseSchema.extend({
+  type: z.literal('coach'),
+  staff: StaffSchema,
+});
 
-export interface DraftPick {
-  ogTeamId: string;
-  year: number;
-  round: number;
-  number?: number;
-}
+export const DraftPickSchema = z.object({
+  ogTeamId: TeamIdSchema.optional(),
+  year: z.number().optional(),
+  round: z.number().optional(),
+  number: z.number().optional(),
+});
 
-export interface DraftPickAsset extends TradeAssetBase {
-  type: 'draft_pick';
-  draftPick: DraftPick;
-}
+export const DraftPickAssetSchema = TradeAssetBaseSchema.extend({
+  type: z.literal('draft_pick'),
+  draftPick: DraftPickSchema,
+});
 
-export interface ConditionalDraftPickAsset extends TradeAssetBase {
-  type: 'conditional_draft_pick';
-  draftPick: DraftPick;
-  conditions: string;
-}
+export const ConditionalDraftPickAssetSchema = TradeAssetBaseSchema.extend({
+  type: z.literal('conditional_draft_pick'),
+  draftPick: DraftPickSchema,
+  conditions: z.string(),
+});
 
-export type TradeAsset =
-  | PlayerAsset
-  | CoachAsset
-  | DraftPickAsset
-  | ConditionalDraftPickAsset;
+export const TradeAssetSchema = z.discriminatedUnion('type', [
+  PlayerAssetSchema,
+  CoachAssetSchema,
+  DraftPickAssetSchema,
+  ConditionalDraftPickAssetSchema,
+]);
+
+export type PlayerAsset = z.infer<typeof PlayerAssetSchema>;
+export type CoachAsset = z.infer<typeof CoachAssetSchema>;
+export type DraftPick = z.infer<typeof DraftPickSchema>;
+export type DraftPickAsset = z.infer<typeof DraftPickAssetSchema>;
+export type ConditionalDraftPickAsset = z.infer<typeof ConditionalDraftPickAssetSchema>;
+export type TradeAsset = z.infer<typeof TradeAssetSchema>;

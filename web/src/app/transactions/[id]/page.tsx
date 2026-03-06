@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { TransactionCard } from '@/components/TransactionCard';
 import { getTransaction } from '@/app/actions/transactions';
 import { getModule } from '@/lib/transactions';
+import { getTeamById } from '@/lib/data/types';
 
 interface TransactionPageProps {
   params: Promise<{ id: string }>;
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: TransactionPageProps) {
   }
 
   const transactionModule = getModule(transaction.type);
-  const teamNames = transaction.teams.map((t) => t.name).join(', ');
+  const teamNames = transaction.teamIds.map((id) => getTeamById(id)?.name ?? id).join(', ');
 
   return {
     title: `${transactionModule.label}: ${teamNames} | NFL Transactions`,

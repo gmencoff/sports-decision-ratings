@@ -14,7 +14,7 @@ export class PromotionModule implements TransactionModule<Promotion> {
     return {
       id: '',
       type: 'promotion',
-      teams: [],
+      teamIds: [],
       timestamp: new Date(),
       staff: { name: '', role: 'Head Coach' },
       previousRole: 'Offensive Coordinator',

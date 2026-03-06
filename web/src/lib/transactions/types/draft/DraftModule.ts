@@ -14,10 +14,10 @@ export class DraftModule implements TransactionModule<DraftSelection> {
     return {
       id: '',
       type: 'draft',
-      teams: [],
+      teamIds: ['ARI'],
       timestamp: new Date(),
       player: { name: '', position: 'QB' },
-      draftPick: { ogTeamId: '', year: new Date().getFullYear(), round: 1, number: 1 },
+      draftPick: { ogTeamId: 'ARI', year: new Date().getFullYear(), round: 1, number: 1 },
     };
   }
 

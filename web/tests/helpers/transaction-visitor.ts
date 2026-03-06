@@ -1,4 +1,4 @@
-import { Transaction, Team, NFL_TEAMS, createPlayerContract, createStaffContract } from '@/lib/data/types';
+import { Transaction, TeamId, NFL_TEAMS, createPlayerContract, createStaffContract } from '@/lib/data/types';
 import {
   TransactionVisitor,
   visitTransaction,
@@ -10,15 +10,15 @@ import {
 export { visitTransaction, visitByType, allTransactionTypes };
 export type { TransactionVisitor };
 
-// Default teams for tests
-export const testTeams = NFL_TEAMS.slice(0, 2); // BUF, MIA
+// Default team IDs for tests
+export const testTeamIds = NFL_TEAMS.slice(0, 2).map((t) => t.id) as TeamId[]; // BUF, MIA
 
 // ============================================================================
 // TEST DATA VISITOR - Creates realistic test data for each transaction type
 // ============================================================================
 
-export function createTestDataVisitor(id: string, teams: Team[]): TransactionVisitor<Transaction> {
-  const base = { id, teams, timestamp: new Date('2024-01-15T10:00:00Z') };
+export function createTestDataVisitor(id: string, teamIds: TeamId[]): TransactionVisitor<Transaction> {
+  const base = { id, teamIds, timestamp: new Date('2024-01-15T10:00:00Z') };
 
   return {
     visitTrade: () => ({
@@ -28,30 +28,30 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
         // Player asset
         {
           type: 'player',
-          fromTeamId: teams[0]?.id ?? 'BUF',
-          toTeamId: teams[1]?.id ?? 'MIA',
+          fromTeamId: teamIds[0] ?? 'BUF',
+          toTeamId: teamIds[1] ?? 'MIA',
           player: { name: 'Test Player', position: 'WR' },
         },
         // Coach asset
         {
           type: 'coach',
-          fromTeamId: teams[1]?.id ?? 'MIA',
-          toTeamId: teams[0]?.id ?? 'BUF',
+          fromTeamId: teamIds[1] ?? 'MIA',
+          toTeamId: teamIds[0] ?? 'BUF',
           staff: { name: 'Assistant Coach', role: 'Wide Receivers Coach' },
         },
         // Draft pick asset
         {
           type: 'draft_pick',
-          fromTeamId: teams[1]?.id ?? 'MIA',
-          toTeamId: teams[0]?.id ?? 'BUF',
-          draftPick: { ogTeamId: teams[1]?.id ?? 'MIA', year: 2025, round: 3 },
+          fromTeamId: teamIds[1] ?? 'MIA',
+          toTeamId: teamIds[0] ?? 'BUF',
+          draftPick: { ogTeamId: teamIds[1] ?? 'MIA', year: 2025, round: 3 },
         },
         // Conditional draft pick asset
         {
           type: 'conditional_draft_pick',
-          fromTeamId: teams[0]?.id ?? 'BUF',
-          toTeamId: teams[1]?.id ?? 'MIA',
-          draftPick: { ogTeamId: teams[0]?.id ?? 'BUF', year: 2026, round: 5 },
+          fromTeamId: teamIds[0] ?? 'BUF',
+          toTeamId: teamIds[1] ?? 'MIA',
+          draftPick: { ogTeamId: teamIds[0] ?? 'BUF', year: 2026, round: 5 },
           conditions: 'Becomes 4th round if player makes Pro Bowl',
         },
       ],
@@ -59,7 +59,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
 
     visitSigning: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'signing',
       player: { name: 'Free Agent Star', position: 'CB' },
       contract: createPlayerContract(4, 80000000, 50000000),
@@ -67,15 +67,15 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
 
     visitDraft: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'draft',
       player: { name: 'Top Prospect', position: 'QB' },
-      draftPick: { ogTeamId: teams[0]?.id ?? 'BUF', year: 2024, round: 1, number: 1 },
+      draftPick: { ogTeamId: teamIds[0] ?? 'BUF', year: 2024, round: 1, number: 1 },
     }),
 
     visitRelease: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'release',
       player: { name: 'Released Player', position: 'RB' },
       capSavings: 5000000,
@@ -83,7 +83,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
 
     visitExtension: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'extension',
       subtype: 'player',
       player: { name: 'Franchise Player', position: 'DE' },
@@ -92,7 +92,7 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
 
     visitHire: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'hire',
       staff: { name: 'New Coach', role: 'Head Coach' },
       contract: createStaffContract(4, 40000000),
@@ -100,14 +100,14 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
 
     visitFire: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'fire',
       staff: { name: 'Former Coach', role: 'Offensive Coordinator' },
     }),
 
     visitPromotion: () => ({
       ...base,
-      teams: [teams[0]],
+      teamIds: [teamIds[0]],
       type: 'promotion',
       staff: { name: 'Promoted Coach', role: 'Head Coach' },
       previousRole: 'Offensive Coordinator',
@@ -117,8 +117,8 @@ export function createTestDataVisitor(id: string, teams: Team[]): TransactionVis
 }
 
 // Convenience function to create test data by type
-export function createTestData(type: Parameters<typeof visitByType>[0], id: string, teams: Team[]): Transaction {
-  return visitByType(type, createTestDataVisitor(id, teams));
+export function createTestData(type: Parameters<typeof visitByType>[0], id: string, teamIds: TeamId[]): Transaction {
+  return visitByType(type, createTestDataVisitor(id, teamIds));
 }
 
 // ============================================================================

@@ -11,6 +11,9 @@ export function createMockDataProvider(overrides: Partial<DataProvider> = {}): D
     getVoteCounts: vi.fn().mockResolvedValue({ good: 0, bad: 0, unsure: 0 }),
     getUserVote: vi.fn().mockResolvedValue(null),
     submitVote: vi.fn().mockResolvedValue(undefined),
+    getTransactionsInDateRange: vi.fn().mockResolvedValue([]),
+    saveNewRssItems: vi.fn().mockResolvedValue([]),
+    markRssItemStatus: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -19,13 +22,10 @@ export function createMockTransaction(overrides: Partial<Transaction> = {}): Tra
   return {
     id: 'tx-1',
     type: 'trade',
-    teams: [
-      { id: 'team-1', name: 'Team A', abbreviation: 'TA', conference: 'AFC', division: 'East' },
-      { id: 'team-2', name: 'Team B', abbreviation: 'TB', conference: 'NFC', division: 'West' },
-    ],
+    teamIds: ['BUF', 'MIA'],
     timestamp: new Date('2024-01-15'),
     assets: [
-      { type: 'player', fromTeamId: 'team-1', toTeamId: 'team-2', player: { name: 'Test Player', position: 'QB' } },
+      { type: 'player', fromTeamId: 'BUF', toTeamId: 'MIA', player: { name: 'Test Player', position: 'QB' } },
     ],
     ...overrides,
   } as Transaction;

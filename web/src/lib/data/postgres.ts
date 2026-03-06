@@ -1,20 +1,19 @@
-import { eq, desc, and, lt, or } from 'drizzle-orm';
+import { eq, desc, and, lt, or, gte, inArray, sql } from 'drizzle-orm';
 import { getDb, type Database } from '@/server/db';
-import { transactions } from '@/server/db/schema';
+import { transactions, rssItems } from '@/server/db/schema';
 import { VoteService, getVoteService } from '@/server/services/vote-service';
 import { DataProvider } from './index';
 import {
   Transaction,
-  Team,
   Vote,
   VoteCounts,
   PaginatedResult,
   Sentiment,
   TransactionType,
-  NFL_TEAMS,
+  RssItem,
+  RssItemStatus,
 } from './types';
-import { visitByType } from '@/lib/transactions/visitor';
-import { DbDecoderVisitor } from './postgres-decoder';
+import { decodeTransaction } from './postgres-decoder';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -35,9 +34,6 @@ function decodeCursor(cursor: string): { timestamp: Date; id: string } | null {
   }
 }
 
-// Build team map from hardcoded NFL_TEAMS
-const TEAM_MAP = new Map<string, Team>(NFL_TEAMS.map((t) => [t.id, t]));
-
 // Convert DB transaction to domain Transaction
 function dbTransactionToTransaction(
   dbTxn: {
@@ -46,11 +42,9 @@ function dbTransactionToTransaction(
     teamIds: string[];
     timestamp: Date;
     data: unknown;
-  },
-  teamMap: Map<string, Team>
+  }
 ): Transaction {
-  const visitor = new DbDecoderVisitor(dbTxn, teamMap);
-  return visitByType<Transaction>(dbTxn.type as TransactionType, visitor);
+  return decodeTransaction(dbTxn);
 }
 
 // Convert domain Transaction to DB format
@@ -61,11 +55,11 @@ function transactionToDbFormat(transaction: Transaction): {
   timestamp: Date;
   data: Record<string, unknown>;
 } {
-  const { id, type, teams: txnTeams, timestamp, ...rest } = transaction;
+  const { id, type, teamIds, timestamp, ...rest } = transaction;
   return {
     id,
     type,
-    teamIds: txnTeams.map((t) => t.id),
+    teamIds,
     timestamp,
     data: rest,
   };
@@ -80,15 +74,10 @@ export class PostgresDataProvider implements DataProvider {
     this.voteService = voteService ?? getVoteService();
   }
 
-  private getTeamMap(): Map<string, Team> {
-    return TEAM_MAP;
-  }
-
   async getTransactions(
     limit: number = DEFAULT_PAGE_SIZE,
     cursor?: string
   ): Promise<PaginatedResult<Transaction>> {
-    const teamMap = this.getTeamMap();
 
     let results;
 
@@ -127,7 +116,7 @@ export class PostgresDataProvider implements DataProvider {
     const hasMore = results.length > limit;
     const pageData = hasMore ? results.slice(0, limit) : results;
 
-    const txns = pageData.map((row) => dbTransactionToTransaction(row, teamMap));
+    const txns = pageData.map((row) => dbTransactionToTransaction(row));
 
     const nextCursor =
       hasMore && pageData.length > 0
@@ -142,8 +131,6 @@ export class PostgresDataProvider implements DataProvider {
   }
 
   async getTransaction(id: string): Promise<Transaction | null> {
-    const teamMap = this.getTeamMap();
-
     const result = await this.db
       .select()
       .from(transactions)
@@ -154,7 +141,7 @@ export class PostgresDataProvider implements DataProvider {
       return null;
     }
 
-    return dbTransactionToTransaction(result[0], teamMap);
+    return dbTransactionToTransaction(result[0]);
   }
 
   async addTransaction(transaction: Transaction): Promise<Transaction> {
@@ -205,5 +192,66 @@ export class PostgresDataProvider implements DataProvider {
       vote.userId,
       vote.sentiment
     );
+  }
+
+  async getTransactionsInDateRange(type: TransactionType, teamIds: string[], from: Date, to: Date): Promise<Transaction[]> {
+    const results = await this.db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.type, type),
+          gte(transactions.timestamp, from),
+          lt(transactions.timestamp, to),
+          sql`${transactions.teamIds} && ARRAY[${sql.join(teamIds.map((id) => sql`${id}`), sql`, `)}]::varchar[]`
+        )
+      );
+    return results.map((row) => dbTransactionToTransaction(row));
+  }
+
+  async saveNewRssItems(items: RssItem[]): Promise<RssItem[]> {
+    if (items.length === 0) return [];
+
+    const guids = items.map((i) => i.guid);
+    const existing = await this.db
+      .select({ guid: rssItems.guid })
+      .from(rssItems)
+      .where(inArray(rssItems.guid, guids));
+
+    const existingGuids = new Set(existing.map((r) => r.guid));
+    const newItems = items.filter((i) => !existingGuids.has(i.guid));
+
+    if (newItems.length === 0) return [];
+
+    await this.db.insert(rssItems).values(
+      newItems.map((item) => ({
+        guid: item.guid,
+        source: item.source,
+        title: item.title,
+        description: item.description,
+        link: item.link,
+        pubDate: item.pubDate,
+        status: 'pending' as RssItemStatus,
+      }))
+    );
+
+    return newItems;
+  }
+
+  async markRssItemStatus(
+    guid: string,
+    status: RssItemStatus,
+    transactionIds?: string[],
+    error?: string
+  ): Promise<void> {
+    await this.db
+      .update(rssItems)
+      .set({
+        status,
+        processedAt: new Date(),
+        ...(transactionIds !== undefined ? { transactionIds } : {}),
+        ...(error !== undefined ? { error } : {}),
+      })
+      .where(eq(rssItems.guid, guid));
   }
 }

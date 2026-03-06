@@ -14,7 +14,7 @@ export class SigningModule implements TransactionModule<Signing> {
     return {
       id: '',
       type: 'signing',
-      teams: [],
+      teamIds: [],
       timestamp: new Date(),
       player: { name: '', position: 'QB' },
       contract: {},

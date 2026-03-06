@@ -6,7 +6,7 @@ import {
   allTransactionTypes,
   createTestData,
   assertFieldsPreserved,
-  testTeams,
+  testTeamIds,
 } from '../helpers/transaction-visitor';
 import type { Signing, PlayerExtension, StaffExtension, Trade } from '@/lib/data/types';
 import { createStaffContract } from '@/lib/data/types';
@@ -25,7 +25,7 @@ describe('PostgresDataProvider Integration', () => {
     // Test each transaction type
     describe.each(allTransactionTypes())('%s transactions', (type) => {
       it('should add and retrieve', async () => {
-        const original = createTestData(type, `test-${type}-add`, testTeams);
+        const original = createTestData(type, `test-${type}-add`, testTeamIds);
 
         await provider.addTransaction(original);
 
@@ -33,7 +33,7 @@ describe('PostgresDataProvider Integration', () => {
         expect(retrieved).not.toBeNull();
         expect(retrieved!.id).toBe(original.id);
         expect(retrieved!.type).toBe(type);
-        expect(retrieved!.teams.length).toBeGreaterThan(0);
+        expect(retrieved!.teamIds.length).toBeGreaterThan(0);
         expect(retrieved!.timestamp).toEqual(original.timestamp);
 
         // Verify type-specific fields are preserved
@@ -41,7 +41,7 @@ describe('PostgresDataProvider Integration', () => {
       });
 
       it('should edit', async () => {
-        const original = createTestData(type, `test-${type}-edit`, testTeams);
+        const original = createTestData(type, `test-${type}-edit`, testTeamIds);
         await provider.addTransaction(original);
 
         // Modify timestamp
@@ -66,14 +66,14 @@ describe('PostgresDataProvider Integration', () => {
       const trade: Trade = {
         id: 'trade-with-pick-number',
         type: 'trade',
-        teams: [testTeams[0], testTeams[1]],
+        teamIds: [testTeamIds[0], testTeamIds[1]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         assets: [
           {
             type: 'draft_pick',
-            fromTeamId: testTeams[0].id,
-            toTeamId: testTeams[1].id,
-            draftPick: { ogTeamId: testTeams[0].id, year: 2025, round: 1, number: 5 },
+            fromTeamId: testTeamIds[0],
+            toTeamId: testTeamIds[1],
+            draftPick: { ogTeamId: testTeamIds[0], year: 2025, round: 1, number: 5 },
           },
         ],
       };
@@ -87,7 +87,7 @@ describe('PostgresDataProvider Integration', () => {
       expect(retrieved.assets[0].type).toBe('draft_pick');
       if (retrieved.assets[0].type === 'draft_pick') {
         expect(retrieved.assets[0].draftPick).toEqual({
-          ogTeamId: testTeams[0].id,
+          ogTeamId: testTeamIds[0],
           year: 2025,
           round: 1,
           number: 5,
@@ -99,14 +99,14 @@ describe('PostgresDataProvider Integration', () => {
       const trade: Trade = {
         id: 'trade-without-pick-number',
         type: 'trade',
-        teams: [testTeams[0], testTeams[1]],
+        teamIds: [testTeamIds[0], testTeamIds[1]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         assets: [
           {
             type: 'draft_pick',
-            fromTeamId: testTeams[0].id,
-            toTeamId: testTeams[1].id,
-            draftPick: { ogTeamId: testTeams[0].id, year: 2025, round: 3 },
+            fromTeamId: testTeamIds[0],
+            toTeamId: testTeamIds[1],
+            draftPick: { ogTeamId: testTeamIds[0], year: 2025, round: 3 },
           },
         ],
       };
@@ -118,7 +118,7 @@ describe('PostgresDataProvider Integration', () => {
       expect(retrieved.type).toBe('trade');
       expect(retrieved.assets).toHaveLength(1);
       if (retrieved.assets[0].type === 'draft_pick') {
-        expect(retrieved.assets[0].draftPick.ogTeamId).toBe(testTeams[0].id);
+        expect(retrieved.assets[0].draftPick.ogTeamId).toBe(testTeamIds[0]);
         expect(retrieved.assets[0].draftPick.year).toBe(2025);
         expect(retrieved.assets[0].draftPick.round).toBe(3);
         expect(retrieved.assets[0].draftPick.number).toBeUndefined();
@@ -129,7 +129,7 @@ describe('PostgresDataProvider Integration', () => {
       const signing: Signing = {
         id: 'signing-partial-contract',
         type: 'signing',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         player: { name: 'Unknown Deal', position: 'WR' },
         contract: {},
@@ -149,7 +149,7 @@ describe('PostgresDataProvider Integration', () => {
       const signing: Signing = {
         id: 'signing-partial-contract-2',
         type: 'signing',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         player: { name: 'Partial Deal', position: 'QB' },
         contract: { years: 3 },
@@ -170,7 +170,7 @@ describe('PostgresDataProvider Integration', () => {
         id: 'extension-partial-contract',
         type: 'extension',
         subtype: 'player',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         player: { name: 'Mystery Extension', position: 'DE' },
         contract: {},
@@ -192,7 +192,7 @@ describe('PostgresDataProvider Integration', () => {
         id: 'extension-partial-contract-2',
         type: 'extension',
         subtype: 'player',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         player: { name: 'Partial Extension', position: 'CB' },
         contract: { totalValue: 80000000, guaranteed: 50000000 },
@@ -214,7 +214,7 @@ describe('PostgresDataProvider Integration', () => {
         id: 'staff-extension-full',
         type: 'extension',
         subtype: 'staff',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         staff: { name: 'Coach Full', role: 'Head Coach' },
         contract: createStaffContract(5, 50000000),
@@ -236,7 +236,7 @@ describe('PostgresDataProvider Integration', () => {
         id: 'staff-extension-empty',
         type: 'extension',
         subtype: 'staff',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         staff: { name: 'Coach Empty', role: 'Offensive Coordinator' },
         contract: {},
@@ -257,7 +257,7 @@ describe('PostgresDataProvider Integration', () => {
         id: 'staff-extension-partial',
         type: 'extension',
         subtype: 'staff',
-        teams: [testTeams[0]],
+        teamIds: [testTeamIds[0]],
         timestamp: new Date('2024-01-15T10:00:00Z'),
         staff: { name: 'Coach Partial', role: 'Defensive Coordinator' },
         contract: createStaffContract(3),
@@ -281,7 +281,7 @@ describe('PostgresDataProvider Integration', () => {
     it('should list transactions with pagination', async () => {
       // Add multiple transactions
       for (let i = 1; i <= 5; i++) {
-        const tx = createTestData('signing', `pagination-tx-${i}`, testTeams);
+        const tx = createTestData('signing', `pagination-tx-${i}`, testTeamIds);
         tx.timestamp = new Date(`2024-01-${10 + i}T10:00:00Z`);
         await provider.addTransaction(tx);
       }
@@ -308,7 +308,7 @@ describe('PostgresDataProvider Integration', () => {
 
       // Add one of each type
       for (const type of types) {
-        const tx = createTestData(type, `mixed-${type}`, testTeams);
+        const tx = createTestData(type, `mixed-${type}`, testTeamIds);
         await provider.addTransaction(tx);
       }
 

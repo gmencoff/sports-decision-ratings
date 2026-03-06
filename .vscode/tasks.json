@@ -13,6 +13,20 @@
         "reveal": "silent",
         "panel": "shared"
       }
+    },
+    {
+      "label": "Run Migrations",
+      "type": "shell",
+      "command": "npm run db:migrate",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "dependsOn": "Start PostgreSQL",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
     }
   ]
 }

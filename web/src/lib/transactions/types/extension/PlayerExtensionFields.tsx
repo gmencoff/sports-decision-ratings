@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PlayerExtension, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
+import { PlayerExtension, Position, POSITIONS, NFL_TEAMS, getTeamById, PlayerContract } from '@/lib/data/types';
 import { ContractFormFields } from '../../components/ContractFormFields';
 
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
@@ -12,7 +12,9 @@ interface PlayerExtensionFormProps {
 }
 
 export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProps) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [contract, setContract] = useState<PlayerContract>(value.contract);
@@ -24,7 +26,7 @@ export function PlayerExtensionForm({ value, onSubmit }: PlayerExtensionFormProp
       id: value.id,
       type: 'extension',
       subtype: 'player',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp: value.timestamp,
       player: { name: playerName, position: playerPosition },
       contract,

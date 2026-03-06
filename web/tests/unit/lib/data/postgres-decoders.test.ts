@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { decodePlayer, decodeStaff, decodeTradeAsset } from '@/lib/data/postgres-decoder';
+import { decodeTransaction } from '@/lib/data/postgres-decoder';
+import { PlayerSchema, StaffSchema, TradeAssetSchema } from '@/lib/data/types';
 
 describe('postgres decoders', () => {
-  describe('decodePlayer', () => {
+  describe('PlayerSchema.parse', () => {
     it('should decode player with valid position', () => {
       const raw = { name: 'Patrick Mahomes', position: 'QB' };
 
-      const player = decodePlayer(raw);
+      const player = PlayerSchema.parse(raw);
 
       expect(player).toEqual({ name: 'Patrick Mahomes', position: 'QB' });
     });
@@ -15,17 +16,17 @@ describe('postgres decoders', () => {
       const positions = ['RB', 'WR', 'TE', 'OT', 'CB', 'LB', 'S', 'K'];
 
       for (const position of positions) {
-        const player = decodePlayer({ name: 'Test Player', position });
+        const player = PlayerSchema.parse({ name: 'Test Player', position });
         expect(player.position).toBe(position);
       }
     });
   });
 
-  describe('decodeStaff', () => {
+  describe('StaffSchema.parse', () => {
     it('should decode staff with valid role', () => {
       const raw = { name: 'Andy Reid', role: 'Head Coach' };
 
-      const staff = decodeStaff(raw);
+      const staff = StaffSchema.parse(raw);
 
       expect(staff).toEqual({ name: 'Andy Reid', role: 'Head Coach' });
     });
@@ -34,13 +35,13 @@ describe('postgres decoders', () => {
       const roles = ['General Manager', 'Offensive Coordinator', 'Defensive Coordinator'];
 
       for (const role of roles) {
-        const staff = decodeStaff({ name: 'Test Staff', role });
+        const staff = StaffSchema.parse({ name: 'Test Staff', role });
         expect(staff.role).toBe(role);
       }
     });
   });
 
-  describe('decodeTradeAsset', () => {
+  describe('TradeAssetSchema.parse', () => {
     it('should decode player asset', () => {
       const raw = {
         type: 'player',
@@ -49,7 +50,7 @@ describe('postgres decoders', () => {
         player: { name: 'Test Player', position: 'WR' },
       };
 
-      const asset = decodeTradeAsset(raw);
+      const asset = TradeAssetSchema.parse(raw);
 
       expect(asset).toEqual({
         type: 'player',
@@ -67,7 +68,7 @@ describe('postgres decoders', () => {
         staff: { name: 'Test Coach', role: 'Offensive Coordinator' },
       };
 
-      const asset = decodeTradeAsset(raw);
+      const asset = TradeAssetSchema.parse(raw);
 
       expect(asset).toEqual({
         type: 'coach',
@@ -85,7 +86,7 @@ describe('postgres decoders', () => {
         draftPick: { ogTeamId: 'KC', year: 2025, round: 3 },
       };
 
-      const asset = decodeTradeAsset(raw);
+      const asset = TradeAssetSchema.parse(raw);
 
       expect(asset).toEqual({
         type: 'draft_pick',
@@ -104,7 +105,7 @@ describe('postgres decoders', () => {
         conditions: 'Becomes 3rd if player makes Pro Bowl',
       };
 
-      const asset = decodeTradeAsset(raw);
+      const asset = TradeAssetSchema.parse(raw);
 
       expect(asset).toEqual({
         type: 'conditional_draft_pick',
@@ -122,7 +123,24 @@ describe('postgres decoders', () => {
         toTeamId: 'NYJ',
       };
 
-      expect(() => decodeTradeAsset(raw)).toThrow('Unknown trade asset type: unknown');
+      expect(() => TradeAssetSchema.parse(raw)).toThrow();
+    });
+  });
+
+  describe('decodeTransaction', () => {
+    it('should decode a signing from a DB row', () => {
+      const dbRow = {
+        id: 'txn-1',
+        type: 'signing',
+        teamIds: ['KC'],
+        timestamp: new Date('2025-01-01'),
+        data: { player: { name: 'Patrick Mahomes', position: 'QB' }, contract: { years: 5, totalValue: 250000000 } },
+      };
+
+      const txn = decodeTransaction(dbRow);
+
+      expect(txn.type).toBe('signing');
+      expect(txn.id).toBe('txn-1');
     });
   });
 });

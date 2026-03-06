@@ -14,7 +14,7 @@ export class FireModule implements TransactionModule<Fire> {
     return {
       id: '',
       type: 'fire',
-      teams: [],
+      teamIds: [],
       timestamp: new Date(),
       staff: { name: '', role: 'Head Coach' },
     };

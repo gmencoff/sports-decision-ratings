@@ -11,7 +11,7 @@ export const DEFAULT_PLAYER_EXTENSION: PlayerExtension = {
   id: '',
   type: 'extension',
   subtype: 'player',
-  teams: [],
+  teamIds: [],
   timestamp: new Date(),
   player: { name: '', position: 'QB' },
   contract: {},
@@ -21,7 +21,7 @@ export const DEFAULT_STAFF_EXTENSION: StaffExtension = {
   id: '',
   type: 'extension',
   subtype: 'staff',
-  teams: [],
+  teamIds: [],
   timestamp: new Date(),
   staff: { name: '', role: 'Head Coach' },
   contract: {},
@@ -34,11 +34,11 @@ export function ExtensionForm({ value, onSubmit }: FormProps<Extension>) {
 
   const playerValue: PlayerExtension = value.subtype === 'player'
     ? { ...value, timestamp }
-    : { ...DEFAULT_PLAYER_EXTENSION, id: value.id, teams: value.teams, timestamp };
+    : { ...DEFAULT_PLAYER_EXTENSION, id: value.id, teamIds: value.teamIds, timestamp };
 
   const staffValue: StaffExtension = value.subtype === 'staff'
     ? { ...value, timestamp }
-    : { ...DEFAULT_STAFF_EXTENSION, id: value.id, teams: value.teams, timestamp };
+    : { ...DEFAULT_STAFF_EXTENSION, id: value.id, teamIds: value.teamIds, timestamp };
 
   return (
     <div className="space-y-4">

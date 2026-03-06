@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Signing, Position, POSITIONS, NFL_TEAMS, PlayerContract } from '@/lib/data/types';
+import { Signing, Position, POSITIONS, NFL_TEAMS, getTeamById, PlayerContract } from '@/lib/data/types';
 import { FormProps } from '../../interface';
 import { ContractFormFields } from '../../components/ContractFormFields';
 import { TransactionDateField } from '../../components/TransactionDateField';
@@ -9,7 +9,9 @@ import { TransactionDateField } from '../../components/TransactionDateField';
 const sortedTeams = [...NFL_TEAMS].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
 export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
-  const [teamAbbreviation, setTeamAbbreviation] = useState(value.teams[0]?.abbreviation ?? sortedTeams[0].abbreviation);
+  const [teamAbbreviation, setTeamAbbreviation] = useState(
+    getTeamById(value.teamIds[0])?.abbreviation ?? sortedTeams[0].abbreviation
+  );
   const [playerName, setPlayerName] = useState(value.player.name);
   const [playerPosition, setPlayerPosition] = useState<Position>(value.player.position);
   const [contract, setContract] = useState<PlayerContract>(value.contract);
@@ -21,7 +23,7 @@ export function SigningForm({ value, onSubmit }: FormProps<Signing>) {
     onSubmit({
       id: value.id,
       type: 'signing',
-      teams: [selectedTeam],
+      teamIds: [selectedTeam.id],
       timestamp,
       player: { name: playerName, position: playerPosition },
       contract,
