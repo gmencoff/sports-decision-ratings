@@ -1,9 +1,9 @@
 import { type DataProvider } from '@/lib/data';
-import { addTransactionImpl } from '@/app/actions/transactions';
+import { addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
 import { fetchRssItems } from './feed-fetcher';
 import { saveNewItems, markItemStatus } from './item-store';
 import { extractTransactions } from './transaction-extractor';
-import { isDuplicate } from './duplicate-detector';
+import { checkDuplicate } from './duplicate-detector';
 import { type LlmClient } from './llm-client';
 
 export interface ProcessingResult {
@@ -11,6 +11,7 @@ export interface ProcessingResult {
   newItemsFound: number;
   transactionsExtracted: number;
   transactionsAdded: number;
+  transactionsUpdated: number;
   errors: string[];
 }
 
@@ -23,6 +24,7 @@ export async function processRssFeeds(
     newItemsFound: 0,
     transactionsExtracted: 0,
     transactionsAdded: 0,
+    transactionsUpdated: 0,
     errors: [],
   };
 
@@ -49,15 +51,19 @@ export async function processRssFeeds(
       const { transactions: candidates } = await extractTransactions(item, llm);
       result.transactionsExtracted += candidates.length;
 
-      // Check each candidate for duplicates and add if new
+      // Check each candidate for duplicates and add/update accordingly
       for (const candidate of candidates) {
         try {
-          const dup = await isDuplicate(candidate, provider, llm);
-          if (!dup) {
+          const check = await checkDuplicate(candidate, provider, llm);
+          if (check.action === 'new') {
             const added = await addTransactionImpl(provider, candidate);
             addedTransactionIds.push(added.id);
             result.transactionsAdded++;
+          } else if (check.action === 'update') {
+            await editTransactionImpl(provider, check.existingTransactionId, check.updatedTransaction);
+            result.transactionsUpdated++;
           }
+          // 'duplicate' — skip
         } catch (err) {
           result.errors.push(`Failed to add transaction from ${item.guid}: ${err}`);
         }

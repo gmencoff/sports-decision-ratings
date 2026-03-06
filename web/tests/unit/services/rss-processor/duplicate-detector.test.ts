@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isDuplicate } from '@/server/services/rss-processor/duplicate-detector';
+import { checkDuplicate } from '@/server/services/rss-processor/duplicate-detector';
 import type { TransactionInput, Transaction } from '@/lib/data/types';
-import type { DataProvider } from '@/lib/data';
 import type { LlmClient } from '@/server/services/rss-processor/llm-client';
 import { createMockDataProvider } from '../../../mocks/mockDataProvider';
 
@@ -35,52 +34,66 @@ describe('duplicate-detector', () => {
     vi.clearAllMocks();
   });
 
-  it('returns false (NEW) when no recent transactions match — no LLM call made', async () => {
+  it('returns { action: "new" } when no recent transactions match — no LLM call made', async () => {
     const provider = createMockDataProvider(); // getTransactionsInDateRange returns []
-    const llm = createMockLlmClient('NEW');
+    const llm = createMockLlmClient('{"action":"new"}');
 
-    const result = await isDuplicate(signingCandidate, provider, llm);
+    const result = await checkDuplicate(signingCandidate, provider, llm);
 
-    expect(result).toBe(false);
+    expect(result).toEqual({ action: 'new' });
     expect(llm.createMessage as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
-  it('returns false (NEW) when matches exist but Claude says NEW', async () => {
+  it('returns { action: "new" } when matches exist but LLM says new', async () => {
     const provider = createMockDataProvider({
       getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTransaction]),
     });
-    const llm = createMockLlmClient('NEW');
+    const llm = createMockLlmClient(JSON.stringify({ action: 'new' }));
 
-    const result = await isDuplicate(signingCandidate, provider, llm);
+    const result = await checkDuplicate(signingCandidate, provider, llm);
 
-    expect(result).toBe(false);
+    expect(result).toEqual({ action: 'new' });
     expect(llm.createMessage as ReturnType<typeof vi.fn>).toHaveBeenCalledOnce();
   });
 
-  it('returns true (DUPLICATE) when matches exist and Claude says DUPLICATE', async () => {
+  it('returns { action: "duplicate" } when LLM identifies a duplicate', async () => {
     const provider = createMockDataProvider({
       getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTransaction]),
     });
-    const llm = createMockLlmClient('DUPLICATE');
+    const llm = createMockLlmClient(JSON.stringify({ action: 'duplicate', existingTransactionId: 'existing-1' }));
 
-    const result = await isDuplicate(signingCandidate, provider, llm);
+    const result = await checkDuplicate(signingCandidate, provider, llm);
 
-    expect(result).toBe(true);
+    expect(result).toEqual({ action: 'duplicate', existingTransactionId: 'existing-1' });
     expect(llm.createMessage as ReturnType<typeof vi.fn>).toHaveBeenCalledOnce();
   });
 
-  it('handles case-insensitive DUPLICATE response', async () => {
+  it('returns { action: "update" } with updated transaction when LLM identifies an enrichable duplicate', async () => {
+    const updatedTransaction = {
+      ...existingTransaction,
+      timestamp: existingTransaction.timestamp.toISOString(),
+      contract: { years: 4, totalValue: 50000000 },
+    };
     const provider = createMockDataProvider({
       getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTransaction]),
     });
-    const llm = createMockLlmClient('DUPLICATE');
+    const llm = createMockLlmClient(JSON.stringify({
+      action: 'update',
+      existingTransactionId: 'existing-1',
+      updatedTransaction,
+    }));
 
-    const result = await isDuplicate(signingCandidate, provider, llm);
+    const result = await checkDuplicate(signingCandidate, provider, llm);
 
-    expect(result).toBe(true);
+    expect(result.action).toBe('update');
+    if (result.action === 'update') {
+      expect(result.existingTransactionId).toBe('existing-1');
+      expect(result.updatedTransaction.type).toBe('signing');
+      expect(result.updatedTransaction.timestamp).toBeInstanceOf(Date);
+    }
   });
 
-  it('returns false when LLM call throws an error', async () => {
+  it('returns { action: "new" } when LLM call throws an error', async () => {
     const provider = createMockDataProvider({
       getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTransaction]),
     });
@@ -88,21 +101,32 @@ describe('duplicate-detector', () => {
       createMessage: vi.fn().mockRejectedValue(new Error('API error')),
     };
 
-    const result = await isDuplicate(signingCandidate, provider, llm);
+    const result = await checkDuplicate(signingCandidate, provider, llm);
 
-    // On error, we assume not duplicate (don't block new transactions)
-    expect(result).toBe(false);
+    // On error, assume not duplicate to avoid blocking new transactions
+    expect(result).toEqual({ action: 'new' });
   });
 
-  it('returns false when LLM returns ambiguous response', async () => {
+  it('returns { action: "new" } when LLM returns invalid JSON', async () => {
     const provider = createMockDataProvider({
       getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTransaction]),
     });
     const llm = createMockLlmClient('I cannot determine this.');
 
-    const result = await isDuplicate(signingCandidate, provider, llm);
+    const result = await checkDuplicate(signingCandidate, provider, llm);
 
-    expect(result).toBe(false);
+    expect(result).toEqual({ action: 'new' });
+  });
+
+  it('returns { action: "new" } when LLM returns JSON that fails Zod validation', async () => {
+    const provider = createMockDataProvider({
+      getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTransaction]),
+    });
+    const llm = createMockLlmClient(JSON.stringify({ action: 'unknown_action' }));
+
+    const result = await checkDuplicate(signingCandidate, provider, llm);
+
+    expect(result).toEqual({ action: 'new' });
   });
 
   it('handles trade candidate with overlapping teams', async () => {
@@ -124,10 +148,10 @@ describe('duplicate-detector', () => {
     const provider = createMockDataProvider({
       getTransactionsInDateRange: vi.fn().mockResolvedValue([existingTrade]),
     });
-    const llm = createMockLlmClient('DUPLICATE');
+    const llm = createMockLlmClient(JSON.stringify({ action: 'duplicate', existingTransactionId: 'existing-trade-1' }));
 
-    const result = await isDuplicate(tradeCandidate, provider, llm);
+    const result = await checkDuplicate(tradeCandidate, provider, llm);
 
-    expect(result).toBe(true);
+    expect(result).toEqual({ action: 'duplicate', existingTransactionId: 'existing-trade-1' });
   });
 });

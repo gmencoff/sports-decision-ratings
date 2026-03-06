@@ -14,20 +14,21 @@ vi.mock('@/server/services/rss-processor/transaction-extractor', () => ({
   extractTransactions: vi.fn(),
 }));
 vi.mock('@/server/services/rss-processor/duplicate-detector', () => ({
-  isDuplicate: vi.fn(),
+  checkDuplicate: vi.fn(),
 }));
 vi.mock('@/app/actions/transactions', () => ({
   addTransactionImpl: vi.fn(),
+  editTransactionImpl: vi.fn(),
 }));
 
 import { processRssFeeds } from '@/server/services/rss-processor';
 import { fetchRssItems } from '@/server/services/rss-processor/feed-fetcher';
 import { saveNewItems, markItemStatus } from '@/server/services/rss-processor/item-store';
 import { extractTransactions } from '@/server/services/rss-processor/transaction-extractor';
-import { isDuplicate } from '@/server/services/rss-processor/duplicate-detector';
-import { addTransactionImpl } from '@/app/actions/transactions';
+import { checkDuplicate } from '@/server/services/rss-processor/duplicate-detector';
+import { addTransactionImpl, editTransactionImpl } from '@/app/actions/transactions';
 import type { RssItem } from '@/lib/data';
-import type { TransactionInput } from '@/lib/data/types';
+import type { TransactionInput, Transaction } from '@/lib/data/types';
 
 const mockProvider = {} as DataProvider;
 const mockLlm = {} as LlmClient;
@@ -49,7 +50,7 @@ const mockSigningInput: TransactionInput = {
   contract: { years: 4, totalValue: 48000000 },
 };
 
-const mockTransaction = {
+const mockTransaction: Transaction = {
   id: 'tx-new-1',
   ...mockSigningInput,
 };
@@ -59,13 +60,14 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.clearAllMocks();
     vi.mocked(markItemStatus).mockResolvedValue(undefined);
     vi.mocked(addTransactionImpl).mockResolvedValue(mockTransaction as never);
+    vi.mocked(editTransactionImpl).mockResolvedValue(mockTransaction as never);
   });
 
   it('happy path: fetches feeds, saves new items, extracts and adds transactions', async () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
-    vi.mocked(isDuplicate).mockResolvedValue(false);
+    vi.mocked(checkDuplicate).mockResolvedValue({ action: 'new' });
 
     const result = await processRssFeeds(mockProvider, mockLlm);
 
@@ -73,6 +75,7 @@ describe('processRssFeeds (orchestrator)', () => {
     expect(result.newItemsFound).toBe(1);
     expect(result.transactionsExtracted).toBe(1);
     expect(result.transactionsAdded).toBe(1);
+    expect(result.transactionsUpdated).toBe(0);
     expect(result.errors).toEqual([]);
     expect(addTransactionImpl).toHaveBeenCalledWith(mockProvider, mockSigningInput);
     expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', ['tx-new-1']);
@@ -94,13 +97,31 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
-    vi.mocked(isDuplicate).mockResolvedValue(true);
+    vi.mocked(checkDuplicate).mockResolvedValue({ action: 'duplicate', existingTransactionId: 'existing-1' });
 
     const result = await processRssFeeds(mockProvider, mockLlm);
 
     expect(result.transactionsExtracted).toBe(1);
     expect(result.transactionsAdded).toBe(0);
+    expect(result.transactionsUpdated).toBe(0);
     expect(addTransactionImpl).not.toHaveBeenCalled();
+    expect(editTransactionImpl).not.toHaveBeenCalled();
+    expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', []);
+  });
+
+  it('updates existing transaction when checkDuplicate returns { action: "update" }', async () => {
+    const updatedTransaction: Transaction = { ...mockTransaction, contract: { years: 4, totalValue: 50000000 } };
+    vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
+    vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
+    vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
+    vi.mocked(checkDuplicate).mockResolvedValue({ action: 'update', existingTransactionId: 'existing-1', updatedTransaction });
+
+    const result = await processRssFeeds(mockProvider, mockLlm);
+
+    expect(result.transactionsAdded).toBe(0);
+    expect(result.transactionsUpdated).toBe(1);
+    expect(addTransactionImpl).not.toHaveBeenCalled();
+    expect(editTransactionImpl).toHaveBeenCalledWith(mockProvider, 'existing-1', updatedTransaction);
     expect(markItemStatus).toHaveBeenCalledWith(mockProvider, 'guid-1', 'processed', []);
   });
 
@@ -146,8 +167,8 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem, item2]);
     vi.mocked(extractTransactions)
       .mockResolvedValueOnce({ transactions: [mockSigningInput], reasoning: 'Signing confirmed.' })
-      .mockResolvedValueOnce({ transactions: [mockSigningInput, mockSigningInput], reasoning: 'Two signings confirmed.' }); // 2 transactions in item2
-    vi.mocked(isDuplicate).mockResolvedValue(false);
+      .mockResolvedValueOnce({ transactions: [mockSigningInput, mockSigningInput], reasoning: 'Two signings confirmed.' });
+    vi.mocked(checkDuplicate).mockResolvedValue({ action: 'new' });
 
     const result = await processRssFeeds(mockProvider, mockLlm);
 
@@ -162,7 +183,7 @@ describe('processRssFeeds (orchestrator)', () => {
     vi.mocked(fetchRssItems).mockResolvedValue([mockRssItem]);
     vi.mocked(saveNewItems).mockResolvedValue([mockRssItem]);
     vi.mocked(extractTransactions).mockResolvedValue({ transactions: [mockSigningInput], reasoning: 'Confirmed signing.' });
-    vi.mocked(isDuplicate).mockResolvedValue(false);
+    vi.mocked(checkDuplicate).mockResolvedValue({ action: 'new' });
     vi.mocked(addTransactionImpl).mockRejectedValue(new Error('DB insert failed'));
 
     const result = await processRssFeeds(mockProvider, mockLlm);
