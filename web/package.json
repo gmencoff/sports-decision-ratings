@@ -10,7 +10,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test:all": "tsc --noEmit && vitest run && vitest run --config vitest.integration.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -20,7 +21,9 @@
     "db:seed:test": "tsx tests/scripts/db-seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "drizzle-orm": "^0.38.0",
+    "fast-xml-parser": "^5.4.1",
     "next": "16.1.1",
     "pg": "^8.13.0",
     "react": "19.2.3",

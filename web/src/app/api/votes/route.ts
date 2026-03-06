@@ -3,12 +3,12 @@ import { Sentiment, VoteCounts } from '@/lib/data/types';
 import { DataProvider, getDataProvider } from '@/lib/data';
 import { getVoterId } from '@/server/auth/voter-session';
 
-export interface TeamVoteData {
+interface TeamVoteData {
   counts: VoteCounts;
   userVote: Sentiment | null;
 }
 
-export async function loadVotesImpl(
+async function loadVotesImpl(
   provider: DataProvider,
   transactionId: string,
   teamIds: string[],
@@ -27,7 +27,7 @@ export async function loadVotesImpl(
   return result;
 }
 
-export async function submitVoteImpl(
+async function submitVoteImpl(
   provider: DataProvider,
   transactionId: string,
   teamId: string,

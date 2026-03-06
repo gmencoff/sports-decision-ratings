@@ -46,3 +46,6 @@ export { SentimentSchema, VoteSchema, VoteCountsSchema, TeamVoteCountsSchema } f
 
 // Pagination types
 export type { PaginatedResult } from './pagination';
+
+// RSS types
+export type { RssSource, RssItemStatus, RssItem } from './rss';

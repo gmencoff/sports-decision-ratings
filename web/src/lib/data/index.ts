@@ -1,4 +1,4 @@
-import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment } from './types';
+import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment, TransactionType, RssItem, RssItemStatus } from './types';
 
 export interface DataProvider {
   getTransactions(limit?: number, cursor?: string): Promise<PaginatedResult<Transaction>>;
@@ -8,6 +8,9 @@ export interface DataProvider {
   getVoteCounts(transactionId: string, teamId: string): Promise<VoteCounts>;
   getUserVote(transactionId: string, teamId: string, userId: string): Promise<Sentiment | null>;
   submitVote(vote: Vote): Promise<void>;
+  getTransactionsInDateRange(type: TransactionType, teamIds: string[], from: Date, to: Date): Promise<Transaction[]>;
+  saveNewRssItems(items: RssItem[]): Promise<RssItem[]>;
+  markRssItemStatus(guid: string, status: RssItemStatus, transactionIds?: string[], error?: string): Promise<void>;
 }
 
 // Factory function to get the data provider

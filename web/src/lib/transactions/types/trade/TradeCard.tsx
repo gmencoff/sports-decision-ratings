@@ -24,16 +24,27 @@ export function TradeCard({ transaction }: CardProps<Trade>) {
             )}
             {asset.type === 'draft_pick' && (
               <span>
-                {asset.draftPick.year} Round {asset.draftPick.round}
-                {asset.draftPick.number != null && `, Pick ${asset.draftPick.number}`}
-                {' '}({getTeamAbbreviation(asset.draftPick.ogTeamId)})
+                {asset.draftPick.year != null && asset.draftPick.round != null
+                  ? <>
+                      {asset.draftPick.year} Round {asset.draftPick.round}
+                      {asset.draftPick.number != null && `, Pick ${asset.draftPick.number}`}
+                      {asset.draftPick.ogTeamId != null && ` (${getTeamAbbreviation(asset.draftPick.ogTeamId)})`}
+                    </>
+                  : 'Draft pick (details TBD)'
+                }
               </span>
             )}
             {asset.type === 'conditional_draft_pick' && (
               <span>
-                {asset.draftPick.year} Round {asset.draftPick.round}
-                {asset.draftPick.number != null && `, Pick ${asset.draftPick.number}`}
-                {' '}({getTeamAbbreviation(asset.draftPick.ogTeamId)}) (conditional)
+                {asset.draftPick.year != null && asset.draftPick.round != null
+                  ? <>
+                      {asset.draftPick.year} Round {asset.draftPick.round}
+                      {asset.draftPick.number != null && `, Pick ${asset.draftPick.number}`}
+                      {asset.draftPick.ogTeamId != null && ` (${getTeamAbbreviation(asset.draftPick.ogTeamId)})`}
+                      {' '}(conditional)
+                    </>
+                  : 'Conditional draft pick (details TBD)'
+                }
               </span>
             )}
           </li>

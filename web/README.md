@@ -2,16 +2,56 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Local Database (optional)
+
+By default the app runs with mock data. To use a real PostgreSQL database locally, spin one up with Docker:
+
+```bash
+docker compose up -d
+```
+
+Then set the connection string in `.env`:
+
+```
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nfl_transactions
+```
+
+Run migrations to create the schema:
+
+```bash
+npm run db:migrate
+```
+
+Optionally seed the database with sample data:
+
+```bash
+npm run db:seed
+```
+
+To stop and remove the container when you're done:
+
+```bash
+docker compose down
+```
+
+To open drizzle studio:
+
+```bash
+npm run drizzle:studio
+```
+
+To hit chron endpoint:
+
+```bash
+curl -H "Authorization: Bearer local-dev-secret" http://localhost:3000/api/cron/process-transactions
+```
+
+### Dev server
+
 First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

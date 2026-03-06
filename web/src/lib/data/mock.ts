@@ -1,5 +1,5 @@
 import { DataProvider } from './index';
-import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment, createPlayerContract, createStaffContract } from './types';
+import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment, createPlayerContract, createStaffContract, TransactionType, RssItem, RssItemStatus } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -130,6 +130,9 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     contract: createStaffContract(5, 50000000),
   },
 ];
+
+// In-memory RSS item storage
+const mockRssItems = new Map<string, RssItem & { status: RssItemStatus }>();
 
 // In-memory vote storage - stores individual votes
 type VoteKey = `${string}-${string}-${string}`; // transactionId-teamId-userId
@@ -263,5 +266,33 @@ export class MockDataProvider implements DataProvider {
     const key = getVoteKey(vote.transactionId, vote.teamId, vote.userId);
     // Upsert: simply set the vote, overwriting any previous vote
     voteStorage.set(key, vote.sentiment);
+  }
+
+  async getTransactionsInDateRange(type: TransactionType, teamIds: string[], from: Date, to: Date): Promise<Transaction[]> {
+    return MOCK_TRANSACTIONS.filter(
+      (t) =>
+        t.type === type &&
+        t.timestamp >= from &&
+        t.timestamp < to &&
+        t.teamIds.some((id) => teamIds.includes(id))
+    );
+  }
+
+  async saveNewRssItems(items: RssItem[]): Promise<RssItem[]> {
+    const newItems = items.filter((item) => !mockRssItems.has(item.guid));
+    newItems.forEach((item) => mockRssItems.set(item.guid, { ...item, status: 'pending' }));
+    return newItems;
+  }
+
+  async markRssItemStatus(
+    guid: string,
+    status: RssItemStatus,
+    _transactionIds?: string[],
+    _error?: string
+  ): Promise<void> {
+    const entry = mockRssItems.get(guid);
+    if (entry) {
+      mockRssItems.set(guid, { ...entry, status });
+    }
   }
 }

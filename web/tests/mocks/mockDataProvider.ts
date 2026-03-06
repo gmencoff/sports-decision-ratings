@@ -11,6 +11,9 @@ export function createMockDataProvider(overrides: Partial<DataProvider> = {}): D
     getVoteCounts: vi.fn().mockResolvedValue({ good: 0, bad: 0, unsure: 0 }),
     getUserVote: vi.fn().mockResolvedValue(null),
     submitVote: vi.fn().mockResolvedValue(undefined),
+    getTransactionsInDateRange: vi.fn().mockResolvedValue([]),
+    saveNewRssItems: vi.fn().mockResolvedValue([]),
+    markRssItemStatus: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
