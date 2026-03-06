@@ -203,7 +203,7 @@ export class PostgresDataProvider implements DataProvider {
           eq(transactions.type, type),
           gte(transactions.timestamp, from),
           lt(transactions.timestamp, to),
-          sql`${transactions.teamIds} && ${teamIds}`
+          sql`${transactions.teamIds} && ARRAY[${sql.join(teamIds.map((id) => sql`${id}`), sql`, `)}]::varchar[]`
         )
       );
     return results.map((row) => dbTransactionToTransaction(row));
