@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
 import './globals.css';
+import { FeedbackWidget } from '@/components/FeedbackWidget';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -37,6 +38,7 @@ export default function RootLayout({
           </div>
         </header>
         <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
+        <FeedbackWidget />
       </body>
     </html>
   );

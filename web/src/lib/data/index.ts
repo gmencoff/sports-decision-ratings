@@ -1,4 +1,5 @@
 import { Transaction, Vote, VoteCounts, PaginatedResult, Sentiment, TransactionType, RssItem, RssItemStatus } from './types';
+import { resolveProvider } from './provider-factory';
 
 export interface DataProvider {
   getTransactions(limit?: number, cursor?: string): Promise<PaginatedResult<Transaction>>;
@@ -13,32 +14,25 @@ export interface DataProvider {
   markRssItemStatus(guid: string, status: RssItemStatus, transactionIds?: string[], error?: string): Promise<void>;
 }
 
-// Factory function to get the data provider
-// This makes it easy to swap implementations (mock, test, production)
-let providerInstance: DataProvider | null = null;
+let instance: DataProvider | null = null;
 
 export async function getDataProvider(): Promise<DataProvider> {
-  if (!providerInstance) {
-    // Use PostgresDataProvider if DATABASE_URL is configured, otherwise fall back to mock
-    if (process.env.DATABASE_URL) {
-      const { PostgresDataProvider } = await import('./postgres');
-      providerInstance = new PostgresDataProvider();
-    } else {
-      const { MockDataProvider } = await import('./mock');
-      providerInstance = new MockDataProvider();
-    }
+  if (!instance) {
+    instance = await resolveProvider<DataProvider>({
+      createPostgres: async () => {
+        const { PostgresDataProvider } = await import('./postgres');
+        return new PostgresDataProvider();
+      },
+      createMock: async () => {
+        const { MockDataProvider } = await import('./mock');
+        return new MockDataProvider();
+      },
+    });
   }
-  return providerInstance;
+  return instance;
 }
 
-// For testing: allow resetting the provider
-export function resetDataProvider(): void {
-  providerInstance = null;
-}
-
-// For testing: allow setting a custom provider
-export function setDataProvider(provider: DataProvider): void {
-  providerInstance = provider;
-}
+export function resetDataProvider(): void { instance = null; }
+export function setDataProvider(provider: DataProvider): void { instance = provider; }
 
 export * from './types';
