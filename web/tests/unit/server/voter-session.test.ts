@@ -4,10 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.unmock('@/server/auth/voter-session');
 
 const mockGetSession = vi.fn();
-vi.mock('@/server/auth/neon-auth', () => ({
-  auth: {
-    getSession: () => mockGetSession(),
-  },
+vi.mock('@/server/auth/auth-provider', () => ({
+  getAuthProvider: () => Promise.resolve({ getSession: () => mockGetSession() }),
 }));
 
 const mockCookieStore = {

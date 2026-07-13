@@ -1,12 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { authClient } from '@/server/auth/auth-client';
+import { useSession, signOut } from '@/lib/auth-client';
 
 export function AuthButton() {
-  const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, refetch } = useSession();
 
   if (isPending) {
     return null;
@@ -21,8 +19,8 @@ export function AuthButton() {
   }
 
   const handleSignOut = async () => {
-    await authClient.signOut();
-    router.refresh();
+    await signOut();
+    refetch();
   };
 
   return (
