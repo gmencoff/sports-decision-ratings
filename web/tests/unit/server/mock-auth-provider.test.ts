@@ -33,7 +33,7 @@ describe('mockAuthProvider', () => {
     expect(data).toBeNull();
   });
 
-  it('should create a user and an active session on sign-up', async () => {
+  it('should establish a session on sign-up, encoded in the cookie itself', async () => {
     cookieJar = createStatefulCookieJar();
 
     const { error } = await mockAuthProvider.signUp.email({
@@ -47,35 +47,12 @@ describe('mockAuthProvider', () => {
     expect(data?.user.email).toBe('signup@example.com');
   });
 
-  it('should reject sign-up with an email that already exists', async () => {
+  it('should establish a session on sign-in for any credentials (no server-side registry)', async () => {
     cookieJar = createStatefulCookieJar();
-    await mockAuthProvider.signUp.email({
-      name: 'First',
-      email: 'duplicate@example.com',
-      password: 'password123',
-    });
-
-    const { error } = await mockAuthProvider.signUp.email({
-      name: 'Second',
-      email: 'duplicate@example.com',
-      password: 'different',
-    });
-
-    expect(error).not.toBeNull();
-  });
-
-  it('should sign in an existing user with the correct password', async () => {
-    cookieJar = createStatefulCookieJar();
-    await mockAuthProvider.signUp.email({
-      name: 'Sign In User',
-      email: 'signin@example.com',
-      password: 'correct-password',
-    });
-    await mockAuthProvider.signOut();
 
     const { error } = await mockAuthProvider.signIn.email({
       email: 'signin@example.com',
-      password: 'correct-password',
+      password: 'anything',
     });
     expect(error).toBeNull();
 
@@ -83,21 +60,36 @@ describe('mockAuthProvider', () => {
     expect(data?.user.email).toBe('signin@example.com');
   });
 
-  it('should reject sign-in with the wrong password', async () => {
+  it('should assign the same user id for the same email across separate sign-ins', async () => {
+    cookieJar = createStatefulCookieJar();
+    await mockAuthProvider.signIn.email({ email: 'stable@example.com', password: 'a' });
+    const firstId = (await mockAuthProvider.getSession()).data?.user.id;
+
+    cookieJar = createStatefulCookieJar();
+    await mockAuthProvider.signIn.email({ email: 'stable@example.com', password: 'b' });
+    const secondId = (await mockAuthProvider.getSession()).data?.user.id;
+
+    expect(firstId).toBe(secondId);
+  });
+
+  it('should not depend on any cross-request in-memory state (survives a fresh cookie jar with the same cookie value)', async () => {
     cookieJar = createStatefulCookieJar();
     await mockAuthProvider.signUp.email({
-      name: 'Wrong Password User',
-      email: 'wrongpass@example.com',
-      password: 'correct-password',
+      name: 'Portable User',
+      email: 'portable@example.com',
+      password: 'password123',
     });
-    await mockAuthProvider.signOut();
+    const cookieValue = cookieJar.get('mock_auth_session')?.value;
+    expect(cookieValue).toBeDefined();
 
-    const { error } = await mockAuthProvider.signIn.email({
-      email: 'wrongpass@example.com',
-      password: 'incorrect',
-    });
+    // Simulate a completely separate request/module instance that only has
+    // the cookie value, not any prior in-memory state.
+    const freshJar = createStatefulCookieJar();
+    freshJar.set('mock_auth_session', cookieValue!);
+    cookieJar = freshJar;
 
-    expect(error).not.toBeNull();
+    const { data } = await mockAuthProvider.getSession();
+    expect(data?.user.email).toBe('portable@example.com');
   });
 
   it('should clear the session on sign-out', async () => {

@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { signUpWithEmail } from '@/app/actions/auth';
+import { useAuthSession } from '@/components/AuthSessionProvider';
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const { refetch } = useAuthSession();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,8 +27,8 @@ export default function SignUpPage() {
       return;
     }
 
-    // Hard navigation so the already-mounted header re-fetches session state.
-    window.location.href = '/';
+    await refetch();
+    router.push('/');
   };
 
   return (

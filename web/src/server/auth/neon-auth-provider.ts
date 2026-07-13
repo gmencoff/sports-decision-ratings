@@ -29,8 +29,3 @@ export const neonAuthProvider: AuthProvider = {
     await neonAuth.signOut();
   },
 };
-
-// The raw Neon Auth REST proxy, used directly by the API route when real
-// auth is configured so the full endpoint surface (not just get-session/
-// sign-out) is available.
-export const neonAuthHandler = neonAuth.handler();

@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { signInWithEmail } from '@/app/actions/auth';
+import { useAuthSession } from '@/components/AuthSessionProvider';
 
 export default function SignInPage() {
+  const router = useRouter();
+  const { refetch } = useAuthSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,8 +26,8 @@ export default function SignInPage() {
       return;
     }
 
-    // Hard navigation so the already-mounted header re-fetches session state.
-    window.location.href = '/';
+    await refetch();
+    router.push('/');
   };
 
   return (

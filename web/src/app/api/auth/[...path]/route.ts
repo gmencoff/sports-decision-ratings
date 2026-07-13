@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthProvider, isRealAuthConfigured } from '@/server/auth/auth-provider';
+import { getAuthProvider } from '@/server/auth/auth-provider';
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
-// When real Neon Auth is configured, delegate everything to its own REST
-// proxy (sign-in, sign-up, OAuth callbacks, etc.). When it's not configured,
-// only the two endpoints our client actually calls (get-session, sign-out)
-// are implemented, backed by the mock provider.
+// The client only ever calls these two endpoints (see lib/auth-client.ts) —
+// sign-in/sign-up go through Server Actions (app/actions/auth.ts) instead.
+// Both endpoints delegate to whichever AuthProvider is active (real Neon
+// Auth or the local mock), so this route doesn't need to know which.
 
 export async function GET(request: NextRequest, context: RouteContext) {
-  if (isRealAuthConfigured()) {
-    const { neonAuthHandler } = await import('@/server/auth/neon-auth-provider');
-    return neonAuthHandler.GET(request, context);
-  }
-
   const { path } = await context.params;
   if (path.join('/') === 'get-session') {
     const { data } = await (await getAuthProvider()).getSession();
@@ -23,11 +18,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
-  if (isRealAuthConfigured()) {
-    const { neonAuthHandler } = await import('@/server/auth/neon-auth-provider');
-    return neonAuthHandler.POST(request, context);
-  }
-
   const { path } = await context.params;
   if (path.join('/') === 'sign-out') {
     await (await getAuthProvider()).signOut();

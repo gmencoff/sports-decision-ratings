@@ -4,6 +4,7 @@ import Link from 'next/link';
 import './globals.css';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { AuthButton } from '@/components/AuthButton';
+import { AuthSessionProvider } from '@/components/AuthSessionProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,15 +32,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <header className="bg-surface border-b border-border-default">
-          <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-            <Link href="/" className="text-xl font-bold text-text-primary">
-              NFL Transactions
-            </Link>
-            <AuthButton />
-          </div>
-        </header>
-        <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
+        <AuthSessionProvider>
+          <header className="bg-surface border-b border-border-default">
+            <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+              <Link href="/" className="text-xl font-bold text-text-primary">
+                NFL Transactions
+              </Link>
+              <AuthButton />
+            </div>
+          </header>
+          <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
+        </AuthSessionProvider>
         <FeedbackWidget />
       </body>
     </html>
