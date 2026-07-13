@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@neondatabase/auth": "^0.4.2-beta",
     "drizzle-orm": "^0.38.0",
     "fast-xml-parser": "^5.4.1",
     "next": "16.1.1",
