@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createHash, randomUUID } from 'crypto';
+import { auth } from './neon-auth';
 
 const VOTER_SESSION_COOKIE = 'voter_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year in seconds
@@ -11,6 +12,12 @@ export interface CookieStore {
 }
 
 export async function getVoterId(): Promise<string> {
+  const { data: session } = await auth.getSession();
+
+  if (session?.user?.id) {
+    return `user:${session.user.id}`;
+  }
+
   const cookieStore = await cookies();
   const sessionId = getOrCreateVoterSessionFromCookies(cookieStore);
   return hashSessionId(sessionId);
