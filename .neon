@@ -1,0 +1,10 @@
+{
+  "orgId": "org-old-lake-21050383",
+  "projectId": "aged-dawn-29943967",
+  "_init": {
+    "features": [
+      "database",
+      "auth"
+    ]
+  }
+}

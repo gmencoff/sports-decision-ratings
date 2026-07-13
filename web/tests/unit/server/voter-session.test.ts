@@ -1,11 +1,25 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Unmock the module so we test the real implementation
 vi.unmock('@/server/auth/voter-session');
 
+const mockGetSession = vi.fn();
+vi.mock('@/server/auth/auth-provider', () => ({
+  getAuthProvider: () => Promise.resolve({ getSession: () => mockGetSession() }),
+}));
+
+const mockCookieStore = {
+  get: vi.fn(),
+  set: vi.fn(),
+};
+vi.mock('next/headers', () => ({
+  cookies: () => Promise.resolve(mockCookieStore),
+}));
+
 import {
   hashSessionId,
   getOrCreateVoterSessionFromCookies,
+  getVoterId,
   type CookieStore,
 } from '@/server/auth/voter-session';
 
@@ -69,6 +83,48 @@ describe('voter-session', () => {
           maxAge: 60 * 60 * 24 * 365,
         })
       );
+    });
+  });
+
+  describe('getVoterId', () => {
+    beforeEach(() => {
+      mockGetSession.mockReset();
+      mockCookieStore.get.mockReset();
+      mockCookieStore.set.mockReset();
+    });
+
+    it('should return a user-prefixed id when a session exists, without touching cookies', async () => {
+      mockGetSession.mockResolvedValue({ data: { user: { id: 'abc123' } } });
+
+      const result = await getVoterId();
+
+      expect(result).toBe('user:abc123');
+      expect(mockCookieStore.get).not.toHaveBeenCalled();
+      expect(mockCookieStore.set).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to the cookie-based flow when there is no session', async () => {
+      mockGetSession.mockResolvedValue({ data: null });
+      mockCookieStore.get.mockReturnValue({ value: 'existing-session' });
+
+      const result = await getVoterId();
+
+      expect(result).toBe(hashSessionId('existing-session'));
+    });
+
+    it('should create a new anonymous cookie when there is no session and no existing cookie', async () => {
+      mockGetSession.mockResolvedValue({ data: null });
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const result = await getVoterId();
+
+      expect(mockCookieStore.set).toHaveBeenCalledWith(
+        'voter_session',
+        expect.any(String),
+        expect.objectContaining({ httpOnly: true })
+      );
+      const [, generatedSessionId] = mockCookieStore.set.mock.calls[0];
+      expect(result).toBe(hashSessionId(generatedSessionId));
     });
   });
 });
